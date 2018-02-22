@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.6)
 project(DeduplicationProj_heuristic)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c)
-add_executable(DeduplicationProj_heuristic ${SOURCE_FILES})
+set(SOURCE_FILES main.c ObjectStructures.c)
+add_executable(DeduplicationProj_heuristic ${SOURCE_FILES} ObjectStructures.c)
