@@ -12,10 +12,8 @@
 #include <limits.h>
 #include <string.h>
 
-#include "Block.h"
-#include "File.h"
 #include "List.h"
-#include "Directory.h"
+
 
 /****************************** DEFINES *****************************/
 #define INIT_SIZE 5007

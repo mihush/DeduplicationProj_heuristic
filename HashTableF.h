@@ -73,18 +73,8 @@ HashTableF ht_createF(char type) {
 /*
  * ht_hash - Given a key (string) Generates a Hash Value by which it will be stored in the table
  */
-long int ht_hashF( HashTableF ht, char *key ) {
-    unsigned long int hashval;
-    int i = 0;
-
-    /* Convert our string to an integer */
-    while((hashval < ULONG_MAX) && (i < strlen(key))){
-        hashval = hashval << 8;
-        hashval += key[i];
-        i++;
-    }
-
-    return hashval % (ht->size_table);
+long int ht_hashF( HashTableF ht, unsigned long sn ) {
+    return sn % (ht->size_table);
 }
 
 /*

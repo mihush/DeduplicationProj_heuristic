@@ -2,7 +2,7 @@
 // Created by Polina on 22-Feb-18.
 //
 #include "ObjectStructures.h"
-/* *************** START ************** Block STRUCT Functions **************** START *************** */
+/* ****************** START ****************** Block STRUCT Functions ****************** START ****************** */
 Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size){
     Block block = malloc(sizeof(*block)); //create a block
     if(block == NULL){ //Check memory allocation was successful
@@ -46,12 +46,12 @@ char* block_get_ID(Block block){
     return block->block_id;
 }
 
-ErrorCode block_add_file(Block block , File* file){
-    if(file_id == NULL || block == NULL){ //Check input is valid
+ErrorCode block_add_file(Block block , File* file_obj){
+    if(file_obj == NULL || block == NULL){ //Check input is valid
         return INVALID_INPUT;
     }
 
-    EntryF result = ht_setF(block->files_ht, file_id);
+    EntryF result = ht_setF(block->files_ht, file_obj);
     if(result == NULL){ //Check for memory allocation
         return OUT_OF_MEMORY;
     }
@@ -62,7 +62,10 @@ ErrorCode block_add_file(Block block , File* file){
 //    printf("            - File  ID   : %s \n" , file_id);
     return SUCCESS;
 }
-/* **************** END *************** Block STRUCT Functions ***************** END **************** */
+/* ******************* END ******************* Block STRUCT Functions ******************* END ******************* */
+/* ************************************************************************************************************** */
+/* ************************************************************************************************************** */
+/* ************************************************************************************************************** */
 /* *************** START ************** File STRUCT Functions *************** START **************** */
 
 File file_create(char* file_id , unsigned int depth , unsigned long file_sn , unsigned int size ,
