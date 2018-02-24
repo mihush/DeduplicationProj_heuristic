@@ -26,7 +26,8 @@ struct block_t{
     char* block_id; // Hashed
     unsigned int block_size;
     unsigned int shared_by_num_files;
-    HashTableF files_ht;
+    //TODO Define HTF
+    //HashTableF files_ht;
 };
 typedef struct block_t *Block;
 
@@ -49,7 +50,8 @@ struct file_t{
     int num_blocks;
     unsigned int file_size;
     List blocks_list;
-    HashTableF files_ht; // should be use only for flag = 'P'
+    //TODO Define HTF
+    //HashTableF files_ht; // should be use only for flag = 'P'
     unsigned int num_files; // should be use only for flag = 'P'
     unsigned long physical_sn;
 
