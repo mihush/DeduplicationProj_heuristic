@@ -15,31 +15,30 @@
 
 /*
  * Definition of a block structure:
- *                  - block_sn -> a running index on all blocks read from the file system
- *                  - block_id -> a hushed id as appears in the input file
- *                  - block_size -> the size of a block
- *                  - shared_by_num_files -> number of files sharing this block
- *                  - files_list -> list of hashed file ids containing this block
+ *            - block_sn -> a running index on all blocks read from the file system
+ *            - block_id -> a hushed id as appears in the input file
+ *            - block_size -> the size of a block
+ *            - shared_by_num_files -> number of files sharing this block
+ *            - files_list -> list of hashed file ids containing this block
  */
 struct block_t{
     unsigned long block_sn; // running index
     char* block_id; // Hashed
     unsigned int block_size;
     unsigned int shared_by_num_files;
-    //TODO Define HTF
     //HashTableF files_ht;
 };
 typedef struct block_t *Block;
 
 /*
  * Definition of a File structure:
- *                  - file_sn -> a running index on all files read from the file system
- *                  - file_id -> a hushed id as appears in the input file
- *                  - file_depth -> the depth of the file in the hierarchical tree
- *                  - dir_sn -> Serial number of the directory containing this file
- *                  - num_blocks -> number of blocks the file consists of
- *                  - file_size -> the size of the file
- *                  - blocks_list -> List of Block_info elements of blocks contained in the file
+ *            - file_sn -> a running index on all files read from the file system
+ *            - file_id -> a hushed id as appears in the input file
+ *            - file_depth -> the depth of the file in the hierarchical tree
+ *            - dir_sn -> Serial number of the directory containing this file
+ *            - num_blocks -> number of blocks the file consists of
+ *            - file_size -> the size of the file
+ *            - blocks_list -> List of Block_info elements of blocks contained in the file
  */
 struct file_t{
     char flag; // L - logical_file , P - physical_file
@@ -60,14 +59,14 @@ typedef struct file_t *File;
 
 /*
  * Definition of a Directory structure:
- *                  - dir_sn -> a running index on all directories read from the file system
- *                  - dir_id -> a hushed id as appears in the input file
- *                  - parent_dir_sn -> the sn of the parent directory in the hierarchy
- *                  - dir_depth -> the depth of the directory in the hierarchical tree
- *                  - num_of_subdirs -> number of sub directories
- *                  - num_of_files -> number of files contained in the directory
- *                  - dirs_list -> list of directory sn contained in this directory
- *                  - files_list -> list of file sn contained in this directory
+ *            - dir_sn -> a running index on all directories read from the file system
+ *            - dir_id -> a hushed id as appears in the input file
+ *            - parent_dir_sn -> the sn of the parent directory in the hierarchy
+ *            - dir_depth -> the depth of the directory in the hierarchical tree
+ *            - num_of_subdirs -> number of sub directories
+ *            - num_of_files -> number of files contained in the directory
+ *            - dirs_list -> list of directory sn contained in this directory
+ *            - files_list -> list of file sn contained in this directory
  */
 struct dir_t{
     unsigned long dir_sn;
@@ -128,7 +127,7 @@ char* block_get_ID(Block block);
 /*
  *  block_add_file - adds the file containing the block to the files list saved in the block
  */
-ErrorCode block_add_file(Block block , File* file);
+ErrorCode block_add_file(Block block , File file);
 
 /* *************** START ************** File STRUCT Functions *************** START **************** */
 /*
