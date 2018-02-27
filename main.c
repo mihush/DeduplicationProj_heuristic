@@ -7,6 +7,7 @@
 #define  OUTPUT_NUM_BLOC_OBJECTS_LOC 14
 
 int main() {
+    /* ------------------------------------------ Define Variables ----------------------------------------- */
     char dedup_type = NULL;
     char* input_file_path;
     char line[1024];
@@ -16,8 +17,9 @@ int main() {
     File physical_files_array = NULL;
     Dir dirs_array = NULL;
     Block blocks_array = NULL;
-
-
+    /* ------------------------------------------ Define Variables ---------------------------------------- */
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* -------------------------------------- Read Global Parameters -------------------------------------- */
     ErrorCode err = readInputParams(&input_file_path);
     if(err != SUCCESS){
         return 0;
@@ -63,12 +65,46 @@ int main() {
     files_array = malloc(num_file_objects * sizeof(*files_array));
     dirs_array = malloc(num_dir_objects * sizeof(*dirs_array));
     blocks_array = malloc(num_block_objects * sizeof(*blocks_array));
+
     if(dedup_type == 'F'){
         physical_files_array = malloc(num_phys_file_objects * sizeof(*physical_files_array));
     }
+    /* -------------------------------------- Read Global Parameters -------------------------------------- */
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* ----------------------------------------- Read Data Objects ---------------------------------------- */
+    //TODO Read the objects from the file
+    while(!feof(input_file)) {
+        fgets(line , 1024 , input_file);
+        switch(line[0]){
+            case 'F':
+
+                break;
+            case 'B':
+
+                break;
+            case 'P':
+
+                break;
+            case 'R':
+
+                break;
+            case 'D':
+
+                break;
+            default:
+                break;
+        }
+    }
+
+    //TODO Do The Heuristic Part
 
 
-    //Free all allocated Data
+    //TODO Save Output to File
+    /* ----------------------------------------- Read Data Objects ---------------------------------------- */
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* -------------------------------------- Free all allocated Data ------------------------------------- */
     free(input_file_path);
     fclose(input_file);
     err = freeStructuresArrays(&files_array , &physical_files_array , &dirs_array , &blocks_array,
@@ -86,5 +122,6 @@ int main() {
     free(files_array);
     //TODO free the Directories array
     free(dirs_array);
+    /* ------------------------------------- Free all allocated Data ------------------------------------ */
     return 0;
 }

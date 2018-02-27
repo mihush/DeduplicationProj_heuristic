@@ -1,11 +1,11 @@
 //
 // Created by Polina on 24-Feb-18.
 //
-#include "Utilities.h"
-#include "ObjectStructures.h"
+
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
-
+#include "Utilities.h"
+#include "ObjectStructures.h"
 /*
  * readInputParams - Reads from the input_params.txt file the path of the input file and the type of
  *                   deduplication that it was created with
@@ -92,6 +92,7 @@ ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,D
     for (int i = 0; i < num_block_objects; ++i) {
         //TODO block_destroy(blocks_array[i]);
     }
+
     if(dedup_type == 'F'){
         for (int i = 0; i < num_phys_file_objects; ++i) {
             //TODO file_destroy(physical_files_array[i]);
@@ -109,4 +110,127 @@ ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,D
     }
     return SUCCESS;
 }
+
+/*
+ *
+ */
+File readFileLine(char* line , char file_type){
+    char* file_id;
+    unsigned int depth = 0;
+    unsigned long file_sn = 0;
+    unsigned int size = 0;
+    unsigned long physical_sn = 0;
+    unsigned long num_of_blocks = 0;
+
+    char* tok = strtok(line , ","); //reading the flag ("F")
+    // reading the file_sn
+    tok = strtok(line , ",");
+    file_sn = atol(tok);
+
+    // reading the file_id
+    file_id = strtok(line , ",");
+
+    //reading num_blocks
+    tok = strtok(line , ",");
+    num_of_blocks = atol(tok);
+
+    //TODO update file creation
+    File file = file_create(file_id , depth , file_sn , size , physical_sn);
+
+    unsigned long block_sn = 0;
+    unsigned int block_size = 0;
+    for(int i=0 ; i< num_of_blocks ; i++){
+        tok = strtok(line , ",");
+        block_size = atol(tok);
+        tok = strtok(line , ",");
+        block_size = atoi(tok);
+        //TODO add block to file
+    }
+
+    return file;
+}
+/*
+ *
+ */
+Block readBlockLine(char* line){
+    char* block_id = NULL;
+    unsigned long block_sn = 0;
+    unsigned int block_size = 0;
+    unsigned short num_of_files = 0;
+
+    char* tok = strtok(line , ","); //reading the flag ("B")
+    //reading block_sn
+    tok = strtok(line , ",");
+    block_sn = atol(tok);
+
+    //reading Block_id
+    block_id = strtok(line , ",");
+
+    //reading num_of_files
+    tok = strtok(line , ",");
+    num_of_files = atoi(tok);
+
+    Block block = block_create(block_id , block_sn , block_size);
+
+    unsigned long file_sn = 0;
+    for(int i=0 ; i<num_of_files ; i++){
+        tok = strtok(line , ",");
+        file_sn = atol(tok);
+        //TODO add file to block
+    }
+
+
+    return block;
+}
+/*
+ *
+ */
+Dir readRootDirLine(char* line, char dir_type){
+    char* dir_id = NULL;
+    unsigned int depth = 0;
+    unsigned long dir_sn = 0;
+    unsigned long num_of_sub_dirs = 0;
+    unsigned long num_of_files = 0;
+
+    char* tok = strtok(line , ","); //reading the flag ("D/R")
+    //reading dir_sn
+    tok = strtok(line , ",");
+    dir_sn = atol(tok);
+
+    //reading dir_id
+    dir_id = strtok(line , ",");
+
+    //reading num_of_sub_dirs
+    tok = strtok(line , ",");
+    num_of_sub_dirs = atol(tok);
+
+    //reading num_of_files
+    tok = strtok(line , ",");
+    num_of_files = atol(tok);
+
+    Dir directory = dir_create(dir_id , depth , dir_sn);
+
+    //reading dir_sn
+    unsigned long sub_dir_sn = 0;
+    for(int i=0 ; i<num_of_sub_dirs ; i++){
+        tok = strtok(line , ",");
+        sub_dir_sn = atol(tok);
+        //TODO add sub_dir to directory
+    }
+
+    //reading file_sn
+    unsigned long sub_file_sn = 0;
+    for(int i=0 ; i<num_of_files  ; i++){
+        tok = strtok(line , ",");
+        sub_file_sn = atol(tok);
+        //TODO add file to directory
+    }
+
+    return directory;
+}
+
+
+
+
+
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
