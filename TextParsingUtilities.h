@@ -459,4 +459,5 @@ void update_dir_values(Dir current_dir , int goal_depth,
         }
     }
 };
+
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
