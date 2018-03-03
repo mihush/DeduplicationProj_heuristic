@@ -6,7 +6,6 @@
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 
 #include "List.h"
-#include "HashTableF.h"
 #include "Utilities.h"
 #include <assert.h>
 #include <stdio.h>

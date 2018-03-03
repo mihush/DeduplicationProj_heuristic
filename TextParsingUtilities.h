@@ -4,6 +4,7 @@
 
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
+
 #include "Utilities.h"
 #include "ObjectStructures.h"
 /*
@@ -62,7 +63,6 @@ int countRootsInInput(char* line){
     }
 
     return roots;
-
 }
 
 /*
@@ -112,7 +112,11 @@ ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,D
 }
 
 /*
+ * readFileLine - Parses the input line into a file object to be saved
+ *                 Returns a pointer to the file object
  *
+ * @line - the line that represents a file object to be parsed
+ * @tile_type - could be either P for physical or F for logical
  */
 File readFileLine(char* line , char file_type){
     char* file_id;
@@ -149,8 +153,12 @@ File readFileLine(char* line , char file_type){
 
     return file;
 }
+
 /*
+ * readBlockLine - Parses the input line into a block object to be saved
+ *                 Returns a pointer to the block object
  *
+ * @line - the line that represents a block object to be parsed
  */
 Block readBlockLine(char* line){
     char* block_id = NULL;
@@ -182,8 +190,13 @@ Block readBlockLine(char* line){
 
     return block;
 }
+
 /*
+ * readRootDirLine - Parses the input line into a directory object to be saved
+ *                   Returns a pointer to the directory object
  *
+ * @line - the line that represents a directory object to be parsed
+ * @tile_type - could be either D for regular directory or R for Root directory
  */
 Dir readRootDirLine(char* line, char dir_type){
     char* dir_id = NULL;
@@ -228,9 +241,6 @@ Dir readRootDirLine(char* line, char dir_type){
 
     return directory;
 }
-
-
-
 
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

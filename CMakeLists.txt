@@ -3,5 +3,5 @@ project(DeduplicationProj_heuristic)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c)
+set(SOURCE_FILES main.c List.c ObjectStructures.c)
 add_executable(DeduplicationProj_heuristic ${SOURCE_FILES})
