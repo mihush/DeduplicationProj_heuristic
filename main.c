@@ -74,23 +74,26 @@ int main() {
     /* ---------------------------------------------------------------------------------------------------- */
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
     //TODO Read the objects from the file
+    Dir res_dir = NULL;
+    File res_file = NULL;
+    Block res_block = NULL;
     while(!feof(input_file)) {
         fgets(line , 1024 , input_file);
         switch(line[0]){
             case 'F':
-
+                res_file = readFileLine(line , 'F');
                 break;
             case 'B':
-
+                res_block = readBlockLine(line);
                 break;
             case 'P':
-
+                res_file = readFileLine(line , 'P');
                 break;
             case 'R':
-
+                res_dir = readRootDirLine(line , 'R');
                 break;
             case 'D':
-
+                res_dir = readRootDirLine(line , 'D');
                 break;
             default:
                 break;
@@ -98,7 +101,20 @@ int main() {
     }
 
     //TODO Do The Heuristic Part
+    printf(" #-#-# The Files array #-#-# \n");
+    for( int i=0 ; i<num_file_objects ; i++){
+        printf("%u\n" , files_array[i].file_sn);
+    }
 
+    printf(" #-#-# The Directories array #-#-# \n");
+    for( int i=0 ; i<num_dir_objects ; i++){
+        printf("%u\n" , dirs_array[i].dir_sn);
+    }
+
+    printf(" #-#-# The Directories array #-#-# \n");
+    for( int i=0 ; i<num_block_objects ; i++){
+        printf("%u\n" , blocks_array[i].block_sn);
+    }
 
     //TODO Save Output to File
 
@@ -119,10 +135,10 @@ int main() {
     if(dedup_type == 'F'){
         free(physical_files_array);
     }
-    //TODO free the Files array
-    free(files_array);
-    //TODO free the Directories array
-    free(dirs_array);
+//    //TODO free the Files array
+//    free(files_array);
+//    //TODO free the Directories array
+//    free(dirs_array);
     /* ------------------------------------- Free all allocated Data ------------------------------------ */
     return 0;
 }

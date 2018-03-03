@@ -90,24 +90,28 @@ ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,D
 
     //free all blocks or physical files
     for (int i = 0; i < num_block_objects; ++i) {
-        //TODO block_destroy(blocks_array[i]);
+        block_destroy(blocks_array[i]);
     }
 
     if(dedup_type == 'F'){
         for (int i = 0; i < num_phys_file_objects; ++i) {
-            //TODO file_destroy(physical_files_array[i]);
+            file_destroy(physical_files_array[i]);
         }
     }
 
     //free files
     for(int i = 0 ; i < num_file_objects ; i++){
-        //TODO file_destroy(files_array[i]);
+        file_destroy(files_array[i]);
     }
 
     //free directories
     for(int i = 0; i < num_dir_objects ; i++){
-        //TODO dir_destroy(dirs_array[i]);
+        dir_destroy(dirs_array[i]);
     }
+    free(files_array);
+    free(physical_files_array);
+    free(dirs_array);
+    free(blocks_array);
     return SUCCESS;
 }
 
