@@ -6,6 +6,7 @@
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 
 #include "List.h"
+#include "HashTableF.h"
 #include "Utilities.h"
 #include <assert.h>
 #include <stdio.h>
@@ -25,7 +26,7 @@ struct block_t{
     char* block_id; // Hashed
     unsigned int block_size;
     unsigned int shared_by_num_files;
-    //HashTableF files_ht;
+    unsigned long* files_array; // array of file serial number that share the same physical file
 };
 typedef struct block_t *Block;
 
@@ -40,19 +41,25 @@ typedef struct block_t *Block;
  *            - blocks_list -> List of Block_info elements of blocks contained in the file
  */
 struct file_t{
+    int depth;
     char flag; // L - logical_file , P - physical_file
     unsigned long file_sn;
     char* file_id;
-    unsigned int file_depth;
     unsigned long dir_sn;
     int num_blocks;
     unsigned int file_size;
-    List blocks_list;
-    //TODO Define HTF
-    //HashTableF files_ht; // should be use only for flag = 'P'
-    unsigned int num_files; // should be use only for flag = 'P'
     unsigned long physical_sn;
 
+    //For Block level deduplication
+    Block_Info* blocks_array;
+
+    //For File level deduplication
+    //Physical File - P flag
+    unsigned int shared_by_num_files; // should be use only for flag = 'P'
+    unsigned long* files_array; // array of file serial number that share the same physical file
+
+    //For the Merged File
+    HashTableF ht_blocks;
 };
 typedef struct file_t *File;
 
@@ -71,34 +78,22 @@ struct dir_t{
     unsigned long dir_sn;
     char* dir_id;
     unsigned long parent_dir_sn;
-    int dir_depth;
-    unsigned short num_of_subdirs;
+    int depth;
+
+    //Sub-Files
     unsigned short num_of_files;
-    List dirs_list; // list of serial numbers
-    List files_list; //list of serial numbers
+    unsigned long* files_array; //list of serial numbers
+
+    //Sub-Dirs
+    unsigned short num_of_subdirs;
+    unsigned long* dirs_array; // list of serial numbers
+
+    //For heuristic part
+    File merged_file;
 };
 typedef struct dir_t *Dir;
 
-
-static ListElement copy_directory_info(ListElement directory_info){
-    assert(directory_info);
-    unsigned long* sn = (unsigned long*)(directory_info);
-    unsigned long* sn_copy = malloc(sizeof(*sn_copy));
-    if(sn_copy == NULL){
-        printf("---> allocation failed at list_element copy_func\n");
-        return NULL;
-    }
-    *sn_copy = *sn;
-    return sn_copy;
-}
-
-static  void free_dir_info(ListElement dir_info){
-    free(dir_info);
-}
-
 /* ****************************************** Function Declarations ******************************************** */
-
-
 /*
  *  blockCreate - Creates a new Block with:
  *                      - a given serial number
@@ -106,7 +101,8 @@ static  void free_dir_info(ListElement dir_info){
  *                      - creates an empty files list
  *                      - zeros the counter that contains the amount of files sharing this block
  */
-Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size);
+Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size ,
+                   unsigned short shared_by_num_files);
 
 /*
  *  block_destroy - Destroys and frees space of a block structure
@@ -126,8 +122,12 @@ char* block_get_ID(Block block);
 /*
  *  block_add_file - adds the file containing the block to the files list saved in the block
  */
-ErrorCode block_add_file(Block block , File file);
+ErrorCode block_add_file(Block block , unsigned long file_sn);
 
+/*
+ *
+ */
+void print_block(Block block);
 /* *************** START ************** File STRUCT Functions *************** START **************** */
 /*
  *  file_create - Creates a new file object with:
@@ -137,8 +137,10 @@ ErrorCode block_add_file(Block block , File file);
  *                      - dir sn
  *
  */
-File file_create(char* file_id , unsigned int depth , unsigned long file_sn , unsigned int size ,
-                 unsigned long physical_sn);
+File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
+                 unsigned long num_of_blocks , unsigned long num_of_files,
+                 unsigned int size , unsigned long physical_sn ,
+                 char* dedup_type , char* file_type);
 
 /*
  *  file_destroy - Destroys and frees space of a file structure
@@ -158,7 +160,12 @@ char* file_get_ID(File file);
 /*
  *  file_get_depth - returns the depth of the file in the hierarchy
  */
-unsigned int file_get_depth(File file);
+int file_get_depth(File file);
+
+/*
+ *  file_set_depth - update the depth of the file in the hierarchy
+ */
+void file_set_depth(File file, int depth);
 
 /*
  *  file_get_num_blocks - returns the number of blocks the file contains
@@ -168,24 +175,17 @@ int file_get_num_blocks(File file);
 /*
  *
  */
-ErrorCode file_set_parent_dir_sn(File file , unsigned long dir_sn);
-/*
- *
- */
-ErrorCode file_set_physical_sn(File file , unsigned long physical_file_sn);
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size);
 
 /*
  *
  */
-ErrorCode file_set_logical_flag(File file);
-
+ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn);
 
 /*
  *
  */
-ErrorCode file_add_block(File file , char* block_id , int block_size);
-
-
+void print_file(File file);
 /* **************** END *************** File STRUCT Functions **************** END ***************** */
 /* *************** START *************** Directory STRUCT Functions *************** START *************** */
 
@@ -195,12 +195,8 @@ ErrorCode file_add_block(File file , char* block_id , int block_size);
  *                      - dir_sn
  *                      - depth
  */
-Dir dir_create(char* dir_id , unsigned int depth , unsigned long dir_sn);
-
-/*
- *
- */
-ErrorCode dir_set_parent_dir_sn(Dir dir , unsigned long sn);
+Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn ,
+               unsigned long num_of_files , unsigned long num_of_sub_dirs);
 
 /*
  * dir_destroy - Destroy struct of Directory
@@ -221,12 +217,21 @@ char* dir_get_ID(Dir dir);
  */
 unsigned int dir_get_depth(Dir dir);
 
+/*
+ * dir_set_depth - updates the depth of the directory
+ */
+void dir_set_depth(Dir dir , int depth);
+
 /* Adding file into the directory */
 ErrorCode dir_add_file(Dir dir , unsigned long file_sn);
 
 /* Adding sub_dir into the directory */
 ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn);
 
+/*
+ *
+ */
+void print_dir(Dir dir);
 /* **************** END **************** Directory STRUCT Functions **************** END **************** */
 /* ****************************************** Function Declarations ******************************************** */
 

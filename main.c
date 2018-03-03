@@ -8,15 +8,20 @@
 
 int main() {
     /* ------------------------------------------ Define Variables ----------------------------------------- */
-    char dedup_type = NULL;
+    char dedup_type[2];
+    dedup_type[1] = '\0';
     char* input_file_path;
     char line[1024];
     int num_roots = 0;
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_block_objects = 0, num_phys_file_objects = 0;
-    File files_array = NULL;
-    File physical_files_array = NULL;
-    Dir dirs_array = NULL;
-    Block blocks_array = NULL;
+    unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, block_objects_cnt = 0, phys_file_objects_cnt = 0;
+    File* files_array = NULL;
+    File* physical_files_array = NULL;
+    Dir* dirs_array = NULL;
+    Dir* roots_array = NULL;
+    Block* blocks_array = NULL;
+
+    int goal_depth = 2;
     /* ------------------------------------------ Define Variables ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
     /* -------------------------------------- Read Global Parameters -------------------------------------- */
@@ -35,9 +40,9 @@ int main() {
     //Read the Output type
     fgets(line , 1024 , input_file);
     if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
-        dedup_type = 'B';
+        dedup_type[0] = 'B';
     } else if (line[OUTPUT_TYPE_CHAR_LOC] == 'f'){
-        dedup_type = 'F';
+        dedup_type[0] = 'F';
     }
 
     //Get the number of files that were read - use the input file names line
@@ -55,7 +60,7 @@ int main() {
 
     //Get the number of Blocks/Physical Files objects in the input file
     fgets(line , 1024 , input_file);
-    if(dedup_type == 'B'){
+    if(dedup_type[0] == 'B'){
         num_block_objects = line[OUTPUT_NUM_BLOC_OBJECTS_LOC] - '0';
     }else{
         num_phys_file_objects = line[OUTPUT_NUM_BLOC_OBJECTS_LOC] - '0';
@@ -64,57 +69,102 @@ int main() {
     //Allocate Arrays For Files, Block/Physical Files , Directories and roots
     files_array = malloc(num_file_objects * sizeof(*files_array));
     dirs_array = malloc(num_dir_objects * sizeof(*dirs_array));
+    roots_array = malloc(num_roots * sizeof(*roots_array));
     blocks_array = malloc(num_block_objects * sizeof(*blocks_array));
-
-    if(dedup_type == 'F'){
-        physical_files_array = malloc(num_phys_file_objects * sizeof(*physical_files_array));
+    if(files_array == NULL || dirs_array == NULL || roots_array == NULL || blocks_array == NULL){
+        return 0;
     }
+
+    if(dedup_type[0] == 'F'){
+        physical_files_array = malloc(num_phys_file_objects * sizeof(*physical_files_array));
+        if(physical_files_array == NULL){
+            free(files_array);
+            free(dirs_array);
+            free(roots_array);
+            free(blocks_array);
+            return 0;
+        }
+    }
+
     /* -------------------------------------- Read Global Parameters -------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
-    //TODO Read the objects from the file
     Dir res_dir = NULL;
     File res_file = NULL;
     Block res_block = NULL;
+    fgets(line , 1024 , input_file);
     while(!feof(input_file)) {
-        fgets(line , 1024 , input_file);
+        printf("%s" , line);
         switch(line[0]){
             case 'F':
-                res_file = readFileLine(line , 'F');
+                res_file = readFileLine(line , dedup_type);
+                files_array[res_file->file_sn] = res_file;
+                file_objects_cnt++;
                 break;
             case 'B':
                 res_block = readBlockLine(line);
+                blocks_array[res_block->block_sn] = res_block;
+                block_objects_cnt++;
                 break;
             case 'P':
-                res_file = readFileLine(line , 'P');
+                res_file = readFileLine(line , dedup_type);
+                physical_files_array[res_file->file_sn] = res_file;
+                phys_file_objects_cnt++;
                 break;
             case 'R':
                 res_dir = readRootDirLine(line , 'R');
+                roots_array[root_objects_cnt] = res_dir;
+                dirs_array[res_dir->dir_sn] = res_dir;
+                root_objects_cnt++;
+                dir_objects_cnt++;
                 break;
             case 'D':
                 res_dir = readRootDirLine(line , 'D');
+                dirs_array[res_dir->dir_sn] = res_dir;
+                dir_objects_cnt++;
                 break;
             default:
                 break;
         }
+        fgets(line , 1024 , input_file);
     }
 
-    //TODO Do The Heuristic Part
+    //TODO Remove this prints later
     printf(" #-#-# The Files array #-#-# \n");
     for( int i=0 ; i<num_file_objects ; i++){
-        printf("%u\n" , files_array[i].file_sn);
+        print_file((files_array[i]));
     }
 
     printf(" #-#-# The Directories array #-#-# \n");
     for( int i=0 ; i<num_dir_objects ; i++){
-        printf("%u\n" , dirs_array[i].dir_sn);
+        print_dir((dirs_array[i]));
     }
 
-    printf(" #-#-# The Directories array #-#-# \n");
+    printf(" #-#-# The Blocks array #-#-# \n");
     for( int i=0 ; i<num_block_objects ; i++){
-        printf("%u\n" , blocks_array[i].block_sn);
+        print_block((blocks_array[i]));
     }
+
+    //TODO Build the tree hierarchy of the file systems
+    if(dedup_type[0] == 'B'){ //Block Level Deduplication
+        calculateDepthAndMergeFiles(roots_array, num_roots,
+                                    dirs_array, num_dir_objects,
+                                    files_array, num_file_objects,
+                                    blocks_array, num_block_objects,
+                                    physical_files_array, num_phys_file_objects,
+                                    'B' , goal_depth);
+    } else {//File Level Deduplication
+        calculateDepthAndMergeFiles(roots_array, num_roots,
+                                    dirs_array, num_dir_objects,
+                                    files_array, num_file_objects,
+                                    blocks_array, num_block_objects,
+                                    physical_files_array, num_phys_file_objects ,
+                                    'F' , goal_depth);
+    }
+
+    //TODO Do The Heuristic Part
+
 
     //TODO Save Output to File
 
@@ -124,17 +174,17 @@ int main() {
     /* -------------------------------------- Free all allocated Data ------------------------------------- */
     free(input_file_path);
     fclose(input_file);
-    err = freeStructuresArrays(&files_array , &physical_files_array , &dirs_array , &blocks_array,
+    err = freeStructuresArrays(files_array , physical_files_array , dirs_array , blocks_array,
                                num_file_objects , num_dir_objects , num_block_objects,
                                num_phys_file_objects ,dedup_type);
     if(err != SUCCESS){
         return 0;
     }
     //TODO free the blocks/physical files array
-    free(blocks_array);
-    if(dedup_type == 'F'){
-        free(physical_files_array);
-    }
+//    free(blocks_array);
+//    if(dedup_type[0] == 'F'){
+//        free(physical_files_array);
+//    }
 //    //TODO free the Files array
 //    free(files_array);
 //    //TODO free the Directories array

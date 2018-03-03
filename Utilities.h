@@ -136,31 +136,27 @@ typedef enum{
  */
 struct block_info{ //helper struct
     int size;
-    char* id; // block id
+    unsigned long block_sn;
 };
 typedef struct block_info* Block_Info;
 
 static ListElement copy_block_info(ListElement block_info){
     assert(block_info);
     Block_Info bi = (Block_Info)(block_info);
+
+    //allocate space for copy
     Block_Info bi_copy = malloc(sizeof(*bi_copy));
     if(bi_copy == NULL){
         return NULL;
     }
 
     bi_copy->size = bi->size;
-    bi_copy->id = malloc(sizeof(char)*(strlen(bi->id) +1));
-    if(bi_copy->id == NULL){
-        free(bi_copy);
-        return NULL;
-    }
-    strcpy(bi_copy->id , bi->id);
-    return bi_copy;
+    bi_copy->block_sn = bi->block_sn;
 
+    return bi_copy;
 }
 
 static void free_block_info(ListElement block_info){
-    free(((Block_Info)(block_info))->id);
     free(block_info);
 }
 

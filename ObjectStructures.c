@@ -12,11 +12,10 @@
  *           - creates an empty files list
  *           - zeros the counter that contains the amount of files sharing this block
  */
-Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size){
-    assert(block_sn && block_size!=0 && block_id);
+Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size ,
+                   unsigned short shared_by_num_files){
     Block block = malloc(sizeof(*block)); //create a block
     if(block == NULL){ //Check memory allocation was successful
-        printf("(Block)--> Adding block to file - Allocation Error (1) \n");
         return NULL;
     }
 
@@ -26,18 +25,17 @@ Block block_create(char* block_id , unsigned long block_sn , unsigned int block_
         return NULL;
     }
     block->block_id = strcpy(block->block_id , block_id);
+
     block->block_sn = block_sn;
     block->shared_by_num_files = 0;
     block->block_size = block_size;
 
-    //I think it's a redundant fild - I can't see why we need the files
-    // contain this block in a hash or whatever...
-//    block->files_ht = ht_createF('N');
-//    if(block->files_ht == NULL){
-//        free(block->block_id);
-//        free(block);
-//        return NULL;
-//    }
+    block->files_array = calloc(shared_by_num_files , sizeof(unsigned long));
+    if(block->files_array == NULL){
+        free(block->block_id);
+        free(block);
+        return NULL;
+    }
     return block;
 }
 
@@ -47,6 +45,7 @@ Block block_create(char* block_id , unsigned long block_sn , unsigned int block_
 void block_destroy(Block block){
     assert(block);
     free(block->block_id);
+    free(block->files_array);
     free(block);
 }
 
@@ -69,23 +68,32 @@ char* block_get_ID(Block block){
 /*
  *  block_add_file - adds the file containing the block to the files list saved in the block
  */
-/**** Maybe it's redundant ****/
-//ErrorCode block_add_file(Block block , File file){
-//    if(file == NULL || block == NULL){ //Check input is valid
-//        return INVALID_INPUT;
-//    }
-//
-//    EntryF result = ht_setF(block->files_ht, file->file_id);
-//    if(result == NULL){ //Check for memory allocation
-//        return OUT_OF_MEMORY;
-//    }
-//
-//    (block->shared_by_num_files)++;
-//
-//    return SUCCESS;
-//}
+ErrorCode block_add_file(Block block , unsigned long file_sn){
+    if(block == NULL){ //Check input is valid
+        return INVALID_INPUT;
+    }
 
-///* *************** START ************** File STRUCT Functions *************** START **************** */
+    (block->files_array)[block->shared_by_num_files] = file_sn;
+    (block->shared_by_num_files)++;
+
+    return SUCCESS;
+}
+
+void print_block(Block block){
+    assert(block);
+    printf("## Block : %lu\n" , block->block_sn);
+    printf("        id : %s\n" , block->block_id);
+    printf("      size : %d\n" , block->block_size);
+    printf(" num_files : %d\n" , block->shared_by_num_files);
+    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+        if( i == ((block->shared_by_num_files)-1)){
+            printf("%lu\n", block->files_array[i]);
+        } else {
+            printf("%lu - ", block->files_array[i]);
+        }
+    }
+}
+/* *************** START ************** File STRUCT Functions *************** START **************** */
 /*
  *  file_create - Creates a new file object with:
  *                      - file id - a hashed id as appears in the input file
@@ -94,48 +102,61 @@ char* block_get_ID(Block block){
  *                      - dir sn
  *
  */
-File file_create(char* file_id , unsigned int depth , unsigned long file_sn , unsigned int size ,
-                 unsigned long physical_sn){
+File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
+                 unsigned long num_of_blocks , unsigned long num_of_files,
+                 unsigned int size , unsigned long physical_sn ,
+                 char* dedup_type , char* file_type){
     File file = malloc(sizeof(*file));
     if(file == NULL){
-        printf("(File)--> Creating file - Allocation Error (1) \n");
         return NULL;
     }
+    file->depth = -1;
 
     file->file_id = malloc(sizeof(char)* (FILE_ID_LEN + 1));
     if(file->file_id == NULL){
-        printf("(File)--> Creating file - Allocation Error (2) \n");
         free(file);
         return NULL;
     }
-
     file->file_id = strcpy(file->file_id , file_id);
     file->file_sn = file_sn;
-    file->dir_sn = 0; //not known in the time of creation
-    file->num_blocks = 0;
-    file->file_depth = depth;
-    file->file_size = size;
-    file->num_files = 1;
-    file->flag = 'P';
-    file->physical_sn = physical_sn; // will be updated from file_compare
 
-    file->blocks_list = listCreate(copy_block_info , free_block_info);
-    if(file->blocks_list == NULL){
-        printf("(File)--> Adding block to file - Allocation Error (3) \n");
+    file->ht_blocks = ht_createF();
+    if(file->ht_blocks == NULL){
         free(file->file_id);
         free(file);
         return NULL;
     }
+    if(strcmp(dedup_type , "B") == 0) { //Block level deduplication
+        file->dir_sn = parent_dir_sn;
+        file->num_blocks = num_of_blocks;
+        file->flag = 'F';
+        file->blocks_array = malloc(num_of_blocks*sizeof(struct block_info));
+        if(file->blocks_array == NULL){
+            //TODO Destroy ht_blocks
+            free(file->file_id);
+            free(file);
+            return NULL;
+        }
+    }else{
+        if(strcmp(file_type , "P") == 0) { //Physical File
+            file->shared_by_num_files = num_of_files;
+            file->flag = 'P';
+            file->files_array = calloc(num_of_files , sizeof(unsigned long));
+            if(file->files_array == NULL){
+                //TODO Destroy ht_blocks
+                free(file->file_id);
+                free(file);
+                return NULL;
+            }
+        }else{
+            file->dir_sn = parent_dir_sn;
+            file->num_blocks = num_of_blocks;
+            file->physical_sn = physical_sn;
+            file->file_size = size;
+            file->flag = 'L';
+        }
+    }
 
-//    file->files_ht = ht_createF('N');
-//    if(file->files_ht == NULL){
-//        free(file->file_id);
-//        listDestroy(file->blocks_list);
-//        free(file);
-//        return NULL;
-//    }
-//
-//    ht_setF(file->files_ht, file_id);
     return file;
 }
 
@@ -145,7 +166,11 @@ File file_create(char* file_id , unsigned int depth , unsigned long file_sn , un
 void file_destroy(File file){
     assert(file);
     free(file->file_id);
-    listDestroy(file->blocks_list);
+    if(file->flag == 'P'){
+        free(file->files_array);
+    }else if(file->flag == 'F'){
+        free(file->blocks_array);
+    }
     free(file);
 }
 
@@ -168,9 +193,14 @@ char* file_get_ID(File file){
 /*
  *  file_get_depth - returns the depth of the file in the hierarchy
  */
-unsigned int file_get_depth(File file){
+int file_get_depth(File file){
     assert(file);
-    return file->file_depth;
+    return file->depth;
+}
+
+void file_set_depth(File file, int depth){
+    assert(file);
+    file->depth = depth;
 }
 
 /*
@@ -184,117 +214,109 @@ int file_get_num_blocks(File file){
 /*
  *
  */
-ErrorCode file_set_parent_dir_sn(File file , unsigned long dir_sn){
-    assert(file && dir_sn!=0);
-    file->dir_sn = dir_sn;
-    return SUCCESS;
-}
-/*
- *
- */
-ErrorCode file_set_physical_sn(File file , unsigned long physical_file_sn){
-    assert(file && physical_file_sn!=0);
-    file->physical_sn = physical_file_sn;
-    return SUCCESS;
-}
-
-/*
- *
- */
-ErrorCode file_set_logical_flag(File file){
-    assert(file);
-    file->flag = 'L';
-    return SUCCESS;
-}
-
-
-/*
- *
- */
-ErrorCode file_add_block(File file , char* block_id , int block_size){
-    if(file == NULL || block_id == NULL || block_size < 0){
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size){
+    if(file == NULL || block_size < 0){
         return INVALID_INPUT;
     }
 
     Block_Info bi = malloc(sizeof(*bi));
     if(bi == NULL){
-        printf("(File)--> Adding block to file - Allocation Error (1) \n");
         return OUT_OF_MEMORY;
     }
-    bi->id =  malloc(sizeof(char)*(strlen(block_id) +1));
-    if(bi->id == NULL){
-        printf("(File)--> Adding block to file - Allocation Error (2) \n");
-        free(bi);
-        return OUT_OF_MEMORY;
-    }
-    strcpy(bi->id , block_id);
+
+    bi->block_sn =  block_sn;
     bi->size = block_size;
-    ListResult res = listInsertLast(file->blocks_list , bi);
 
-    if(res != LIST_SUCCESS){
-        printf("(File)--> Adding block to file - List of files containing block allocation Error (3) \n");
-        free(bi->id);
-        free(bi);
-        return OUT_OF_MEMORY;
-    }
-
+    (file->blocks_array)[file->num_blocks] = bi;
     (file->num_blocks)++;
-    free(bi->id);
-    free(bi);
+
     return SUCCESS;
 }
 
-///* *************** START *************** Directory STRUCT Functions *************** START *************** */
+/*
+ *
+ */
+ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn){
+    if(file == NULL){
+        return INVALID_INPUT;
+    }
+
+    (file->files_array)[file->shared_by_num_files] = logical_files_sn;
+    (file->shared_by_num_files)++;
+
+    return SUCCESS;
+}
+
+/*
+ *
+ */
+void file_add_merged_block(File file , Block_Info bi){
+    assert(file);
+
+    ht_setF(file->ht_blocks , bi);
+    (file->num_blocks)++;
+    return;
+}
+
+/*
+ *
+ */
+void print_file(File file){
+    assert(file);
+    if(file->flag == 'F'){
+        printf("## File : %lu\n" , file->file_sn);
+    } else if (file->flag == 'P'){
+        printf("## Physical File : %lu \n", file->file_sn);
+    } else if(file->flag == 'L'){
+        printf("## Logical File : %lu \n", file->file_sn);
+    }
+}
+/* *************** START *************** Directory STRUCT Functions *************** START *************** */
 /*
  * dir_create - Creates a new Directory object with:
  *                      - dir_id
  *                      - dir_sn
  *                      - depth
  */
-Dir dir_create(char* dir_id , unsigned int depth , unsigned long dir_sn){
+Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn ,
+               unsigned long num_of_files , unsigned long num_of_sub_dirs){
     Dir dir = malloc(sizeof(*dir));
     if(dir == NULL){
-        printf("(Directory)--> Creating Directory - Allocation Error (1) \n");
         return NULL;
     }
+    dir->depth = -1;
+
     dir->dir_id = malloc((sizeof(char)*DIR_NAME_LEN));
     if(!(dir->dir_id)){
-        printf("(Directory)--> Creating Directory - Allocation Error (2) \n");
         free(dir);
         return NULL;
     }
     dir->dir_id = strcpy(dir->dir_id , dir_id);
-    dir->dir_depth = depth;
-    dir->dir_sn = dir_sn;
-    dir->num_of_files = 0;
-    dir->num_of_subdirs = 0;
-    dir->parent_dir_sn = 0; //  not known in the time of creation
-    dir->dirs_list = listCreate(copy_directory_info , free_dir_info);
-    dir->files_list = listCreate(copy_directory_info , free_dir_info);
 
-    if((!dir->files_list) || (!dir->dirs_list)){
-        printf("(Directory)--> Creating Directory - Allocation Error (3) \n");
+    dir->dir_sn = dir_sn;
+    dir->num_of_files = num_of_files;
+    dir->num_of_subdirs = num_of_sub_dirs;
+    dir->parent_dir_sn = parent_dir_sn;
+
+    dir->files_array = calloc(num_of_files , sizeof(unsigned long));
+    if(dir->files_array== NULL){
+        free(dir->dir_id);
+        free(dir);
+        return NULL;
+    }
+    dir->dirs_array = calloc(num_of_sub_dirs , sizeof(unsigned long));
+    if(dir->dirs_array == NULL){
+        free(dir->files_array);
         free(dir->dir_id);
         free(dir);
         return NULL;
     }
 
-//    printf("(Directory)--> Created Directory Successfully:\n");
-//    printf("              - SN    : %lu \n" , dir->dir_sn);
-//    printf("              - ID    : %s \n" , dir->dir_id);
-//    printf("              - Depth : %d \n" , dir->dir_depth);
+    dir->merged_file = NULL;
+
     return dir;
 }
 
-
-/*
- *
- */
-ErrorCode dir_set_parent_dir_sn(Dir dir , unsigned long sn){
-    assert(dir);
-    dir->parent_dir_sn = sn;
-    return SUCCESS;
-}
 
 /*
  * dir_destroy - Destroy struct of Directory
@@ -302,8 +324,8 @@ ErrorCode dir_set_parent_dir_sn(Dir dir , unsigned long sn){
 void dir_destroy(Dir dir){
     assert(dir);
     free(dir->dir_id);
-    listDestroy(dir->dirs_list);
-    listDestroy(dir->files_list);
+    free(dir->dirs_array);
+    free(dir->files_array);
     free(dir);
 }
 
@@ -328,7 +350,15 @@ char* dir_get_ID(Dir dir){
  */
 unsigned int dir_get_depth(Dir dir){
     assert(dir);
-    return dir->dir_depth;
+    return dir->depth;
+}
+
+/*
+ * dir_set_depth - updates the depth of the directory
+ */
+void dir_set_depth(Dir dir , int depth){
+    assert(dir);
+    dir->depth = depth;
 }
 
 /* Adding file into the directory */
@@ -336,19 +366,7 @@ ErrorCode dir_add_file(Dir dir , unsigned long file_sn){
     if(dir == NULL || file_sn < 0){
         return INVALID_INPUT;
     }
-    unsigned long* temp = malloc(sizeof(*temp));
-    if(temp == NULL){
-        printf("(Directory)--> Adding file to Directory - Allocation Error (1) \n");
-        return OUT_OF_MEMORY;
-    }
-    *temp = file_sn;
-    ListResult res = listInsertFirst(dir->files_list , temp);
-    if(res != LIST_SUCCESS){
-        free(temp);
-        printf("(Directory)--> Adding file to Directory - Allocation Error (2) \n");
-        return OUT_OF_MEMORY;
-
-    }
+    (dir->files_array)[dir->num_of_files] = file_sn;
     (dir->num_of_files)++;
 
     return SUCCESS;
@@ -359,23 +377,16 @@ ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn){
     if(dir == NULL || dir_sn < 0){
         return INVALID_INPUT;
     }
-    unsigned long* temp = malloc(sizeof(*temp));
-    if(temp == NULL){
-        printf("(Directory)--> Adding sub directory to Directory - Allocation Error (1) \n");
-        return OUT_OF_MEMORY;
-    }
-    *temp = dir_sn;
-    ListResult res = listInsertFirst(dir->dirs_list, temp);
-    if(res != LIST_SUCCESS){
-        free(temp);
-        printf("(Directory)--> Adding sub directory to Directory - Allocation Error (2) \n");
-        return OUT_OF_MEMORY;
-    }
+    (dir->files_array)[dir->num_of_subdirs] = dir_sn;
     (dir->num_of_subdirs)++;
 
     return SUCCESS;
 }
 
+void print_dir(Dir dir){
+    assert(dir);
+    printf("## Directory : %lu \n" , dir->dir_sn);
+}
 /* **************** END **************** Directory STRUCT Functions **************** END **************** */
 /* ****************************************** Function Declarations ******************************************** */
 

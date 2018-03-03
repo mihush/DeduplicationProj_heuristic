@@ -15,10 +15,12 @@
 #define GROWTH_FACTOR 2
 #define INIT_SIZE 5007
 #define BLOCKS_IN_FILE_SIZE 300
+#define BLOCKS_INIT_SIZE 20000
+
 typedef void* DataF;
 
 struct entryf_t {
-    char *key;
+    unsigned long key;
     DataF data;
     struct entryf_t *next;//Chain-hashing solution. ptr to the next element
 };
@@ -36,7 +38,7 @@ typedef struct hashtablef_t *HashTableF;
 /* *********************************************************************************************** */
 /* *************** START ************** HashTable Functions *************** START **************** */
 /* Create a new HashTable. */
-HashTableF ht_createF(char type) {
+HashTableF ht_createF() {
     HashTableF ht = NULL;
 
     /* Allocate the table itself */
@@ -45,14 +47,8 @@ HashTableF ht_createF(char type) {
         printf("(HashTableF)--> Creating HashTable - Allocation Error (1) \n");
         return NULL;
     }
-    switch(type){
-        case 'N': //for Hashtable in file object
-            ht->size_table = BLOCKS_IN_FILE_SIZE;
-            break;
-        default:
-            ht->size_table = INIT_SIZE; //Shouldn't really get here
-            break;
-    }
+
+    ht->size_table = BLOCKS_INIT_SIZE;
     ht->num_of_elements = 0;
 
     /* Allocate pointers to the head nodes */
@@ -66,14 +62,14 @@ HashTableF ht_createF(char type) {
     for(int i = 0; i < (ht->size_table) ; i++ ){
         ht->table[i] = NULL;
     }
-    printf("(HashTableF)--> Created HashTable Successfully of size %lu \n" , ht->size_table);
+
     return ht;
 }
 
 /*
  * ht_hash - Given a key (string) Generates a Hash Value by which it will be stored in the table
  */
-long int ht_hashF( HashTableF ht, unsigned long sn ) {
+unsigned long ht_hashF( HashTableF ht, unsigned long sn ) {
     return sn % (ht->size_table);
 }
 
@@ -82,21 +78,13 @@ long int ht_hashF( HashTableF ht, unsigned long sn ) {
  *                  - For block - size parameter will contain the block size
  *                  - For File - size parameter will be -1
  */
-EntryF ht_newpairF(char *key){
+EntryF ht_newpairF(unsigned long key , Block_Info bi){
     EntryF newpair  = malloc(sizeof(*newpair));
     if(newpair == NULL){
-        printf("(HashTableF)--> Creating new pair - Allocation Error (1) \n");
         return NULL;
     }
-
-    newpair->key = malloc(sizeof(char)*(strlen(key)+1));
-    if(newpair->key == NULL){
-        printf("(HashTableF)--> Creating new pair - Allocation Error (2) \n");
-        free(newpair);
-        return NULL;
-    }
-    strcpy(newpair->key , key);
-    newpair->data = NULL;
+    newpair->key = key;
+    newpair->data = copy_block_info(bi);
     newpair->next = NULL;
     return newpair;
 }
@@ -104,26 +92,27 @@ EntryF ht_newpairF(char *key){
 /*
  * ht_set - Insert a key-value pair into a hash table.
  */
-EntryF ht_setF(HashTableF ht, char *key) {
+EntryF ht_setF(HashTableF ht, Block_Info bi) {
     EntryF newpair = NULL;
     EntryF next = NULL;
     EntryF last = NULL;
 
-    long int hash_key = ht_hashF( ht , key );
+    unsigned long key = bi->block_sn;
+    long int hash_key = ht_hashF( ht , key);
     next = ht->table[hash_key];
 
     /* Advance until get the end of the list OR first matching key*/
-    while( next != NULL && next->key != NULL && strcmp( key, next->key ) != 0 ) {
+    while( next != NULL && next->key != NULL && key != next->key ) {
         last = next;
         next = next->next;
     }
 
     /* There's already a pair. Let's replace that string. */
-    if( next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 ) {
+    if( next != NULL && next->key != NULL && key == next->key ) {
         //Return the pointer to the Block/File that already exists in the hash
         return next;
     } else { /* Nope, could't find it.  Time to grow a pair. */
-        newpair = ht_newpairF(key); //allocate new pair
+        newpair = ht_newpairF(key , bi); //allocate new pair
         if(newpair == NULL){
             printf("(HashTableF)--> Adding Pair to HT - Allocation Error (1) \n");
             return NULL;
@@ -148,17 +137,17 @@ EntryF ht_setF(HashTableF ht, char *key) {
 /*
  * ht_get - Retrieve pointer for block/file element with corresponding key in hash table.
  */
-DataF ht_getF(HashTableF ht, char *key ) {
+DataF ht_getF(HashTableF ht, unsigned long key ) {
     long int hash_key = ht_hashF(ht, key);
     EntryF pair = ht->table[hash_key];
 
     /* Step through the hash_key, looking for our value. */
-    while( pair != NULL && pair->key != NULL && strcmp( key, pair->key ) != 0 ) {
+    while( pair != NULL && pair->key != NULL && key != pair->key) {
         pair = pair->next;
     }
 
     /* Did we actually find anything? */
-    if( pair == NULL || pair->key == NULL || strcmp( key, pair->key ) != 0 ) {
+    if( pair == NULL || pair->key == NULL || key != pair->key ) {
         //didn't find anything
         return NULL;
 
@@ -182,7 +171,7 @@ void hashTableF_destroy(HashTableF ht){
             ht->table[i] = temp_to_free->next;
 
             // Destroy elements fields
-            free(temp_to_free->key);
+            free_block_info(temp_to_free->data);
             free(temp_to_free);
         }
         assert(ht->table[i]==NULL);
