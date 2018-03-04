@@ -147,24 +147,26 @@ int main() {
     }
 
     //TODO Build the tree hierarchy of the file systems
-    if(dedup_type[0] == 'B'){ //Block Level Deduplication
-        calculateDepthAndMergeFiles(roots_array, num_roots,
-                                    dirs_array, num_dir_objects,
-                                    files_array, num_file_objects,
-                                    blocks_array, num_block_objects,
-                                    physical_files_array, num_phys_file_objects,
-                                    'B' , goal_depth);
-    } else {//File Level Deduplication
-        calculateDepthAndMergeFiles(roots_array, num_roots,
-                                    dirs_array, num_dir_objects,
-                                    files_array, num_file_objects,
-                                    blocks_array, num_block_objects,
-                                    physical_files_array, num_phys_file_objects ,
-                                    'F' , goal_depth);
+
+/* ----------------- Define Output Directories and Files arrays -----------------  */
+    File* output_files_array = malloc(num_file_objects * sizeof(*output_files_array));
+    if(output_files_array == NULL){
+        return 0;
+    }
+    Dir* output_dirs_array = malloc(num_dir_objects * sizeof(*output_dirs_array));
+    if(output_dirs_array == NULL){
+        free(output_files_array);
+        return 0;
     }
 
-    //TODO Do The Heuristic Part
+    unsigned long output_files_idx = 0 , output_dirs_idx = 0;
 
+    /* ----------------- Define Output Directories and Files arrays -----------------  */
+
+    calculateDepthAndMergeFiles(roots_array, num_roots,
+    dirs_array, num_dir_objects, files_array,  num_file_objects,
+    blocks_array, num_block_objects, physical_files_array, num_phys_file_objects,
+    dedup_type[0], goal_depth, output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx);
 
     //TODO Save Output to File
 

@@ -168,7 +168,7 @@ File readFileLine(char* line , char* dedup_type){
         file = file_create(file_id ,file_sn , parent_dir_sn,
                            num_of_blocks , 0,
                            0 , 0,
-                           dedup_type , file_type);
+                           dedup_type[0] , file_type[0]);
 
         printf("F - %lu - %s - %lu \n" , file_sn , file_id , num_of_blocks);
 
@@ -191,7 +191,7 @@ File readFileLine(char* line , char* dedup_type){
             file = file_create(file_id ,file_sn , parent_dir_sn,
                                0 , num_of_files,
                                0 , 0,
-                               dedup_type , file_type);
+                               dedup_type[0] , file_type[0]);
 
             unsigned long logical_files_sn = 0;
             for(int i=0 ; i< num_of_files ; i++){
@@ -220,7 +220,7 @@ File readFileLine(char* line , char* dedup_type){
             file = file_create(file_id , file_sn , parent_dir_sn ,
                                num_of_blocks , 0 ,
                                size , physical_sn,
-                               dedup_type , file_type);
+                               dedup_type[0] , file_type[0]);
 
         }
     }
@@ -329,36 +329,17 @@ Dir readRootDirLine(char* line, char dir_type){
 /*
  *
  */
-void calculateDepthAndMergeFiles(Dir* roots_array, int num_roots,
-                                 Dir* dirs_array, unsigned long num_dirs,
-                                 File* files_array,  unsigned long num_files,
-                                 Block* blocks_array, unsigned long num_blocks,
-                                 File* physical_files_array, unsigned long num_physical_files,
-                                char dedup_type , int goal_depth){
-    /* ----------------- Define Output Directories and Files arrays -----------------  */
-    File* output_files_array = malloc(num_files * sizeof(*output_files_array));
-    if(output_files_array == NULL){
-        return;
+void merge_file_blocks(File merged_file , File file_to_insert){
+    for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
+        file_add_merged_block(merged_file , (file_to_insert->blocks_array)[i]);
     }
-    Dir* output_dirs_array = malloc(num_dirs * sizeof(*output_dirs_array));
-    if(output_dirs_array == NULL){
-        free(output_files_array);
-        return;
-    }
+}
 
-    unsigned long output_files_idx = 0 , output_dirs_idx = 0;
-
-    /* ----------------- Define Output Directories and Files arrays -----------------  */
-
-    for(int r = 0 ; r < num_roots ; r++){
-        //Set each roots depth to be 0
-        dir_set_depth(roots_array[r] , 0);
-        //TODO add root to output_dirs_array
-        update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs,
-                          files_array, num_files, blocks_array, num_blocks,
-                          physical_files_array, num_physical_files, output_files_array , &output_files_idx,
-                          output_dirs_array , &output_dirs_idx, dedup_type);
-    }
+/*
+ *
+ */
+void merge_file_physical_files(File merged_file , File file_to_insert){
+    file_add_merged_physical(merged_file , file_to_insert->physical_sn);
 }
 
 /*
@@ -375,32 +356,34 @@ void update_dir_values(Dir current_dir , int goal_depth,
     int current_depth = dir_get_depth(current_dir);
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
-    if(current_dir->num_of_dirs == 0){ //
-        if(current_dir->num_of_files == 0){
-            //add the current directory to output_dirs_array
-            output_dirs_array[*output_dirs_idx] = current_dir;
-            (*output_dirs_idx)++;
+    if(((Dir)current_dir)->num_of_subdirs == 0){ //
+        if(((Dir)current_dir)->num_of_files == 0){
             return;
         } else { //There are still some files in the directory
-            if((goal_depth - 1) >= current_depth){
+            if(current_depth <= (goal_depth - 1)){
                 // add all of the files to output_files_array
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++){
                     output_files_array[*output_files_idx] = files_array[(current_dir->files_array)[f]];
                     (*output_files_idx)++;
                 }
-            } else {
+
+//                if(current_depth == (goal_depth -1)){ //create
+//                    current_dir -> merged_file = dirs_array[current_dir->dir_sn]->merged_file;
+//                }
+            } else { // current_depth > (goal_depth -1)
                 //add all the file blocks to the merged file - meaning current_dir->mergedFile
                 assert(current_dir->merged_file);
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++){
-                    //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->mergedFile
-                    for(int i = 0 ; i < (files_array[(current_dir->files_array)[f]])->num_blocks ; i++){
-                        file_add_merged_block(current_dir->mergedFile ,
-                                              ((files_array[(current_dir->files_array)[f]])->blocks_array)[i]);
+                    //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
+                    if(dedup_type == 'B'){
+                        merge_file_blocks(current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
+                    } else {
+                        merge_file_physical_files(current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
                     }
 
                     //Destroy the file that was merged
-                    file_destroy(files_array[(current_dir->files_array)[f]]);
-                    files_array[(current_dir->files_array)[f]] = NULL;
+//                    file_destroy(files_array[(current_dir->files_array)[f]]);
+//                    files_array[(current_dir->files_array)[f]] = NULL;
                 }
 
             }
@@ -437,47 +420,46 @@ void update_dir_values(Dir current_dir , int goal_depth,
         }
     } else {//we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
-            //TODO create new merged file and save it to output_files_array
+            //create new merged file and save it to output_files_array
             if(dedup_type == 'B'){
-                current_dir->merged_file = file_create("a" , *output_dirs_idx , current_dir->dir_sn ,
+                current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
                                                        0 , 0 , 0 , 0 , 'B' , 'F');
             } else {
-                current_dir->merged_file = file_create("a" , *output_dirs_idx , current_dir->dir_sn ,
+                current_dir->merged_file = file_create("sarit_hadad_queen" , *output_files_idx , current_dir->dir_sn ,
                                                        0 , 0 , 0 , 0 , 'F' , 'L');
             }
-            output_dirs_array[*output_dirs_idx] = current_dir->merged_file;
-            (*output_dirs_idx)++;
+            output_files_array[*output_files_idx] = current_dir->merged_file;
+            (*output_files_idx)++;
 
 
         } else { //current_depth > (goal_depth - 1)
             //update the merged file pointer of the directory to be the one of the father
-            current_dir -> merged_file = dirs_array[current_dir->dir_sn]->merged_file;
+            current_dir->merged_file = (dirs_array[current_dir->dir_sn])->merged_file;
         }
 
         //merge all child file blocks to the merged file of the parent directory
         assert(current_dir->merged_file);
         for(int f = 0 ; f < current_dir->num_of_files  ; f++){
-            //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->mergedFile
-            for(int i = 0 ; i < (files_array[(current_dir->files_array)[f]])->num_blocks ; i++){
-                file_add_merged_block(current_dir->mergedFile ,
-                                      ((files_array[(current_dir->files_array)[f]])->blocks_array)[i]);
+            //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
+            if(dedup_type == 'B'){
+                merge_file_blocks(current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
+            } else {
+                merge_file_physical_files( current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
             }
-
             //Destroy the file that was merged
-            file_destroy(files_array[(current_dir->files_array)[f]]);
-            files_array[(current_dir->files_array)[f]] = NULL;
+//            file_destroy(files_array[(current_dir->files_array)[f]]);
+//            files_array[(current_dir->files_array)[f]] = NULL;
         }
-
-        //TODO update all directory depths
-        //TODO For each directory - call update_dir_values
-        for(int d = 0 ; d < current_dir->num_of_subdirs ; d++){
+        //update all directory depths
+        //For each directory - call update_dir_values
+        for(int j = 0 ; j < current_dir->num_of_subdirs ; j++){
             //update dir depth
-            dir_set_depth(dirs_array[(current_dir->dirs_array)[d]] ,(current_dir->depth + 1));
-
+            dir_set_depth(dirs_array[(current_dir->dirs_array)[j]] ,(current_dir->depth + 1));
+            (dirs_array[(current_dir->dirs_array)[j]])->merged_file = (dirs_array[current_dir->dir_sn])->merged_file;
             //TODO - free this directory from the array ????
 
             //For each directory - call update_dir_values
-            update_dir_values(dirs_array[(current_dir->dirs_array)[d]] ,goal_depth,
+            update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files,
                               blocks_array, num_blocks, physical_files_array, num_physical_files,
                               output_files_array , output_files_idx, output_dirs_array , output_dirs_idx, dedup_type);
@@ -485,5 +467,36 @@ void update_dir_values(Dir current_dir , int goal_depth,
         }
     }
 };
+
+/*
+ *
+ */
+void calculateDepthAndMergeFiles(Dir* roots_array, int num_roots,
+                                 Dir* dirs_array, unsigned long num_dirs,
+                                 File* files_array,  unsigned long num_files,
+                                 Block* blocks_array, unsigned long num_blocks,
+                                 File* physical_files_array, unsigned long num_physical_files,
+                                 char dedup_type , int goal_depth ,
+                                 File* output_files_array , unsigned long* output_files_idx ,
+                                 Dir* output_dirs_array , unsigned long* output_dirs_idx ){
+
+
+    for(int r = 0 ; r < num_roots ; r++){
+        //Set each roots depth to be 0
+        dir_set_depth(roots_array[r] , 0);
+        //add root to output_dirs_array
+        output_dirs_array[*output_dirs_idx] = roots_array[r];
+        (*output_dirs_idx)++;
+
+        update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs,
+                          files_array, num_files, blocks_array, num_blocks,
+                          physical_files_array, num_physical_files, output_files_array , output_files_idx,
+                          output_dirs_array , output_dirs_idx, dedup_type);
+    }
+}
+
+
+
+
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#include "Utilities.h"
 
 #define GROWTH_FACTOR 2
 #define INIT_SIZE 5007
@@ -78,13 +79,17 @@ unsigned long ht_hashF( HashTableF ht, unsigned long sn ) {
  *                  - For block - size parameter will contain the block size
  *                  - For File - size parameter will be -1
  */
-EntryF ht_newpairF(unsigned long key , Block_Info bi){
+EntryF ht_newpairF(unsigned long key , DataF bi , char flag){
     EntryF newpair  = malloc(sizeof(*newpair));
     if(newpair == NULL){
         return NULL;
     }
     newpair->key = key;
-    newpair->data = copy_block_info(bi);
+    if( flag == 'B'){
+        newpair->data = copy_block_info(bi);
+    } else { // it's file level
+        newpair->data = NULL;
+    }
     newpair->next = NULL;
     return newpair;
 }
@@ -92,27 +97,27 @@ EntryF ht_newpairF(unsigned long key , Block_Info bi){
 /*
  * ht_set - Insert a key-value pair into a hash table.
  */
-EntryF ht_setF(HashTableF ht, Block_Info bi) {
+EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag) {
     EntryF newpair = NULL;
     EntryF next = NULL;
     EntryF last = NULL;
 
-    unsigned long key = bi->block_sn;
+    //unsigned long key = bi->block_sn;
     long int hash_key = ht_hashF( ht , key);
     next = ht->table[hash_key];
 
     /* Advance until get the end of the list OR first matching key*/
-    while( next != NULL && next->key != NULL && key != next->key ) {
+    while( next != NULL && key != next->key ) {
         last = next;
         next = next->next;
     }
 
     /* There's already a pair. Let's replace that string. */
-    if( next != NULL && next->key != NULL && key == next->key ) {
+    if( next != NULL && key == next->key ) {
         //Return the pointer to the Block/File that already exists in the hash
         return next;
     } else { /* Nope, could't find it.  Time to grow a pair. */
-        newpair = ht_newpairF(key , bi); //allocate new pair
+        newpair = ht_newpairF(key , bi , flag); //allocate new pair
         if(newpair == NULL){
             printf("(HashTableF)--> Adding Pair to HT - Allocation Error (1) \n");
             return NULL;
@@ -142,12 +147,12 @@ DataF ht_getF(HashTableF ht, unsigned long key ) {
     EntryF pair = ht->table[hash_key];
 
     /* Step through the hash_key, looking for our value. */
-    while( pair != NULL && pair->key != NULL && key != pair->key) {
+    while( pair != NULL && key != pair->key) {
         pair = pair->next;
     }
 
     /* Did we actually find anything? */
-    if( pair == NULL || pair->key == NULL || key != pair->key ) {
+    if( pair == NULL || key != pair->key ) {
         //didn't find anything
         return NULL;
 
@@ -159,7 +164,7 @@ DataF ht_getF(HashTableF ht, unsigned long key ) {
 /*
  * ht_free - freeing all allocations of HashTable.
  */
-void hashTableF_destroy(HashTableF ht){
+void hashTableF_destroy(HashTableF ht , char flag){
     long num_of_elements = ht->num_of_elements;
     //long size_of_lists = 0;
     struct entryf_t* temp_to_free;
@@ -171,7 +176,9 @@ void hashTableF_destroy(HashTableF ht){
             ht->table[i] = temp_to_free->next;
 
             // Destroy elements fields
-            free_block_info(temp_to_free->data);
+            if(flag == 'B') {
+                free_block_info(temp_to_free->data);
+            }
             free(temp_to_free);
         }
         assert(ht->table[i]==NULL);

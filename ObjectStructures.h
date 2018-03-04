@@ -7,7 +7,7 @@
 
 #include "List.h"
 #include "HashTableF.h"
-#include "Utilities.h"
+//#include "Utilities.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -36,7 +36,7 @@ typedef struct block_t *Block;
  *            - file_id -> a hushed id as appears in the input file
  *            - file_depth -> the depth of the file in the hierarchical tree
  *            - dir_sn -> Serial number of the directory containing this file
- *            - num_blocks -> number of blocks the file consists of
+ *            - num_base_objects -> number of blocks the file consists of
  *            - file_size -> the size of the file
  *            - blocks_list -> List of Block_info elements of blocks contained in the file
  */
@@ -46,7 +46,7 @@ struct file_t{
     unsigned long file_sn;
     char* file_id;
     unsigned long dir_sn;
-    int num_blocks;
+    int num_base_objects;
     unsigned int file_size;
     unsigned long physical_sn;
 
@@ -59,7 +59,8 @@ struct file_t{
     unsigned long* files_array; // array of file serial number that share the same physical file
 
     //For the Merged File
-    HashTableF ht_blocks;
+    HashTableF ht_base_objects;
+
 };
 typedef struct file_t *File;
 
@@ -140,7 +141,7 @@ void print_block(Block block);
 File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
                  unsigned long num_of_blocks , unsigned long num_of_files,
                  unsigned int size , unsigned long physical_sn ,
-                 char* dedup_type , char* file_type);
+                 char dedup_type , char file_type);
 
 /*
  *  file_destroy - Destroys and frees space of a file structure
@@ -168,9 +169,9 @@ int file_get_depth(File file);
 void file_set_depth(File file, int depth);
 
 /*
- *  file_get_num_blocks - returns the number of blocks the file contains
+ *  file_get_num_base_objects - returns the number of blocks the file contains
  */
-int file_get_num_blocks(File file);
+int file_get_num_base_objects(File file);
 
 /*
  *
@@ -186,6 +187,18 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn);
  *
  */
 void print_file(File file);
+
+/*
+ *
+ */
+void file_add_merged_block(File file , Block_Info bi);
+
+/*
+ *
+ */
+void file_add_merged_physical(File file , unsigned long sn_of_physical);
+
+
 /* **************** END *************** File STRUCT Functions **************** END ***************** */
 /* *************** START *************** Directory STRUCT Functions *************** START *************** */
 

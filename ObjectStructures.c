@@ -105,7 +105,7 @@ void print_block(Block block){
 File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
                  unsigned long num_of_blocks , unsigned long num_of_files,
                  unsigned int size , unsigned long physical_sn ,
-                 char* dedup_type , char* file_type){
+                 char dedup_type , char file_type){
     File file = malloc(sizeof(*file));
     if(file == NULL){
         return NULL;
@@ -120,15 +120,15 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     file->file_id = strcpy(file->file_id , file_id);
     file->file_sn = file_sn;
 
-    file->ht_blocks = ht_createF();
-    if(file->ht_blocks == NULL){
+    file->ht_base_objects = ht_createF();
+    if(file->ht_base_objects == NULL){
         free(file->file_id);
         free(file);
         return NULL;
     }
-    if(strcmp(dedup_type , "B") == 0) { //Block level deduplication
+    if(dedup_type == 'B') { //Block level deduplication
         file->dir_sn = parent_dir_sn;
-        file->num_blocks = num_of_blocks;
+        file->num_base_objects = num_of_blocks;
         file->flag = 'F';
         file->blocks_array = malloc(num_of_blocks*sizeof(struct block_info));
         if(file->blocks_array == NULL){
@@ -138,7 +138,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             return NULL;
         }
     }else{
-        if(strcmp(file_type , "P") == 0) { //Physical File
+        if(file_type == 'P') { //Physical File
             file->shared_by_num_files = num_of_files;
             file->flag = 'P';
             file->files_array = calloc(num_of_files , sizeof(unsigned long));
@@ -150,7 +150,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             }
         }else{
             file->dir_sn = parent_dir_sn;
-            file->num_blocks = num_of_blocks;
+            file->num_base_objects = num_of_blocks;
             file->physical_sn = physical_sn;
             file->file_size = size;
             file->flag = 'L';
@@ -204,11 +204,11 @@ void file_set_depth(File file, int depth){
 }
 
 /*
- *  file_get_num_blocks - returns the number of blocks the file contains
+ *  file_get_num_base_objects - returns the number of blocks the file contains
  */
-int file_get_num_blocks(File file){
+int file_get_num_base_objects(File file){
     assert(file);
-    return file->num_blocks;
+    return file->num_base_objects;
 }
 
 /*
@@ -227,8 +227,8 @@ ErrorCode file_add_block(File file , unsigned long block_sn , int block_size){
     bi->block_sn =  block_sn;
     bi->size = block_size;
 
-    (file->blocks_array)[file->num_blocks] = bi;
-    (file->num_blocks)++;
+    (file->blocks_array)[file->num_base_objects] = bi;
+    (file->num_base_objects)++;
 
     return SUCCESS;
 }
@@ -252,9 +252,20 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn){
  */
 void file_add_merged_block(File file , Block_Info bi){
     assert(file);
+    //TODO check if first block and changed id to sarit_hadad_i
+    ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B');
+    (file->num_base_objects)++;
+    return;
+}
 
-    ht_setF(file->ht_blocks , bi);
-    (file->num_blocks)++;
+/*
+ *
+ */
+void file_add_merged_physical(File file , unsigned long sn_of_physical){
+    assert(file);
+    //TODO check if first physical file and changed id to sarit_hadad_i
+    ht_setF(file->ht_base_objects , sn_of_physical , NULL , 'F');
+    (file->num_base_objects)++;
     return;
 }
 
