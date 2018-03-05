@@ -1,43 +1,11 @@
 //
-// Created by Polina on 22-Feb-18.
+// Created by Polina on 05-Mar-18.
 //
 
-#ifndef DEDUPLICATIONPROJ_HEURISTIC_HASHTABLEF_H
-#define DEDUPLICATIONPROJ_HEURISTIC_HASHTABLEF_H
+
+#include "HashTable.h"
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-#include <assert.h>
-#include "Utilities.h"
-
-#define GROWTH_FACTOR 2
-#define INIT_SIZE 5007
-#define BLOCKS_IN_FILE_SIZE 300
-#define BLOCKS_INIT_SIZE 20000
-
-typedef void* DataF;
-
-struct entryf_t {
-    unsigned long key;
-    DataF data;
-    struct entryf_t *next;//Chain-hashing solution. ptr to the next element
-};
-typedef struct entryf_t *EntryF;
-
-struct hashtablef_t {
-    long size_table;
-    long num_of_elements;
-    EntryF *table; // array of pointers to Entries
-};
-typedef struct hashtablef_t *HashTableF;
-
-/* **************** END *************** HashTable Definition **************** END **************** */
-/* *********************************************************************************************** */
-/* *********************************************************************************************** */
-/* *************** START ************** HashTable Functions *************** START **************** */
 /* Create a new HashTable. */
 HashTableF ht_createF() {
     HashTableF ht = NULL;
@@ -186,6 +154,3 @@ void hashTableF_destroy(HashTableF ht , char flag){
     free(ht->table);
     free(ht);
 }
-
-
-#endif //DEDUPLICATIONPROJ_HEURISTIC_HASHTABLEF_H

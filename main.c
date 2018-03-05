@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "TextParsingUtilities.h"
 #define  OUTPUT_TYPE_CHAR_LOC 15
 #define  OUTPUT_NUM_FILE_OBJECTS_LOC 13
@@ -11,7 +9,7 @@ int main() {
     char dedup_type[2];
     dedup_type[1] = '\0';
     char* input_file_path;
-    char line[1024];
+    char line[MAX_LINE_LEN];
     int num_roots = 0;
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_block_objects = 0, num_phys_file_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, block_objects_cnt = 0, phys_file_objects_cnt = 0;
@@ -20,6 +18,10 @@ int main() {
     Dir* dirs_array = NULL;
     Dir* roots_array = NULL;
     Block* blocks_array = NULL;
+    char* tok = NULL;
+    char* tok1 = NULL;
+    char sep[2] = ":";
+    char sep1[2] = " ";
 
     int goal_depth = 2;
     /* ------------------------------------------ Define Variables ---------------------------------------- */
@@ -38,7 +40,7 @@ int main() {
     }
 
     //Read the Output type
-    fgets(line , 1024 , input_file);
+    fgets(line , MAX_LINE_LEN , input_file);
     if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
         dedup_type[0] = 'B';
     } else if (line[OUTPUT_TYPE_CHAR_LOC] == 'f'){
@@ -46,24 +48,34 @@ int main() {
     }
 
     //Get the number of files that were read - use the input file names line
-    fgets(line , 1024 , input_file);
+    fgets(line , MAX_LINE_LEN , input_file);
     num_roots = countRootsInInput(line);
     printf("%d\n" , num_roots);
 
     //Get the number of File objects in the input file
-    fgets(line , 1024 , input_file);
-    num_file_objects = line[OUTPUT_NUM_FILE_OBJECTS_LOC] - '0';
+    fgets(line , MAX_LINE_LEN , input_file);
+    tok = strtok(line , sep);
+    tok = strtok(NULL , sep); //get the number with leading space
+    num_file_objects = atol(tok);
+    printf("%lu \n" , num_file_objects);
 
     //Get the number of Directory objects in the input file
-    fgets(line , 1024 , input_file);
-    num_dir_objects = line[OUTPUT_NUM_DIR_OBJECTS_LOC] - '0';
+    fgets(line , MAX_LINE_LEN , input_file);
+    tok = strtok(line , sep);
+    tok = strtok(NULL , sep); //get the number with leading space
+    num_dir_objects = atol(tok);
+    printf("%lu \n" , num_dir_objects);
 
     //Get the number of Blocks/Physical Files objects in the input file
-    fgets(line , 1024 , input_file);
+    fgets(line , MAX_LINE_LEN , input_file);
+    tok = strtok(line , sep);
+    tok = strtok(NULL , sep);
     if(dedup_type[0] == 'B'){
-        num_block_objects = line[OUTPUT_NUM_BLOC_OBJECTS_LOC] - '0';
+        num_block_objects = atol(tok);
+        printf("%lu \n" , num_block_objects);
     }else{
-        num_phys_file_objects = line[OUTPUT_NUM_BLOC_OBJECTS_LOC] - '0';
+        num_phys_file_objects = atol(tok);
+        printf("%lu \n" , num_phys_file_objects);
     }
 
     //Allocate Arrays For Files, Block/Physical Files , Directories and roots
@@ -93,12 +105,13 @@ int main() {
     Dir res_dir = NULL;
     File res_file = NULL;
     Block res_block = NULL;
-    fgets(line , 1024 , input_file);
+    fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
         printf("%s" , line);
         switch(line[0]){
             case 'F':
                 res_file = readFileLine(line , dedup_type);
+                printf("SN : %lu , num_file_objects : %lu\n" , res_file->file_sn , num_file_objects);
                 files_array[res_file->file_sn] = res_file;
                 file_objects_cnt++;
                 break;
@@ -113,21 +126,21 @@ int main() {
                 phys_file_objects_cnt++;
                 break;
             case 'R':
-                res_dir = readRootDirLine(line , 'R');
+                res_dir = readDirLine(line , 'R');
                 roots_array[root_objects_cnt] = res_dir;
                 dirs_array[res_dir->dir_sn] = res_dir;
                 root_objects_cnt++;
                 dir_objects_cnt++;
                 break;
             case 'D':
-                res_dir = readRootDirLine(line , 'D');
+                res_dir = readDirLine(line , 'D');
                 dirs_array[res_dir->dir_sn] = res_dir;
                 dir_objects_cnt++;
                 break;
             default:
                 break;
         }
-        fgets(line , 1024 , input_file);
+        fgets(line , MAX_LINE_LEN , input_file);
     }
 
     //TODO Remove this prints later
@@ -169,6 +182,16 @@ int main() {
     dedup_type[0], goal_depth, output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx);
 
     //TODO Save Output to File
+
+    printf(" #-#-# The OUTPUT Files array #-#-# \n");
+    for( int i = 0 ; i < output_files_idx ; i++){
+        print_file((output_files_array[i]));
+    }
+
+    printf(" #-#-# The OUTPUT Directories array #-#-# \n");
+    for( int i = 0 ; i < output_dirs_idx ; i++){
+        print_dir((output_dirs_array[i]));
+    }
 
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */

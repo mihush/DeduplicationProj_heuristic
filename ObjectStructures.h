@@ -6,8 +6,7 @@
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 
 #include "List.h"
-#include "HashTableF.h"
-//#include "Utilities.h"
+#include "HashTable.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -236,10 +235,10 @@ unsigned int dir_get_depth(Dir dir);
 void dir_set_depth(Dir dir , int depth);
 
 /* Adding file into the directory */
-ErrorCode dir_add_file(Dir dir , unsigned long file_sn);
+ErrorCode dir_add_file(Dir dir , unsigned long file_sn , int idx);
 
 /* Adding sub_dir into the directory */
-ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn);
+ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn , int idx);
 
 /*
  *

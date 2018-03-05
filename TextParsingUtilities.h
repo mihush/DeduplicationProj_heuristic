@@ -26,7 +26,7 @@ ErrorCode readInputParams(char** input_file_path){
         return INVALID_INPUT;
     }
 
-    char line[1024];
+    char line[MAX_LINE_LEN];
     FILE* input_params_file = fopen("input_params.txt","r");
     if(input_params_file == NULL){ //check the file was opened successfully - if not terminate
         printf("(Parser)--> Can't open input file/s =[ \n");
@@ -34,7 +34,7 @@ ErrorCode readInputParams(char** input_file_path){
     }
 
     //Read First Line - Input File Path
-    fgets(line , 1024 , input_params_file);
+    fgets(line , MAX_LINE_LEN , input_params_file);
     *input_file_path = calloc(strlen(line) + 1 , sizeof(char));
     strcpy(*input_file_path , line);
 
@@ -164,23 +164,23 @@ File readFileLine(char* line , char* dedup_type){
         //reading num_blocks
         tok = strtok(NULL , sep);
         num_of_blocks = atol(tok);
-
+        printf(" -- %lu \n", num_of_blocks);
         file = file_create(file_id ,file_sn , parent_dir_sn,
                            num_of_blocks , 0,
                            0 , 0,
                            dedup_type[0] , file_type[0]);
 
-        printf("F - %lu - %s - %lu \n" , file_sn , file_id , num_of_blocks);
-
         unsigned long block_sn = 0;
         unsigned int block_size = 0;
-        for(int i=0 ; i< num_of_blocks ; i++){
+        for(int i = 0 ; i < num_of_blocks ; i++){
             tok = strtok(NULL , sep);
             block_sn = atol(tok);
+            printf("%lu " , block_sn);
             tok = strtok(NULL , sep);
             block_size = atoi(tok);
             file_add_block(file , block_sn , block_size);
         }
+        printf("\n");
 
     } else { //File level deduplication
         if(strcmp(file_type , "P") == 0){ //Physical File
@@ -255,7 +255,6 @@ Block readBlockLine(char* line){
 
     Block block = block_create(block_id , block_sn , block_size , num_of_files);
 
-    printf("B - %lu - %s - %lu \n" , block_sn , block_id , num_of_files);
     unsigned long file_sn = 0;
     for(int i=0 ; i<num_of_files ; i++){
         tok = strtok(NULL , sep);
@@ -273,7 +272,7 @@ Block readBlockLine(char* line){
  * @line - the line that represents a directory object to be parsed
  * @tile_type - could be either D for regular directory or R for Root directory
  */
-Dir readRootDirLine(char* line, char dir_type){
+Dir readDirLine(char* line, char dir_type){
     char* dir_id = NULL;
     unsigned int depth = 0;
     unsigned long dir_sn = 0;
@@ -305,22 +304,25 @@ Dir readRootDirLine(char* line, char dir_type){
 
     Dir directory = dir_create(dir_id , dir_sn , parent_dir_sn ,
                                 num_of_files , num_of_sub_dirs);
-    printf("D - %lu - %s - %lu - %lu\n" , dir_sn , dir_id , num_of_sub_dirs , num_of_files);
 
     //reading dir_sn
     unsigned long sub_dir_sn = 0;
-    for(int i=0 ; i<num_of_sub_dirs ; i++){
+    for(int i = 0 ; i < num_of_sub_dirs ; i++){
         tok = strtok(NULL , sep);
         sub_dir_sn = atol(tok);
-        //TODO add sub_dir to directory
+        printf("%lu\n" , sub_dir_sn);
+        //add sub_dir to directory
+        dir_add_sub_dir(directory ,sub_dir_sn , i);
     }
 
     //reading file_sn
     unsigned long sub_file_sn = 0;
-    for(int i=0 ; i<num_of_files  ; i++){
+    for(int i = 0 ; i < num_of_files  ; i++){
         tok = strtok(NULL , sep);
         sub_file_sn = atol(tok);
-        //TODO add file to directory
+        printf("%lu\n" , sub_file_sn);
+        //add file to directory
+        dir_add_file(directory , sub_file_sn , i);
     }
 
     return directory;
@@ -356,23 +358,37 @@ void update_dir_values(Dir current_dir , int goal_depth,
     int current_depth = dir_get_depth(current_dir);
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
-    if(((Dir)current_dir)->num_of_subdirs == 0){ //
-        if(((Dir)current_dir)->num_of_files == 0){
+    if(current_dir->num_of_subdirs == 0){ //
+        if(current_dir->num_of_files == 0){
+            printf("-------> No more file or directories ... \n");
             return;
         } else { //There are still some files in the directory
-            if(current_depth <= (goal_depth - 1)){
+            printf("-------> No more directories BUT there are files to process ... \n");
+            if(current_depth < (goal_depth - 1)){
                 // add all of the files to output_files_array
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++){
                     output_files_array[*output_files_idx] = files_array[(current_dir->files_array)[f]];
                     (*output_files_idx)++;
                 }
-
+                printf("---------> Haven't reached the goal depth - just save the files \n");
 //                if(current_depth == (goal_depth -1)){ //create
 //                    current_dir -> merged_file = dirs_array[current_dir->dir_sn]->merged_file;
 //                }
-            } else { // current_depth > (goal_depth -1)
+            } else { // current_depth >= (goal_depth -1)
                 //add all the file blocks to the merged file - meaning current_dir->mergedFile
+                if(current_depth == (goal_depth -1)){ //Create merged file
+                    if(dedup_type == 'B'){
+                        current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
+                                                               0 , 0 , 0 , 0 , 'B' , 'F');
+                    } else {
+                        current_dir->merged_file = file_create("sarit_hadad_queen" , *output_files_idx , current_dir->dir_sn ,
+                                                               0 , 0 , 0 , 0 , 'F' , 'L');
+                    }
+                    output_files_array[*output_files_idx] = current_dir->merged_file;
+                    (*output_files_idx)++;
+                }
                 assert(current_dir->merged_file);
+                printf("---------> Reached the goal depth merge the files into directory no.%lu \n" , current_dir->dir_sn);
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++){
                     //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
                     if(dedup_type == 'B'){
@@ -380,7 +396,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
                     } else {
                         merge_file_physical_files(current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
                     }
-
                     //Destroy the file that was merged
 //                    file_destroy(files_array[(current_dir->files_array)[f]]);
 //                    files_array[(current_dir->files_array)[f]] = NULL;
@@ -391,9 +406,12 @@ void update_dir_values(Dir current_dir , int goal_depth,
         }
     }
 
+    printf("----> Updating values for directory : %lu \n" , current_dir->dir_sn);
     //CALCULATE RECURSION
     // Get Here ONLY if we have dirs to process !!!!!!!!!
     if(current_depth < (goal_depth - 1)){ //we HAVEN'T Reached the desired depth
+        printf("------> Current dir depth %d < %d (goal depth) \n" , current_dir->depth , (goal_depth -1));
+
         //add all of the files to output_files_array
         for(int f = 0 ; f < current_dir->num_of_files  ; f++){
             output_files_array[*output_files_idx] = files_array[(current_dir->files_array)[f]];
@@ -404,6 +422,11 @@ void update_dir_values(Dir current_dir , int goal_depth,
         //Add all of the directories to the output_dirs_array
         //For each directory - call update_dir_values
         for(int d = 0 ; d < current_dir->num_of_subdirs ; d++){
+            printf(" -- >Current Subdir : %lu \n" ,dirs_array[(current_dir->dirs_array)[d]]->dir_sn);
+
+            if((current_dir->dirs_array)[d] == current_dir->dir_sn){
+                continue;
+            }
             //update dir depth
             dir_set_depth(dirs_array[(current_dir->dirs_array)[d]] ,(current_dir->depth + 1));
 
@@ -412,6 +435,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
             (*output_dirs_idx)++;
 
             //For each directory - call update_dir_values
+
             update_dir_values(dirs_array[(current_dir->dirs_array)[d]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files,
                               blocks_array, num_blocks, physical_files_array, num_physical_files,
@@ -420,6 +444,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
         }
     } else {//we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
+            printf("------> Current dir depth %d = %d (goal depth) \n" , current_dir->depth , (goal_depth -1));
             //create new merged file and save it to output_files_array
             if(dedup_type == 'B'){
                 current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
@@ -433,6 +458,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
 
 
         } else { //current_depth > (goal_depth - 1)
+            printf("------> Current dir depth %d > %d (goal depth) \n" , current_dir->depth , (goal_depth -1));
             //update the merged file pointer of the directory to be the one of the father
             current_dir->merged_file = (dirs_array[current_dir->dir_sn])->merged_file;
         }
@@ -459,6 +485,9 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //TODO - free this directory from the array ????
 
             //For each directory - call update_dir_values
+            if((current_dir->dirs_array)[j] == current_dir->dir_sn){
+                continue;
+            }
             update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files,
                               blocks_array, num_blocks, physical_files_array, num_physical_files,
@@ -480,14 +509,16 @@ void calculateDepthAndMergeFiles(Dir* roots_array, int num_roots,
                                  File* output_files_array , unsigned long* output_files_idx ,
                                  Dir* output_dirs_array , unsigned long* output_dirs_idx ){
 
-
+    printf("Let's Start Building the tree ..... \n");
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
         dir_set_depth(roots_array[r] , 0);
+
         //add root to output_dirs_array
         output_dirs_array[*output_dirs_idx] = roots_array[r];
         (*output_dirs_idx)++;
 
+        printf("-->Updating values for directory : %lu \n" , roots_array[r]->dir_sn);
         update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs,
                           files_array, num_files, blocks_array, num_blocks,
                           physical_files_array, num_physical_files, output_files_array , output_files_idx,

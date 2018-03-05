@@ -35,7 +35,7 @@ typedef enum{
 #define ROOT_ID_LEN 8
 #define FILE_NAME_LEN 5
 #define NUM_OF_INPUT_FILE 208
-
+#define MAX_LINE_LEN 15000
 /* **************** START **************** object_info struct **************** START **************** */
 
 ///*

@@ -373,23 +373,21 @@ void dir_set_depth(Dir dir , int depth){
 }
 
 /* Adding file into the directory */
-ErrorCode dir_add_file(Dir dir , unsigned long file_sn){
+ErrorCode dir_add_file(Dir dir , unsigned long file_sn , int idx){
     if(dir == NULL || file_sn < 0){
         return INVALID_INPUT;
     }
-    (dir->files_array)[dir->num_of_files] = file_sn;
-    (dir->num_of_files)++;
+    (dir->files_array)[idx] = file_sn;
 
     return SUCCESS;
 }
 
 /* Adding sub_dir into the directory */
-ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn){
+ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn ,int idx){
     if(dir == NULL || dir_sn < 0){
         return INVALID_INPUT;
     }
-    (dir->files_array)[dir->num_of_subdirs] = dir_sn;
-    (dir->num_of_subdirs)++;
+    (dir->dirs_array)[idx] = dir_sn;
 
     return SUCCESS;
 }
@@ -397,6 +395,18 @@ ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn){
 void print_dir(Dir dir){
     assert(dir);
     printf("## Directory : %lu \n" , dir->dir_sn);
+    printf("- num_of_files : %lu \n" , dir->num_of_files);
+//    for(int i = 0 ; i < dir->num_of_files ; i++){
+//        printf("%lu - ", (dir->files_array)[i]);
+//    }
+//    printf("\n");
+    printf("- num_of_subdirs : %lu \n" , dir->num_of_subdirs);
+//    for(int i = 0 ; i < dir->num_of_subdirs ; i++){
+//        printf("%lu - ", (dir->dirs_array)[i]);
+//    }
+//    printf("\n");
+
+
 }
 /* **************** END **************** Directory STRUCT Functions **************** END **************** */
 /* ****************************************** Function Declarations ******************************************** */
