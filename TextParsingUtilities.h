@@ -145,10 +145,10 @@ File readFileLine(char* line , char* dedup_type){
     // reading the file_sn
     tok = strtok(NULL , sep);
     file_sn = atol(tok);
-
+    printf(" -- file_sn - %lu \n", file_sn);
     // reading the file_id
     file_id = strtok(NULL , sep);
-
+    printf(" -- file_id - %s \n", file_id);
 
     //Block Level
     // F - file_sn     - file_id     - dir_sn    - num_blocks - block1_sn - block1_size - block2_sn - block2_size ....
@@ -160,16 +160,17 @@ File readFileLine(char* line , char* dedup_type){
         //reading parent_sir_sn
         tok = strtok(NULL , sep);
         parent_dir_sn = atol(tok);
-
+        printf(" -- parent_dir - %lu \n", parent_dir_sn);
         //reading num_blocks
         tok = strtok(NULL , sep);
         num_of_blocks = atol(tok);
-        printf(" -- %lu \n", num_of_blocks);
+        printf(" -- num_blocks --  %lu \n", num_of_blocks);
+
         file = file_create(file_id ,file_sn , parent_dir_sn,
                            num_of_blocks , 0,
                            0 , 0,
                            dedup_type[0] , file_type[0]);
-
+        printf(" -- blocks list -- \n");
         unsigned long block_sn = 0;
         unsigned int block_size = 0;
         for(int i = 0 ; i < num_of_blocks ; i++){
@@ -178,7 +179,7 @@ File readFileLine(char* line , char* dedup_type){
             printf("%lu " , block_sn);
             tok = strtok(NULL , sep);
             block_size = atoi(tok);
-            file_add_block(file , block_sn , block_size);
+            file_add_block(file , block_sn , block_size , i);
         }
         printf("\n");
 
@@ -194,10 +195,10 @@ File readFileLine(char* line , char* dedup_type){
                                dedup_type[0] , file_type[0]);
 
             unsigned long logical_files_sn = 0;
-            for(int i=0 ; i< num_of_files ; i++){
+            for(int i = 0 ; i < num_of_files ; i++){
                 tok = strtok(NULL , sep);
                 logical_files_sn = atol(tok);
-                file_add_logical_file(file , logical_files_sn);
+                file_add_logical_file(file , logical_files_sn , i);
             }
 
         } else { //Logical File

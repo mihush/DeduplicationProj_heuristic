@@ -1,17 +1,10 @@
-
-/********************** ~Includes~ **********************/
-
+/* **************************************************** INCLUDES **************************************************** */
 #include "ObjectStructures.h"
+/* **************************************************** INCLUDES **************************************************** */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ******************* START ******************* Block STRUCT Functions ******************* START ******************* */
 
-///* ****************** START ****************** Block STRUCT Functions ****************** START ****************** */
-
-/*
- *  blockCreate - Creates a new Block with:
- *           - a given serial number
- *           - a hashed id
- *           - creates an empty files list
- *           - zeros the counter that contains the amount of files sharing this block
- */
 Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size ,
                    unsigned short shared_by_num_files){
     Block block = malloc(sizeof(*block)); //create a block
@@ -39,9 +32,6 @@ Block block_create(char* block_id , unsigned long block_sn , unsigned int block_
     return block;
 }
 
-/*
- *  block_destroy - Destroys and frees space of a block structure
- */
 void block_destroy(Block block){
     assert(block);
     free(block->block_id);
@@ -49,25 +39,16 @@ void block_destroy(Block block){
     free(block);
 }
 
-/*
- *  block_get_SN - returns the SN of the block
- */
 long block_get_SN(Block block){
     assert(block);
     return block->block_sn;
 }
 
-/*
- *  block_get_ID - Returns the hashed id of the block
- */
 char* block_get_ID(Block block){
     assert(block);
     return block->block_id;
 }
 
-/*
- *  block_add_file - adds the file containing the block to the files list saved in the block
- */
 ErrorCode block_add_file(Block block , unsigned long file_sn){
     if(block == NULL){ //Check input is valid
         return INVALID_INPUT;
@@ -81,7 +62,7 @@ ErrorCode block_add_file(Block block , unsigned long file_sn){
 
 void print_block(Block block){
     assert(block);
-    printf("## Block : %lu\n" , block->block_sn);
+    printf("# ------- Block : %lu ------- #\n" , block->block_sn);
     printf("        id : %s\n" , block->block_id);
     printf("      size : %d\n" , block->block_size);
     printf(" num_files : %d\n" , block->shared_by_num_files);
@@ -92,16 +73,14 @@ void print_block(Block block){
             printf("%lu - ", block->files_array[i]);
         }
     }
+    printf("# ------------------------- #\n");
 }
-/* *************** START ************** File STRUCT Functions *************** START **************** */
-/*
- *  file_create - Creates a new file object with:
- *                      - file id - a hashed id as appears in the input file
- *                      - depth
- *                      -file sn - running index on all files in the filesystem
- *                      - dir sn
- *
- */
+
+/* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ******************* START ******************* File STRUCT Functions ******************* START ******************** */
+
 File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
                  unsigned long num_of_blocks , unsigned long num_of_files,
                  unsigned int size , unsigned long physical_sn ,
@@ -132,7 +111,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
         file->flag = 'F';
         file->blocks_array = malloc(num_of_blocks*sizeof(struct block_info));
         if(file->blocks_array == NULL){
-            //TODO Destroy ht_blocks
             free(file->file_id);
             free(file);
             return NULL;
@@ -143,7 +121,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             file->flag = 'P';
             file->files_array = calloc(num_of_files , sizeof(unsigned long));
             if(file->files_array == NULL){
-                //TODO Destroy ht_blocks
                 free(file->file_id);
                 free(file);
                 return NULL;
@@ -160,9 +137,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     return file;
 }
 
-/*
- *  file_destroy - Destroys and frees space of a file structure
- */
 void file_destroy(File file){
     assert(file);
     free(file->file_id);
@@ -174,25 +148,16 @@ void file_destroy(File file){
     free(file);
 }
 
-/*
- *  file_get_SN - returns the SN of the file
- */
 unsigned long file_get_SN(File file){
     assert(file);
     return file->file_sn;
 }
 
-/*
- * file_get_ID - returns the hashed ID of the file
- */
 char* file_get_ID(File file){
     assert(file);
     return file->file_id;
 }
 
-/*
- *  file_get_depth - returns the depth of the file in the hierarchy
- */
 int file_get_depth(File file){
     assert(file);
     return file->depth;
@@ -203,53 +168,43 @@ void file_set_depth(File file, int depth){
     file->depth = depth;
 }
 
-/*
- *  file_get_num_base_objects - returns the number of blocks the file contains
- */
 int file_get_num_base_objects(File file){
     assert(file);
     return file->num_base_objects;
 }
 
-/*
- *
- */
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size){
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, int idx){
     if(file == NULL || block_size < 0){
+        printf("!!1\n");
         return INVALID_INPUT;
     }
 
     Block_Info bi = malloc(sizeof(*bi));
     if(bi == NULL){
+        printf("!!2\n");
         return OUT_OF_MEMORY;
     }
 
     bi->block_sn =  block_sn;
     bi->size = block_size;
 
-    (file->blocks_array)[file->num_base_objects] = bi;
-    (file->num_base_objects)++;
+    (file->blocks_array)[idx] = bi;
 
     return SUCCESS;
 }
 
-/*
- *
- */
-ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn){
+ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx){
     if(file == NULL){
         return INVALID_INPUT;
     }
 
-    (file->files_array)[file->shared_by_num_files] = logical_files_sn;
+    (file->files_array)[idx] = logical_files_sn;
     (file->shared_by_num_files)++;
 
     return SUCCESS;
 }
 
-/*
- *
- */
+
 void file_add_merged_block(File file , Block_Info bi){
     assert(file);
     //TODO check if first block and changed id to sarit_hadad_i
@@ -258,9 +213,6 @@ void file_add_merged_block(File file , Block_Info bi){
     return;
 }
 
-/*
- *
- */
 void file_add_merged_physical(File file , unsigned long sn_of_physical){
     assert(file);
     //TODO check if first physical file and changed id to sarit_hadad_i
@@ -269,26 +221,26 @@ void file_add_merged_physical(File file , unsigned long sn_of_physical){
     return;
 }
 
-/*
- *
- */
 void print_file(File file){
     assert(file);
     if(file->flag == 'F'){
-        printf("## File : %lu\n" , file->file_sn);
+        printf("# ------- File : %lu ------- #\n" , file->file_sn);
     } else if (file->flag == 'P'){
-        printf("## Physical File : %lu \n", file->file_sn);
+        printf("# ------- Physical File : %lu ------- #\n", file->file_sn);
     } else if(file->flag == 'L'){
-        printf("## Logical File : %lu \n", file->file_sn);
+        printf("# ------- Logical File : %lu ------- #\n", file->file_sn);
     }
+    printf("         id : %s\n" , file->file_id);
+    printf(" num_blocks : %d\n" , file->num_base_objects);
+    printf(" parent_dir : %lu\n" , file->dir_sn);
+    printf("# ------------------------- #\n");
 }
-/* *************** START *************** Directory STRUCT Functions *************** START *************** */
-/*
- * dir_create - Creates a new Directory object with:
- *                      - dir_id
- *                      - dir_sn
- *                      - depth
- */
+
+/* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ****************** START ****************** Directory STRUCT Functions ****************** START ****************** */
+
 Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn ,
                unsigned long num_of_files , unsigned long num_of_sub_dirs){
     Dir dir = malloc(sizeof(*dir));
@@ -328,10 +280,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     return dir;
 }
 
-
-/*
- * dir_destroy - Destroy struct of Directory
- */
 void dir_destroy(Dir dir){
     assert(dir);
     free(dir->dir_id);
@@ -340,33 +288,21 @@ void dir_destroy(Dir dir){
     free(dir);
 }
 
-/*
- * dir_get_SN - Return the sn of directory
- */
 unsigned long dir_get_SN(Dir dir){
     assert(dir);
     return dir->dir_sn;
 }
 
-/*
- * dir_get_ID - Return the ID of directory
- */
 char* dir_get_ID(Dir dir){
     assert(dir);
     return dir->dir_id;
 }
 
-/*
- * dir_get_depth - Return the depth of the directory
- */
 unsigned int dir_get_depth(Dir dir){
     assert(dir);
     return dir->depth;
 }
 
-/*
- * dir_set_depth - updates the depth of the directory
- */
 void dir_set_depth(Dir dir , int depth){
     assert(dir);
     dir->depth = depth;
@@ -394,21 +330,20 @@ ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn ,int idx){
 
 void print_dir(Dir dir){
     assert(dir);
-    printf("## Directory : %lu \n" , dir->dir_sn);
+    printf("# ------- : %lu \n ------- #" , dir->dir_sn);
     printf("- num_of_files : %lu \n" , dir->num_of_files);
-//    for(int i = 0 ; i < dir->num_of_files ; i++){
-//        printf("%lu - ", (dir->files_array)[i]);
-//    }
-//    printf("\n");
+    for(int i = 0 ; i < dir->num_of_files ; i++){
+        printf("%lu - ", (dir->files_array)[i]);
+    }
+    printf("\n");
     printf("- num_of_subdirs : %lu \n" , dir->num_of_subdirs);
-//    for(int i = 0 ; i < dir->num_of_subdirs ; i++){
-//        printf("%lu - ", (dir->dirs_array)[i]);
-//    }
-//    printf("\n");
-
+    for(int i = 0 ; i < dir->num_of_subdirs ; i++){
+        printf("%lu - ", (dir->dirs_array)[i]);
+    }
+    printf("\n");
+    printf("# ------------------------- #\n");
 
 }
-/* **************** END **************** Directory STRUCT Functions **************** END **************** */
-/* ****************************************** Function Declarations ******************************************** */
+/* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 
 //#endif //DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H

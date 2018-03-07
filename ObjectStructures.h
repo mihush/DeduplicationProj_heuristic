@@ -4,14 +4,17 @@
 
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
-
+/* **************************************************** INCLUDES **************************************************** */
 #include "List.h"
 #include "HashTable.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
+/* **************************************************** INCLUDES **************************************************** */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ***************** START ****************** Structure Object Definitions ****************** START ***************** */
 /*
  * Definition of a block structure:
  *            - block_sn -> a running index on all blocks read from the file system
@@ -92,8 +95,10 @@ struct dir_t{
     File merged_file;
 };
 typedef struct dir_t *Dir;
-
-/* ****************************************** Function Declarations ******************************************** */
+/* ****************** END ******************* Structure Object Definitions ******************* END ****************** */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ******************* START ******************* Block STRUCT Functions ******************* START ******************* */
 /*
  *  blockCreate - Creates a new Block with:
  *                      - a given serial number
@@ -128,7 +133,12 @@ ErrorCode block_add_file(Block block , unsigned long file_sn);
  *
  */
 void print_block(Block block);
-/* *************** START ************** File STRUCT Functions *************** START **************** */
+
+/* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ******************* START ******************* File STRUCT Functions ******************* START ******************** */
+
 /*
  *  file_create - Creates a new file object with:
  *                      - file id - a hashed id as appears in the input file
@@ -175,12 +185,12 @@ int file_get_num_base_objects(File file);
 /*
  *
  */
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size);
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size , int idx);
 
 /*
  *
  */
-ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn);
+ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx);
 
 /*
  *
@@ -197,9 +207,10 @@ void file_add_merged_block(File file , Block_Info bi);
  */
 void file_add_merged_physical(File file , unsigned long sn_of_physical);
 
-
-/* **************** END *************** File STRUCT Functions **************** END ***************** */
-/* *************** START *************** Directory STRUCT Functions *************** START *************** */
+/* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
+/* ****************************************************************************************************************** */
+/* ****************************************************************************************************************** */
+/* ****************** START ****************** Directory STRUCT Functions ****************** START ****************** */
 
 /*
  * dir_create - Creates a new Directory object with:
@@ -244,7 +255,7 @@ ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn , int idx);
  *
  */
 void print_dir(Dir dir);
-/* **************** END **************** Directory STRUCT Functions **************** END **************** */
-/* ****************************************** Function Declarations ******************************************** */
+
+/* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
