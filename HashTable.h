@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "Utilities.h"
 
 #define GROWTH_FACTOR 2
@@ -42,7 +43,7 @@ typedef struct hashtablef_t *HashTableF;
 HashTableF ht_createF();
 unsigned long ht_hashF(HashTableF ht, unsigned long sn);
 EntryF ht_newpairF(unsigned long key , DataF bi , char flag);
-EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag);
+EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag , bool* object_exists);
 DataF ht_getF(HashTableF ht, unsigned long key );
 void hashTableF_destroy(HashTableF ht , char flag);
 

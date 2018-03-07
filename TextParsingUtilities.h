@@ -337,7 +337,7 @@ Dir readDirLine(char* line, char dir_type){
  */
 void merge_file_blocks(File merged_file , File file_to_insert){
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
-        file_add_merged_block(merged_file , (file_to_insert->blocks_array)[i]);
+        file_add_merged_block(merged_file , (file_to_insert->blocks_array)[i] , file_to_insert->file_id);
     }
 }
 
@@ -348,7 +348,7 @@ void merge_file_blocks(File merged_file , File file_to_insert){
  *  @file_to_insert - ...
  */
 void merge_file_physical_files(File merged_file , File file_to_insert){
-    file_add_merged_physical(merged_file , file_to_insert->physical_sn);
+    file_add_merged_physical(merged_file , file_to_insert->physical_sn , file_to_insert->file_id);
 }
 
 /*
@@ -439,6 +439,8 @@ void update_dir_values(Dir current_dir , int goal_depth,
         //add all of the files to output_files_array
         for(int f = 0 ; f < current_dir->num_of_files  ; f++){
             output_files_array[*output_files_idx] = files_array[(current_dir->files_array)[f]];
+            //TODO Update sn in the directory files array
+            //TODO Go over all blocks of the file and update their file sn
             (*output_files_idx)++;
         }
 

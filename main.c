@@ -21,9 +21,7 @@ int main() {
     Block* blocks_array = NULL;
     char input_files_list[MAX_LINE_LEN] ;
     char* tok = NULL;
-    char* tok1 = NULL;
     char sep[2] = ":";
-    char sep1[2] = " ";
 
     int goal_depth = 2;
 
@@ -205,38 +203,45 @@ int main() {
     // Open the output file
     results_file = fopen(output_file_name , "w+");
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , heurisitc_runtime,
-                            num_file_objects , 0 , num_dir_objects , 0);
+                            num_file_objects , output_files_idx , num_dir_objects , output_dirs_idx);
 
     //Print Files to Output CSV
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){
-        print_file((output_files_array[i]));
+        //print_file((output_files_array[i]));
+        printf("%lu\n" ,output_files_array[i]->file_sn);
         print_file_to_csv(output_files_array[i] , temp_output_line);
+        fprintf(results_file , temp_output_line);
+        memset(temp_output_line , 0 , sizeof(temp_output_line));
     }
 
     if(dedup_type[0] == 'B'){
         //Print Blocks to output CSV
         for(int i = 0 ; i < num_block_objects ; i++){
-            print_block(blocks_array[i]);
+            //print_block(blocks_array[i]);
+            printf("%lu\n" , blocks_array[i]->block_sn);
             print_block_to_csv(blocks_array[i] , temp_output_line);
+            fprintf(results_file , temp_output_line);
+            memset(temp_output_line , 0 , sizeof(temp_output_line));
         }
     } else {
         //Print Physical files to output CSV
         for(int i = 0 ; i < num_phys_file_objects ; i++){
-            print_file(physical_files_array[i]);
+            //print_file(physical_files_array[i]);
             print_file_to_csv(physical_files_array[i] , temp_output_line);
+            fprintf(results_file , temp_output_line);
+            memset(temp_output_line , 0 , sizeof(temp_output_line));
         }
     }
 
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
-        print_dir(output_dirs_array[i]);
+        //print_dir(output_dirs_array[i]);
         print_dir_to_cvs(output_dirs_array[i] , temp_output_line , 'D');
+        fprintf(results_file , temp_output_line);
+        memset(temp_output_line , 0 , sizeof(temp_output_line));
     }
-
-
-
 
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */

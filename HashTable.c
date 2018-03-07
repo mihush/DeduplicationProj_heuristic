@@ -65,7 +65,7 @@ EntryF ht_newpairF(unsigned long key , DataF bi , char flag){
 /*
  * ht_set - Insert a key-value pair into a hash table.
  */
-EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag) {
+EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag , bool* object_exists) {
     EntryF newpair = NULL;
     EntryF next = NULL;
     EntryF last = NULL;
@@ -83,6 +83,7 @@ EntryF ht_setF(HashTableF ht, unsigned long key , DataF bi , char flag) {
     /* There's already a pair. Let's replace that string. */
     if( next != NULL && key == next->key ) {
         //Return the pointer to the Block/File that already exists in the hash
+        *object_exists = true;
         return next;
     } else { /* Nope, could't find it.  Time to grow a pair. */
         newpair = ht_newpairF(key , bi , flag); //allocate new pair

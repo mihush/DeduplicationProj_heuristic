@@ -24,7 +24,7 @@ typedef enum{
 #define DIR_NAME_LEN 11
 #define DIR_NAME_HASH 10
 #define BLOCK_ID_LEN 13
-#define FILE_ID_LEN 22
+#define FILE_ID_LEN 30
 #define BUFFER_SIZE 255
 #define LETTERS_CHAR 48
 #define LINE_SPACE 10

@@ -12,7 +12,7 @@ Block block_create(char* block_id , unsigned long block_sn , unsigned int block_
         return NULL;
     }
 
-    block->block_id = malloc(sizeof(char)*(BLOCK_ID_LEN + 1)); //allocate string for block_id
+    block->block_id = calloc((BLOCK_ID_LEN + 1), sizeof(char)); //allocate string for block_id
     if(block->block_id == NULL){ //check successful allocation
         free(block);
         return NULL;
@@ -80,8 +80,7 @@ void print_block_to_csv(Block block , char* output_line){
     assert(block);
     char temp[100];
     sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
-    //Print all file serial numbers the block belongs to
-    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+    for(int i = 0 ; i < block->shared_by_num_files ; i++){ //Print all file serial numbers the block belongs to
         sprintf(temp , "%lu," , (block->files_array)[i]);
         strcat(output_line , temp);
     }
@@ -103,7 +102,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->depth = -1;
 
-    file->file_id = malloc(sizeof(char)* (FILE_ID_LEN + 1));
+    file->file_id = calloc((FILE_ID_LEN + 1) , sizeof(char));
     if(file->file_id == NULL){
         free(file);
         return NULL;
@@ -216,20 +215,37 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int
     return SUCCESS;
 }
 
-
-void file_add_merged_block(File file , Block_Info bi){
+void file_add_merged_block(File file , Block_Info bi , char* file_id){
     assert(file);
-    //TODO check if first block and changed id to sarit_hadad_i
-    ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B');
-    (file->num_base_objects)++;
+    bool object_exists = false;
+    ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B', &object_exists);
+    if(object_exists == false){ //Check if block exists already - do not increase counter
+        (file->num_base_objects)++;
+    }
+    //Check if first physical file and changed id
+    if(file->num_base_objects == 1){
+        char new_file_id[FILE_ID_LEN];
+        sprintf(new_file_id , "MF_");
+        strcat(new_file_id , file_id);
+        strcpy(file->file_id , new_file_id);
+    }
     return;
 }
 
-void file_add_merged_physical(File file , unsigned long sn_of_physical){
+void file_add_merged_physical(File file , unsigned long sn_of_physical , char* file_id){
     assert(file);
-    //TODO check if first physical file and changed id to sarit_hadad_i
-    ht_setF(file->ht_base_objects , sn_of_physical , NULL , 'F');
-    (file->num_base_objects)++;
+    bool object_exists = false;
+    ht_setF(file->ht_base_objects , sn_of_physical , NULL , 'F', &object_exists);
+    if(object_exists == false){ //Check if block exists already - do not increase counter
+        (file->num_base_objects)++;
+    }
+    //Check if first physical file and changed id
+    if(file->num_base_objects == 1){
+        char new_file_id[FILE_ID_LEN];
+        sprintf(new_file_id , "MF_");
+        strcat(new_file_id , file_id);
+        strcpy(file->file_id , new_file_id);
+    }
     return;
 }
 
@@ -255,10 +271,11 @@ void print_file_to_csv(File file, char* output_line){
 
     if(file_type == 'F'){
         sprintf(output_line , "F,%lu,%s,%lu,%d,",file->file_sn,file->file_id,file->dir_sn,file->num_base_objects);
-        for(int i = 0 ; i < file->num_base_objects ; i++){
-            sprintf(temp , "%lu,%d" , ((file->blocks_array)[i])->block_sn , ((file->blocks_array)[i])->size);
-            strcat(output_line , temp);
-        }
+        //TODO differntiate between merged file and original
+//        for(int i = 0 ; i < file->num_base_objects ; i++){
+//            sprintf(temp , "%lu,%d" , ((file->blocks_array)[i])->block_sn , ((file->blocks_array)[i])->size);
+//            strcat(output_line , temp);
+//        }
     } else if(file_type == 'P'){
         sprintf(output_line , "P,%lu,%s,%d,", file->physical_sn,file->file_id ,file->shared_by_num_files);
         for(int i = 0 ; i < file->shared_by_num_files ; i++){
@@ -380,10 +397,21 @@ void print_dir(Dir dir){
 
 }
 
-void print_dir_to_cvs(Dir dir , char* output_line , char dir_type){
+void print_dir_to_cvs(Dir dir , char* output_line){
     assert(dir);
     char temp[100];
-    //TODO Determine if root or not
+    //Determine if root or not
+    char dir_type = 'Z';
+    if(dir->dir_sn == dir->parent_dir_sn){ //It's root directory
+        dir_type = 'R';
+    } else { // It's a regular directory
+        dir_type = 'D';
+    }
+
+    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type,
+            dir->dir_sn, dir->dir_id, dir->parent_dir_sn,
+            dir->num_of_subdirs, dir->num_of_files);
+
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 

@@ -7,6 +7,7 @@
 /* **************************************************** INCLUDES **************************************************** */
 #include "List.h"
 #include "HashTable.h"
+#include "Utilities.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -29,6 +30,8 @@ struct block_t{
     unsigned int block_size;
     unsigned int shared_by_num_files;
     unsigned long* files_array;
+    //TODO unsigned long* new_files_array;
+    //TODO int idx_of_running_blocks;
 };
 typedef struct block_t *Block;
 
@@ -51,7 +54,7 @@ struct file_t{
     int num_base_objects;
     unsigned int file_size;
     unsigned long physical_sn;
-    //TODO add merged flage
+    //TODO add merged flag
 
     //For Block level deduplication
     Block_Info* blocks_array;
@@ -251,18 +254,20 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int
 /*
  *  file_add_merged_block - ...
  *
- *  @file - Pointer to the file object
- *  @bi   - ...
+ *  @file    - Pointer to the file object
+ *  @bi      - ...
+ *  @file_id - ...
  */
-void file_add_merged_block(File file , Block_Info bi);
+void file_add_merged_block(File file , Block_Info bi , char* file_id);
 
 /*
  *  file_add_merged_physical - ...
  *
  *  @file            - Pointer to the file object
  *  @sn_of_physical  - ...
+ *  @file_id         - ...
  */
-void file_add_merged_physical(File file , unsigned long sn_of_physical);
+void file_add_merged_physical(File file , unsigned long sn_of_physical , char* file_id);
 
 /*
  *  print_file - ....
@@ -367,9 +372,8 @@ void print_dir(Dir dir);
  *
  *  @dir         -  Pointer to the directory object structure to be printed
  *  @output_line - ...
- *  @dir_type    - ...
  */
-void print_dir_to_cvs(Dir dir , char* output_line , char dir_type);
+void print_dir_to_cvs(Dir dir , char* output_line);
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
