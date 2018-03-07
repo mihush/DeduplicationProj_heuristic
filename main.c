@@ -192,6 +192,7 @@ int main() {
                                                                     ((double)(tv_end.tv_sec - tv_start.tv_sec)));
 
     //TODO Save Output to File
+    char temp_output_line[MAX_LINE_LEN];
     //Open the Output File
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
@@ -210,19 +211,31 @@ int main() {
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){
         print_file((output_files_array[i]));
+        print_file_to_csv(output_files_array[i] , temp_output_line);
+    }
 
+    if(dedup_type[0] == 'B'){
+        //Print Blocks to output CSV
+        for(int i = 0 ; i < num_block_objects ; i++){
+            print_block(blocks_array[i]);
+            print_block_to_csv(blocks_array[i] , temp_output_line);
+        }
+    } else {
+        //Print Physical files to output CSV
+        for(int i = 0 ; i < num_phys_file_objects ; i++){
+            print_file(physical_files_array[i]);
+            print_file_to_csv(physical_files_array[i] , temp_output_line);
+        }
     }
 
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
-        print_dir((output_dirs_array[i]));
+        print_dir(output_dirs_array[i]);
+        print_dir_to_cvs(output_dirs_array[i] , temp_output_line , 'D');
     }
 
-    //Print Blocks to output CSV
-    for(int i = 0 ; i < num_block_objects ; i++){
 
-    }
 
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
