@@ -76,6 +76,18 @@ void print_block(Block block){
     printf("# ------------------------- #\n");
 }
 
+void print_block_to_csv(Block block , char* output_line){
+    assert(block);
+    char temp[100];
+    sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
+    //Print all file serial numbers the block belongs to
+    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+        sprintf(temp , "%lu," , (block->files_array)[i]);
+        strcat(output_line , temp);
+    }
+    strcat(output_line , "\n");
+}
+
 /* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
@@ -236,6 +248,29 @@ void print_file(File file){
     printf("# ------------------------- #\n");
 }
 
+void print_file_to_csv(File file, char* output_line){
+    assert(file);
+    char temp[100];
+    char file_type = file->flag;
+
+    if(file_type == 'F'){
+        sprintf(output_line , "F,%lu,%s,%lu,%d,",file->file_sn,file->file_id,file->dir_sn,file->num_base_objects);
+        for(int i = 0 ; i < file->num_base_objects ; i++){
+            sprintf(temp , "%lu,%d" , ((file->blocks_array)[i])->block_sn , ((file->blocks_array)[i])->size);
+            strcat(output_line , temp);
+        }
+    } else if(file_type == 'P'){
+        sprintf(output_line , "P,%lu,%s,%d,", file->physical_sn,file->file_id ,file->shared_by_num_files);
+        for(int i = 0 ; i < file->shared_by_num_files ; i++){
+            sprintf(temp , "%lu," , (file->files_array)[i]);
+            strcat(output_line , temp);
+        }
+    } else if(file_type == 'L'){
+        sprintf(output_line , "F,%lu,%s,%lu,%d,%lu,%d,\n",file->file_sn, file->file_id , file->dir_sn, 1, file->physical_sn, file->file_size);
+        //TODO Take care of merged files
+    }
+    strcat(output_line , "\n");
+}
 /* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
@@ -343,6 +378,12 @@ void print_dir(Dir dir){
     printf("\n");
     printf("# ------------------------- #\n");
 
+}
+
+void print_dir_to_cvs(Dir dir , char* output_line , char dir_type){
+    assert(dir);
+    char temp[100];
+    //TODO Determine if root or not
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 

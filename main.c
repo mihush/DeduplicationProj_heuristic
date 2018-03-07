@@ -1,8 +1,9 @@
 #include "TextParsingUtilities.h"
+#include <sys/time.h>
+
+
 #define  OUTPUT_TYPE_CHAR_LOC 15
-#define  OUTPUT_NUM_FILE_OBJECTS_LOC 13
-#define  OUTPUT_NUM_DIR_OBJECTS_LOC 19
-#define  OUTPUT_NUM_BLOC_OBJECTS_LOC 14
+
 
 int main() {
     /* ------------------------------------------ Define Variables ----------------------------------------- */
@@ -18,12 +19,16 @@ int main() {
     Dir* dirs_array = NULL;
     Dir* roots_array = NULL;
     Block* blocks_array = NULL;
+    char input_files_list[MAX_LINE_LEN] ;
     char* tok = NULL;
     char* tok1 = NULL;
     char sep[2] = ":";
     char sep1[2] = " ";
 
     int goal_depth = 2;
+
+    struct timeval tv_start,tv_end;
+    double heurisitc_runtime = 0;
     /* ------------------------------------------ Define Variables ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
     /* -------------------------------------- Read Global Parameters -------------------------------------- */
@@ -48,8 +53,8 @@ int main() {
     }
 
     //Get the number of files that were read - use the input file names line
-    fgets(line , MAX_LINE_LEN , input_file);
-    num_roots = countRootsInInput(line);
+    fgets(input_files_list , MAX_LINE_LEN , input_file);
+    num_roots = countRootsInInput(input_files_list);
     printf("%d\n" , num_roots);
 
     //Get the number of File objects in the input file
@@ -159,9 +164,9 @@ int main() {
         print_block((blocks_array[i]));
     }
 
-    //TODO Build the tree hierarchy of the file systems
-
-/* ----------------- Define Output Directories and Files arrays -----------------  */
+    //Build the tree hierarchy of the file systems
+    gettimeofday(&tv_start, NULL);
+    /* ----------------- Define Output Directories and Files arrays -----------------  */
     File* output_files_array = malloc(num_file_objects * sizeof(*output_files_array));
     if(output_files_array == NULL){
         return 0;
@@ -181,16 +186,42 @@ int main() {
     blocks_array, num_block_objects, physical_files_array, num_phys_file_objects,
     dedup_type[0], goal_depth, output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx);
 
-    //TODO Save Output to File
+    gettimeofday(&tv_end, NULL);
+    //Calculate Total runtime of the heuristic part in seconds
+    heurisitc_runtime = ((((double)(tv_end.tv_usec - tv_start.tv_usec))/1000000) +
+                                                                    ((double)(tv_end.tv_sec - tv_start.tv_sec)));
 
+    //TODO Save Output to File
+    //Open the Output File
+    FILE *results_file = NULL;
+    char* output_file_name = calloc(777 , sizeof(char));
+    strcpy(output_file_name , "Heuristic_Results_");
+    if( dedup_type[0] == 'B'){
+        strcat(output_file_name , "_B.csv");
+    } else {
+        strcat(output_file_name , "_F.csv");
+    }
+    // Open the output file
+    results_file = fopen(output_file_name , "w+");
+    print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , heurisitc_runtime,
+                            num_file_objects , 0 , num_dir_objects , 0);
+
+    //Print Files to Output CSV
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){
         print_file((output_files_array[i]));
+
     }
 
+    //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
         print_dir((output_dirs_array[i]));
+    }
+
+    //Print Blocks to output CSV
+    for(int i = 0 ; i < num_block_objects ; i++){
+
     }
 
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */
@@ -199,6 +230,8 @@ int main() {
     /* -------------------------------------- Free all allocated Data ------------------------------------- */
     free(input_file_path);
     fclose(input_file);
+    fclose(results_file);
+
     err = freeStructuresArrays(files_array , physical_files_array , dirs_array , blocks_array,
                                num_file_objects , num_dir_objects , num_block_objects,
                                num_phys_file_objects ,dedup_type);
