@@ -96,12 +96,13 @@ void print_block_to_csv(Block block , char* output_line){
 File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
                  unsigned long num_of_blocks , unsigned long num_of_files,
                  unsigned int size , unsigned long physical_sn ,
-                 char dedup_type , char file_type){
+                 char dedup_type , char file_type , bool isMerged){
     File file = malloc(sizeof(*file));
     if(file == NULL){
         return NULL;
     }
     file->depth = -1;
+    file->isMergedF = isMerged;
 
     file->file_id = malloc(sizeof(char)* (FILE_ID_LEN + 1));
     if(file->file_id == NULL){
@@ -190,16 +191,13 @@ ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, in
         printf("!!1\n");
         return INVALID_INPUT;
     }
-
     Block_Info bi = malloc(sizeof(*bi));
     if(bi == NULL){
         printf("!!2\n");
         return OUT_OF_MEMORY;
     }
-
     bi->block_sn =  block_sn;
     bi->size = block_size;
-
     (file->blocks_array)[idx] = bi;
 
     return SUCCESS;
@@ -309,7 +307,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
         free(dir);
         return NULL;
     }
-
     dir->merged_file = NULL;
 
     return dir;

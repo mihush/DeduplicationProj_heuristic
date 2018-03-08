@@ -131,10 +131,8 @@ File readFileLine(char* line , char* dedup_type){
     unsigned long file_sn = 0;
     unsigned long parent_dir_sn = 0;
     unsigned int size = 0;
-
     unsigned long num_of_blocks = 0;
     unsigned long num_of_files = 0;
-
     unsigned long physical_sn = 0;
 
     char* tok = NULL;
@@ -169,7 +167,7 @@ File readFileLine(char* line , char* dedup_type){
         file = file_create(file_id ,file_sn , parent_dir_sn,
                            num_of_blocks , 0,
                            0 , 0,
-                           dedup_type[0] , file_type[0]);
+                           dedup_type[0] , file_type[0] , false);
         printf(" -- blocks list -- \n");
         unsigned long block_sn = 0;
         unsigned int block_size = 0;
@@ -192,7 +190,7 @@ File readFileLine(char* line , char* dedup_type){
             file = file_create(file_id ,file_sn , parent_dir_sn,
                                0 , num_of_files,
                                0 , 0,
-                               dedup_type[0] , file_type[0]);
+                               dedup_type[0] , file_type[0] , false);
 
             unsigned long logical_files_sn = 0;
             for(int i = 0 ; i < num_of_files ; i++){
@@ -221,7 +219,7 @@ File readFileLine(char* line , char* dedup_type){
             file = file_create(file_id , file_sn , parent_dir_sn ,
                                num_of_blocks , 0 ,
                                size , physical_sn,
-                               dedup_type[0] , file_type[0]);
+                               dedup_type[0] , file_type[0] , false);
 
         }
     }
@@ -392,6 +390,8 @@ void update_dir_values(Dir current_dir , int goal_depth,
                 // add all of the files to output_files_array
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++){
                     output_files_array[*output_files_idx] = files_array[(current_dir->files_array)[f]];
+                    //TODO - update the sn of the inserted file .
+                    //TODO - update correspondly the file_sn at each block contain this file
                     (*output_files_idx)++;
                 }
                 printf("---------> Haven't reached the goal depth - just save the files \n");
@@ -403,10 +403,10 @@ void update_dir_values(Dir current_dir , int goal_depth,
                 if(current_depth == (goal_depth -1)){ //Create merged file
                     if(dedup_type == 'B'){
                         current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
-                                                               0 , 0 , 0 , 0 , 'B' , 'F');
+                                                               0 , 0 , 0 , 0 , 'B' , 'F' , true);
                     } else {
-                        current_dir->merged_file = file_create("sarit_hadad_queen" , *output_files_idx , current_dir->dir_sn ,
-                                                               0 , 0 , 0 , 0 , 'F' , 'L');
+                        current_dir->merged_file = file_create("sarit_hadad_queenF" , *output_files_idx , current_dir->dir_sn ,
+                                                               0 , 0 , 0 , 0 , 'F' , 'L' , true);
                     }
                     output_files_array[*output_files_idx] = current_dir->merged_file;
                     (*output_files_idx)++;
@@ -472,10 +472,10 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //create new merged file and save it to output_files_array
             if(dedup_type == 'B'){
                 current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
-                                                       0 , 0 , 0 , 0 , 'B' , 'F');
+                                                       0 , 0 , 0 , 0 , 'B' , 'F' , true);
             } else {
                 current_dir->merged_file = file_create("sarit_hadad_queen" , *output_files_idx , current_dir->dir_sn ,
-                                                       0 , 0 , 0 , 0 , 'F' , 'L');
+                                                       0 , 0 , 0 , 0 , 'F' , 'L' , true);
             }
             output_files_array[*output_files_idx] = current_dir->merged_file;
             (*output_files_idx)++;
@@ -524,7 +524,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
 /*
  *  calculateDepthAndMergeFiles - ...
  *
- *
  * @roots_array          - ...
  * @num_roots           - ...
  * @dirs_array           - ...
@@ -557,6 +556,7 @@ void calculateDepthAndMergeFiles(Dir* roots_array, int num_roots,
         dir_set_depth(roots_array[r] , 0);
 
         //add root to output_dirs_array
+        //TODO - update the dir_sn from a global param
         output_dirs_array[*output_dirs_idx] = roots_array[r];
         (*output_dirs_idx)++;
 
@@ -580,7 +580,7 @@ void print_output_csv_header(FILE* results_file , char dedup_type , char* input_
         fprintf(results_file ,"# Output type: file-level\n");
     }
 
-    fprintf(results_file , "%s" , input_files_list);
+    fprintf(results_file ,"%s" , input_files_list);
     fprintf(results_file ,"# Target Level: %d\n" , goal_depth);
     fprintf(results_file ,"# Run Time: %f\n",run_time);
     fprintf(results_file ,"# Memory Usage: ... \n"); //TODO find a way
