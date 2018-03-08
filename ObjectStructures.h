@@ -54,7 +54,7 @@ struct file_t{
     int num_base_objects;
     unsigned int file_size;
     unsigned long physical_sn;
-    //TODO add merged flag
+    bool isMergedF;//TODO add merged flage
 
     //For Block level deduplication
     Block_Info* blocks_array;
@@ -188,7 +188,7 @@ void print_block_to_csv(Block block , char* output_line);
 File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
                  unsigned long num_of_blocks , unsigned long num_of_files,
                  unsigned int size , unsigned long physical_sn ,
-                 char dedup_type , char file_type);
+                 char dedup_type , char file_type , bool isMerged);
 
 /*
  *  file_destroy - Destroys and frees space of a file structure
