@@ -218,6 +218,7 @@ void file_add_merged_block(File file , Block_Info bi , char* file_id){
     bool object_exists = false;
     ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B', &object_exists);
     if(object_exists == false){ //Check if block exists already - do not increase counter
+        //Update SNS list of a block
         (file->num_base_objects)++;
     }
     //Check if first physical file and changed id
