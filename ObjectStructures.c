@@ -429,7 +429,6 @@ void print_dir(Dir dir){
     }
     printf("\n");
     printf("# ------------------------- #\n");
-
 }
 
 void print_dir_to_cvs(Dir dir , char* output_line){
