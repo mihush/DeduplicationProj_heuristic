@@ -30,8 +30,8 @@ struct block_t{
     unsigned int block_size;
     unsigned int shared_by_num_files;
     unsigned long* files_array;
-    //TODO unsigned long* new_files_array;
-    //TODO int idx_of_running_blocks;
+    unsigned long* files_array_updated;
+    unsigned long* output_updated_idx;
 };
 typedef struct block_t *Block;
 
@@ -57,7 +57,8 @@ struct file_t{
     bool isMergedF;
 
     //For Block level deduplication
-    Block_Info* blocks_array;
+    Block* blocks_array;
+    unsigned long ind_blocks;
 
     //For File level deduplication
     //Physical File - P flag
@@ -145,7 +146,9 @@ char* block_get_ID(Block block);
  *  @block   - pointer to the block structure to which we want to add the file
  *  @file_sn - the serial number of the file that contains the block
  */
-ErrorCode block_add_file(Block block , unsigned long file_sn);
+//ErrorCode block_add_file(Block block , unsigned long file_sn);
+ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long file_sn);
+
 
 /*
  *  print_block - Prints the data saved in the block structure
@@ -258,7 +261,7 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int
  *  @bi      - ...
  *  @file_id - ...
  */
-void file_add_merged_block(File file , Block_Info bi , char* file_id);
+void file_add_merged_block(File file , Block block , char* file_id);
 
 /*
  *  file_add_merged_physical - ...

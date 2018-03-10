@@ -345,7 +345,7 @@ int main() {
                 file_objects_cnt++;
                 break;
             case 'B':
-                res_block = readBlockLine(line);
+                res_block = readBlockLine(line , files_array);
                 blocks_array[res_block->block_sn] = res_block;
                 block_objects_cnt++;
                 break;
@@ -464,7 +464,7 @@ int main() {
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
         //print_dir(output_dirs_array[i]);
-        print_dir_to_cvs(output_dirs_array[i] , temp_output_line , 'D');
+        print_dir_to_cvs(output_dirs_array[i] , temp_output_line );
         fprintf(results_file , temp_output_line);
         memset(temp_output_line , 0 , sizeof(temp_output_line));
     }

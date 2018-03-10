@@ -23,12 +23,20 @@ Block block_create(char* block_id , unsigned long block_sn , unsigned int block_
     block->shared_by_num_files = 0;
     block->block_size = block_size;
 
-    block->files_array = calloc(shared_by_num_files , sizeof(unsigned long));
-    if(block->files_array == NULL){
+//    block->files_array = calloc(shared_by_num_files , sizeof(unsigned long));
+    block->files_array_updated = calloc(shared_by_num_files , sizeof(unsigned long));
+//    if(block->files_array == NULL){
+//        free(block->block_id);
+//        free(block);
+//        return NULL;
+//    }
+    if(block->files_array_updated == NULL){
+        free(block->files_array);
         free(block->block_id);
         free(block);
         return NULL;
     }
+    block->output_updated_idx = 0;
     return block;
 }
 
@@ -49,13 +57,24 @@ char* block_get_ID(Block block){
     return block->block_id;
 }
 
-ErrorCode block_add_file(Block block , unsigned long file_sn){
-    if(block == NULL){ //Check input is valid
+//ErrorCode block_add_file(Block block , unsigned long file_sn){
+//    if(block == NULL){ //Check input is valid
+//        return INVALID_INPUT;
+//    }
+//
+//    (block->files_array)[block->shared_by_num_files] = file_sn;
+//    (block->shared_by_num_files)++;
+//
+//    return SUCCESS;
+//}
+
+ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long file_sn){
+    if(block == NULL || files_array == NULL){ //Check input is valid
         return INVALID_INPUT;
     }
-
-    (block->files_array)[block->shared_by_num_files] = file_sn;
-    (block->shared_by_num_files)++;
+    assert(files_array[file_sn]->ind_blocks< files_array[file_sn]->num_base_objects );
+    files_array[file_sn]->blocks_array[(files_array[file_sn]->ind_blocks)] = block;
+    (files_array[file_sn]->ind_blocks)++;
 
     return SUCCESS;
 }
@@ -80,8 +99,9 @@ void print_block_to_csv(Block block , char* output_line){
     assert(block);
     char temp[100];
     sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
-    for(int i = 0 ; i < block->shared_by_num_files ; i++){ //Print all file serial numbers the block belongs to
-        sprintf(temp , "%lu," , (block->files_array)[i]);
+    //Print all file serial numbers the block belongs to
+    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+        sprintf(temp , "%lu," , (block->files_array_updated)[i]);
         strcat(output_line , temp);
     }
     strcat(output_line , "\n");
@@ -121,7 +141,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
         file->dir_sn = parent_dir_sn;
         file->num_base_objects = num_of_blocks;
         file->flag = 'F';
-        file->blocks_array = malloc(num_of_blocks*sizeof(struct block_info));
+        file->blocks_array = malloc(num_of_blocks*sizeof(Block));
         if(file->blocks_array == NULL){
             free(file->file_id);
             free(file);
@@ -165,6 +185,21 @@ unsigned long file_get_SN(File file){
     return file->file_sn;
 }
 
+//void file_set_SN(File file , char* new_sn){
+//    assert(file);
+//    if(!file){
+//        return;
+//    }
+//    free(file->file_sn);
+//
+//    file->file_id = malloc(sizeof(char)* (FILE_ID_LEN + 3));
+//    if(file->file_id == NULL){
+//        free(file);
+//        return;
+//    }
+//    file->file_id = strcpy(file->file_id , new_sn);
+//}
+
 char* file_get_ID(File file){
     assert(file);
     return file->file_id;
@@ -185,22 +220,22 @@ int file_get_num_base_objects(File file){
     return file->num_base_objects;
 }
 
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, int idx){
-    if(file == NULL || block_size < 0){
-        printf("!!1\n");
-        return INVALID_INPUT;
-    }
-    Block_Info bi = malloc(sizeof(*bi));
-    if(bi == NULL){
-        printf("!!2\n");
-        return OUT_OF_MEMORY;
-    }
-    bi->block_sn =  block_sn;
-    bi->size = block_size;
-    (file->blocks_array)[idx] = bi;
-
-    return SUCCESS;
-}
+//ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, int idx){
+//    if(file == NULL || block_size < 0){
+//        printf("!!1\n");
+//        return INVALID_INPUT;
+//    }
+//    Block_Info bi = malloc(sizeof(*bi));
+//    if(bi == NULL){
+//        printf("!!2\n");
+//        return OUT_OF_MEMORY;
+//    }
+//    bi->block_sn =  block_sn;
+//    bi->size = block_size;
+//    (file->blocks_array)[idx] = bi;
+//
+//    return SUCCESS;
+//}
 
 ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx){
     if(file == NULL){
@@ -213,11 +248,14 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int
     return SUCCESS;
 }
 
-void file_add_merged_block(File file , Block_Info bi , char* file_id){
+void file_add_merged_block(File file , Block bi , char* file_id){
     assert(file);
     bool object_exists = false;
     ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B', &object_exists);
     if(object_exists == false){ //Check if block exists already - do not increase counter
+        // Update correspondly file_sn at each block contain this file.
+        bi->files_array_updated[*(bi->output_updated_idx)] = file->file_sn;
+        (*(bi->output_updated_idx))++;
         (file->num_base_objects)++;
     }
     //Check if first physical file and changed id
@@ -397,18 +435,7 @@ void print_dir(Dir dir){
 void print_dir_to_cvs(Dir dir , char* output_line){
     assert(dir);
     char temp[100];
-    //Determine if root or not
-    char dir_type = 'Z';
-    if(dir->dir_sn == dir->parent_dir_sn){ //It's root directory
-        dir_type = 'R';
-    } else { // It's a regular directory
-        dir_type = 'D';
-    }
-
-    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type,
-            dir->dir_sn, dir->dir_id, dir->parent_dir_sn,
-            dir->num_of_subdirs, dir->num_of_files);
-
+    //TODO Determine if root or not
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 
