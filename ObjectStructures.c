@@ -435,7 +435,18 @@ void print_dir(Dir dir){
 void print_dir_to_cvs(Dir dir , char* output_line){
     assert(dir);
     char temp[100];
-    //TODO Determine if root or not
+    //Determine if root or not
+    char dir_type = 'Z';
+    if(dir->dir_sn == dir->parent_dir_sn){ //It's root directory
+        dir_type = 'R';
+    } else { // It's a regular directory
+        dir_type = 'D';
+    }
+
+    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type,
+            dir->dir_sn, dir->dir_id, dir->parent_dir_sn,
+            dir->num_of_subdirs, dir->num_of_files);
+
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 
