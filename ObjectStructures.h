@@ -54,7 +54,7 @@ struct file_t{
     int num_base_objects;
     unsigned int file_size;
     unsigned long physical_sn;
-    bool isMergedF;//TODO add merged flage
+    bool isMergedF;
 
     //For Block level deduplication
     Block_Info* blocks_array;
