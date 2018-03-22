@@ -1,6 +1,7 @@
 //
-// Created by Polina on 22-Feb-18.
+// Created by Polina on 08-Dec-17.
 //
+
 /*----------------- includes & Defines -----------------*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@ typedef struct node {
 //List structure with list functions
 struct List_t {
     Node first;
+    Node last;
     Node iterator;
     CopyListElement copyElement;
     FreeListElement freeElement;
@@ -25,12 +27,9 @@ struct List_t {
 
 /* ---------- STATIC FUNCTION DECLARATIONS ------------ */
 
-static int indexOfMax(ListElement* array, int lengthOfArray, CompareListElements compareElement);
-static void maxSort(ListElement* a, int n, CompareListElements compareElement);
 static int listGetIndexOfIterator(List list);
 static void destroyNodes(Node toDestroy, FreeListElement freeFunction);
 static Node nodeCreate(ListElement data, CopyListElement copyFunction);
-static Node listGetNodeBeforeIterator(List list);
 
 /* ----END---- STATIC FUNCTION DECLARATIONS ----END---- */
 
@@ -47,6 +46,7 @@ List listCreate(CopyListElement copyElement, FreeListElement freeElement) {
     newList->copyElement = copyElement;
     newList->freeElement = freeElement;
     newList->first = NULL;
+    newList->last = NULL;
     newList->iterator = NULL;
     return newList;
 }
@@ -57,13 +57,6 @@ void listDestroy(List list) {
     }
     destroyNodes(list->first, list->freeElement);
     free(list);
-}
-ListResult listRestartIterator(List list) {
-    if (!list) {
-        return LIST_NULL_ARGUMENT;
-    }
-    list->iterator = list->first;
-    return LIST_SUCCESS;
 }
 
 List listCopy(List list) {
@@ -99,33 +92,6 @@ List listCopy(List list) {
     return copyList;
 }
 
-List listFilter(List list, FilterListElement filterElement, ListFilterKey key) {
-    //Check for invalid arguments
-    if (!list || !filterElement || !key) {
-        return NULL;
-    }
-    List filtered = listCreate(list->copyElement, list->freeElement);
-    if (!filtered) {
-        return NULL;
-    }
-    ListResult addResult;
-    Node iterator = list->first;
-    //check all nodes to see if they fit the key
-    //if they do, add them to the filtered list
-    while (iterator) {
-        if (filterElement(iterator->data, key)) {
-            addResult = listInsertLast(filtered, iterator->data);
-            if (addResult != LIST_SUCCESS) {
-                listDestroy(filtered);
-                return NULL;
-            }
-        }
-        iterator = iterator->next;
-    }
-    filtered->iterator = filtered->first;
-    return filtered;
-}
-
 int listGetSize(List list) {
     //Check for invalid arguments
     if (list == NULL) {
@@ -151,6 +117,18 @@ ListElement listGetFirst(List list) {
         return NULL;
     }
     return list->first->data;
+}
+
+ListElement listGetLast(List list) {
+    //Check for invalid arguments
+    if (!list) {
+        return NULL;
+    }
+    list->iterator = list->last;
+    if (!list->iterator || !list->iterator->data) {
+        return NULL;
+    }
+    return list->last->data;
 }
 
 ListElement listGetNext(List list) {
@@ -187,6 +165,11 @@ ListResult listInsertFirst(List list, ListElement element) {
     newNode->next = list->first;
     //and set the first node in the list as the new node
     list->first = newNode;
+    //if we insert the first element
+    //update also the last to point on this element
+    if(!list->last){
+        list->last = list->first;
+    }
     return LIST_SUCCESS;
 }
 
@@ -195,141 +178,31 @@ ListResult listInsertLast(List list, ListElement element) {
     if (!list || !element) {
         return LIST_NULL_ARGUMENT;
     }
-    //if first node is null the list is empty so enter new node as first
-    Node iterator = list->first;
-    if (!iterator) {
-        return listInsertFirst(list, element);
-    }
-    //move to the next until the next node is null
-    while (iterator->next) {
-        iterator = iterator->next;
-    }
-    //set the next node, which is null, to be the new node
-    iterator->next = nodeCreate(element, list->copyElement);
-    if (!iterator->next) {
+    //create a new node for insertion in the end
+    Node newNode = nodeCreate(element, list->copyElement);
+    if (!newNode) {
         return LIST_OUT_OF_MEMORY;
     }
-    return LIST_SUCCESS;
-}
-
-ListResult listInsertBeforeCurrent(List list, ListElement element) {
-    //Check for invalid arguments
-    if (list == NULL || element == NULL) {
-        return LIST_NULL_ARGUMENT;
-    }
-    if (!list->iterator) {
-        return LIST_INVALID_CURRENT;
-    }
-    int indexOfIterator = listGetIndexOfIterator(list);
-
-    //if indexOfIterator = 0 then the current node is the first
-    if (indexOfIterator == INDEX_OF_FIRST) {
-        ListResult InsertResult = listInsertFirst(list, element);
-        if (InsertResult != LIST_SUCCESS) {
-            return InsertResult;
+    //if we insert the first element
+    if(!list->first && !list->last){
+        //set next node of new node to the first node of list
+        newNode->next = NULL;
+        //and set the first node in the list as the new node
+        list->last = newNode;
+        list->first = list->last;
+    } else { //one or more elements
+        if(!list->last){ //sanity check we don't try to go to NULL arg
+            return LIST_NULL_ARGUMENT;
         }
-    } else {
-        Node nodeBefore = listGetNodeBeforeIterator(list);
-        Node newNode = nodeCreate(element, list->copyElement);
-        if (!newNode) {
-            return LIST_OUT_OF_MEMORY;
-        }
-        newNode->next = list->iterator;
-        nodeBefore->next = newNode;
+        newNode->next = NULL;
+        list->last->next = newNode;
+        list->last = newNode;
     }
+    //if we want to update the list iterator TODO - check if hurt the list-foreach in implementation
+    list->iterator = list->last; //TODO - might not needed this - so can be in remark
     return LIST_SUCCESS;
 }
 
-ListResult listInsertAfterCurrent(List list, ListElement element) {
-    //Check for invalid arguments
-    if (!list || !element) {
-        return LIST_NULL_ARGUMENT;
-    }
-    if (!list->iterator) {
-        return LIST_INVALID_CURRENT;
-    }
-
-    int size = listGetSize(list);
-    int nodesFromEnd = size - listGetIndexOfIterator(list);
-    //iterator is not in last place
-    if (nodesFromEnd > 0) {
-        Node newNode = nodeCreate(element, list->copyElement);
-        if (!newNode) {
-            return LIST_OUT_OF_MEMORY;
-        }
-        newNode->next = list->iterator->next;
-        list->iterator->next = newNode;
-    } else {
-        //if iterator is in last place we can simply use listInsertLast
-        return listInsertLast(list, element);
-    }
-    return LIST_SUCCESS;
-}
-
-ListResult listRemoveCurrent(List list) {
-
-    //Check for invalid arguments
-    if (list == NULL) {
-        return LIST_NULL_ARGUMENT;
-    }
-
-    //the iterator is invalid - doesn't point to a NODE
-    if (list->iterator == NULL) {
-        return LIST_INVALID_CURRENT;
-    }
-    //save the pointer to the Node to remove
-    Node toRemove = list->iterator;
-    //if toRemove is first node point first to the next node
-    if (listGetIndexOfIterator(list) == INDEX_OF_FIRST) {
-        list->first = toRemove->next;
-    } else {
-        Node nodeBefore = listGetNodeBeforeIterator(list);
-        //skip the node to be removed
-        nodeBefore->next = toRemove->next;
-    }
-    if (toRemove->data) {
-        list->freeElement(toRemove->data);
-    }
-    free(toRemove);
-
-    // the iterator should point to null at the end
-    list->iterator = NULL;
-
-    return LIST_SUCCESS;
-}
-
-ListResult listSort(List list, CompareListElements compareElement) {
-    //Check for invalid arguments
-    if (!list || !compareElement) {
-        return LIST_NULL_ARGUMENT;
-    }
-
-    int size = listGetSize(list);
-    ListElement* array = malloc(size * sizeof(ListElement));
-    if (!array) {
-        return LIST_OUT_OF_MEMORY;
-    }
-
-    //save all the data in each node to an array
-    Node iterator = list->first;
-    for (int i = 0; i < size; i++) {
-        array[i] = list->copyElement(iterator->data);
-        iterator = iterator->next;
-    }
-
-    //sort the array using compare function supplied for the type of ListElement
-    maxSort(array, size, compareElement);
-
-    //save the sorted ListElements into the Nodes in the List
-    iterator = list->first;
-    for (int i = 0; i < size; i++) {
-        list->freeElement(iterator->data);
-        iterator->data = array[i];
-        iterator = iterator->next;
-    }
-    free(array);
-    return LIST_SUCCESS;
-}
 
 ListResult listClear(List list) {
     //Check Invalid arguments
@@ -338,45 +211,14 @@ ListResult listClear(List list) {
     }
     //destroy all nodes
     destroyNodes(list->first,list->freeElement);
-    list->first=NULL;
-    list->iterator=NULL;
+    list->first = NULL;
+    list->last = NULL;
+    list->iterator = NULL;
     return LIST_SUCCESS;
 }
 /*------------- End - Structure Functions -------------*/
 
 /* ------------------- STATIC FUNCTIONS ---------------------- */
-
-/* @param array - array of ListElements to sort
- * @lengthOfArray - the length of the array
- * @compareElement - function to compare between two ListElements
- * returns the index of the max ListElement in a given array according to a
- * supplied compare function
- */
-static int indexOfMax(ListElement* array, int lengthOfArray,
-                      CompareListElements compareElement) {
-    int indexOfMax = 0;
-    for (int i = 1; i < lengthOfArray; i++)
-        if (compareElement(*(array + i), *(array + indexOfMax)) > 0) {
-            indexOfMax = i;
-        }
-    return indexOfMax;
-}
-
-/* @param array - array of ListElements to sort
- * @lengthOfArray - the length of the array
- * @compareElement - function to compare between two ListElements
- * sorts an array of ListElements according to a supplied function from
- * smallest to biggest
- */
-static void maxSort(ListElement* array, int lengthOfArray,
-                    CompareListElements compareElement) {
-    for (int length = lengthOfArray; length > 1; length--) {
-        int indexOfmax = indexOfMax(array, length, compareElement);
-        ListElement tmp = *(array + length - 1);
-        *(array + length - 1) = *(array + indexOfmax);
-        *(array + indexOfmax) = tmp;
-    }
-}
 
 /* @param list - the list from which to get the index of the iterator from
  * returns the index of the node in the list to which the iterator points to
@@ -433,17 +275,4 @@ static Node nodeCreate(ListElement data, CopyListElement copyFunction) {
     newNode->next = NULL;
     return newNode;
 }
-
-/* @param list the list from which to get the node from
- * returns the node before the node to which the iterator points at
- */
-static Node listGetNodeBeforeIterator(List list) {
-    int indexOfIterator = listGetIndexOfIterator(list);
-    Node nodeBefore = list->first;
-    for (; indexOfIterator > 1; indexOfIterator--) {
-        nodeBefore = nodeBefore->next;
-    }
-    return nodeBefore;
-}
-
 /*----------------- End-  Functions ----------------*/

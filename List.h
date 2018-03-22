@@ -1,9 +1,9 @@
 //
-// Created by Polina on 22-Feb-18.
+// Created by Polina on 08-Dec-17.
 //
 
-#ifndef DEDUPLICATIONPROJ_HEURISTIC_LIST_H
-#define DEDUPLICATIONPROJ_HEURISTIC_LIST_H
+#ifndef DEDUP_LIST_H
+#define DEDUP_LIST_H
 
 #include <stdbool.h>
 /**
@@ -46,10 +46,10 @@ typedef struct List_t *List;
 
 /** Type used for returning error codes from list functions */
 typedef enum ListResult_t {
-    LIST_SUCCESS,
-    LIST_NULL_ARGUMENT,
-    LIST_OUT_OF_MEMORY,
-    LIST_INVALID_CURRENT,
+	LIST_SUCCESS,
+	LIST_NULL_ARGUMENT,
+	LIST_OUT_OF_MEMORY,
+	LIST_INVALID_CURRENT,
 } ListResult;
 
 /** Element data type for list container */
@@ -187,6 +187,30 @@ int listGetSize(List list);
 ListElement listGetFirst(List list);
 
 /**
+* Sets the internal iterator to the first element and retrieves it.
+*
+* The list has an internal iterator (also called current element) to allow
+* iteration over the list's elements. This function sets the iterator to point
+* to the last element in the list and return it.
+* Use this to insert element from the end of the list
+* the list and/or get the last element in the list.
+* (To continue iteration use listGetNext)
+* @code
+* void f(List list) {
+*   ListElement last = listGetLast(list);
+*   printf("The last element is at address %x\n", last);
+* }
+* @endcode
+*
+* @param list The list for which to set the iterator and return the first
+* element.
+* @return
+* NULL is a NULL pointer was sent or the list is empty.
+* The first element of the list otherwise
+*/
+ListElement listGetLast(List list);
+
+/**
 * Advances the list's iterator to the next element and return it
 *
 * @param list The list for which to advance the iterator
@@ -236,115 +260,6 @@ ListResult listInsertFirst(List list, ListElement element);
 ListResult listInsertLast(List list, ListElement element);
 
 /**
-* Adds a new element to the list, the new element will be place right before
-* the current element (As pointed by the inner iterator of the list)
-*
-* @param list The list for which to add an element before its current element
-* @param element The element to insert. A copy of the element will be
-* inserted as supplied by the copying function which is stored in the list
-* @return
-* LIST_NULL_ARGUMENT if a NULL was sent as list
-* LIST_INVALID_CURRENT if the list's iterator is in an invalid state (Does
-* not point to a legal element in the list)
-* LIST_OUT_OF_MEMORY if an allocation failed (Meaning the function for copying
-* an element failed)
-* LIST_SUCCESS the element has been inserted successfully
-*/
-ListResult listInsertBeforeCurrent(List list, ListElement element);
-
-/**
-* Adds a new element to the list, the new element will be place right after
-* the current element (As pointed by the inner iterator be of the list)
-*
-* @param list The list for which to add an element after its current element
-* @param element The element to insert. A copy of the element will be
-* inserted as supplied by the copying function which is stored in the list
-* @return
-* LIST_NULL_ARGUMENT if a NULL was sent as list
-* LIST_INVALID_CURRENT if the list's iterator is in an invalid state (Does
-* not point to a legal element in the list)
-* LIST_OUT_OF_MEMORY if an allocation failed (Meaning the function for copying
-* an element failed)
-* LIST_SUCCESS the element has been inserted successfully
-*/
-ListResult listInsertAfterCurrent(List list, ListElement element);
-
-/**
-* Removes the currently pointed element of the list using the stored freeing
-* function
-*
-* @param list The list for which the current element will be removed
-* @return
-* LIST_NULL_ARGUMENT if list is NULL
-* LIST_INVALID_CURRENT if the current pointer of the list is in invalid state
-* LIST_SUCCESS the current element was removed successfully
-*/
-ListResult listRemoveCurrent(List list);
-
-/**
-* Sorts the list according to the given function.
-*
-* For example, the following code will sort a list of integers according to
-* their distance from 0.
-* @code
-* int closerTo(ListElement num1, ListElement num2, ListSortKey value) {
-*   int distance1 = abs(*(int*)num1 - *(int*)value);
-*   int distance2 = abs(*(int*)num2 - *(int*)value);
-*   return distance1 - distance2;
-* }
-*
-* void sortInts(List listOfInts) {
-*   int key = 0;
-*   listSort(listOfInts, closerTo, &key);
-* }
-* @endcode
-*
-* @param list the target list to sort
-* @param compareElement A comparison function as defined in the type
-* CompareListElements. This function should return an integer indicating the
-* relation between two elements in the list
-*
-* @return
-* LIST_NULL_ARGUMENT if list or compareElement are NULL
-* LIST_OUT_OF_MEMORY if a memory allocation failed, the list will be intact
-* in this case.
-* LIST_SUCCESS if sorting completed successfully.
-*/
-ListResult listSort(List list, CompareListElements compareElement);
-
-/**
-* Creates a new filtered copy of a list.
-*
-* This creates a new list with only the elements for which the filtering
-* function returned true.
-*
-* For example, the following code creates a new list, given a list of strings
-* containing only the strings which are longer than 10 characters.
-* @code
-*
-* bool isLongerThan(ListElement string, ListFilterKey key) {
-*   return strlen(string) > *(int*)key;
-* }
-*
-* List createFilteredList(List listOfStrings) {
-*   int key = 10;
-*   return listFilter(listOfStrings, isLongerThan, &key);
-* }
-* @endcode
-*
-* @param list The list for which a filtered copy will be made
-* @param filterElement The function used for determining whether a given
-* element should be in the resulting list or not.
-* @param key Any extra values that need to be sent to the filtering function
-* when called
-* @return
-* NULL if list or filterElement are NULL or a memory allocation failed.
-* A List containing only elements from list which filterElement returned true
-* for.
-*/
-List listFilter(List list, FilterListElement filterElement, ListFilterKey key);
-
-/**
 * Removes all elements from target list.
 *
 * The elements are deallocated using the stored freeing function
@@ -364,7 +279,6 @@ ListResult listClear(List list);
 */
 void listDestroy(List list);
 
-ListResult listRestartIterator(List list);
 /**
 * Macro for iterating over a list.
 *
@@ -390,5 +304,4 @@ ListResult listRestartIterator(List list);
 		iterator ;\
 		iterator = listGetNext(list))
 
-
-#endif //DEDUPLICATIONPROJ_HEURISTIC_LIST_H
+#endif //DEDUP_LIST_H

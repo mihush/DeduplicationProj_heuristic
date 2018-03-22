@@ -72,9 +72,14 @@ ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long 
     if(block == NULL || files_array == NULL){ //Check input is valid
         return INVALID_INPUT;
     }
-    assert(files_array[file_sn]->ind_blocks< files_array[file_sn]->num_base_objects );
+    printf(" ~~~~~~ the file_sn is : %lu\n" , file_sn);
+    printf(" ~~~~~~ the ind_blocks is : %lu\n" , files_array[file_sn]->ind_blocks);
+    printf(" ~~~~~~ the num_base_object is: %lu\n", files_array[file_sn]->num_base_objects );
+//    assert(files_array[file_sn]->ind_blocks<= files_array[file_sn]->num_base_objects );
     files_array[file_sn]->blocks_array[(files_array[file_sn]->ind_blocks)] = block;
     (files_array[file_sn]->ind_blocks)++;
+    printf(" ~~~~~~ the ind_blocks2 is : %lu\n" , files_array[file_sn]->ind_blocks);
+
 
     return SUCCESS;
 }
@@ -100,7 +105,7 @@ void print_block_to_csv(Block block , char* output_line){
     char temp[100];
     sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
     //Print all file serial numbers the block belongs to
-    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+    for(int i = 0 ; i < block->output_updated_idx ; i++){
         sprintf(temp , "%lu," , (block->files_array_updated)[i]);
         strcat(output_line , temp);
     }
@@ -122,7 +127,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->depth = -1;
     file->isMergedF = isMerged;
-
+    printf("1 (create file)\n");
     file->file_id = calloc((FILE_ID_LEN + 1) , sizeof(char));
     if(file->file_id == NULL){
         free(file);
@@ -130,6 +135,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->file_id = strcpy(file->file_id , file_id);
     file->file_sn = file_sn;
+//    file->ind_blocks = 0;
 
     file->ht_base_objects = ht_createF();
     if(file->ht_base_objects == NULL){
@@ -138,16 +144,19 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
         return NULL;
     }
     if(dedup_type == 'B') { //Block level deduplication
+        printf("2 (B) (create file)\n");
         file->dir_sn = parent_dir_sn;
         file->num_base_objects = num_of_blocks;
         file->flag = 'F';
         file->blocks_array = malloc(num_of_blocks*sizeof(Block));
+        file->ind_blocks = 0;
         if(file->blocks_array == NULL){
             free(file->file_id);
             free(file);
             return NULL;
         }
     }else{
+        printf("2 (P) (create file)\n");
         if(file_type == 'P') { //Physical File
             file->shared_by_num_files = num_of_files;
             file->flag = 'P';
@@ -157,7 +166,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
                 free(file);
                 return NULL;
             }
-        }else{
+        } else {
             file->dir_sn = parent_dir_sn;
             file->num_base_objects = num_of_blocks;
             file->physical_sn = physical_sn;
@@ -165,7 +174,7 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             file->flag = 'L';
         }
     }
-
+    printf("2 (B) (create file)\n");
     return file;
 }
 
@@ -220,22 +229,27 @@ int file_get_num_base_objects(File file){
     return file->num_base_objects;
 }
 
-//ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, int idx){
-//    if(file == NULL || block_size < 0){
-//        printf("!!1\n");
-//        return INVALID_INPUT;
-//    }
-//    Block_Info bi = malloc(sizeof(*bi));
-//    if(bi == NULL){
-//        printf("!!2\n");
-//        return OUT_OF_MEMORY;
-//    }
-//    bi->block_sn =  block_sn;
-//    bi->size = block_size;
-//    (file->blocks_array)[idx] = bi;
-//
-//    return SUCCESS;
-//}
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size/* int idx*/){
+    if(file == NULL || block_size < 0){
+        printf("!!1\n");
+        return INVALID_INPUT;
+    }
+    Block bi = malloc(sizeof(*bi));
+    if(bi == NULL){
+        printf("!!2\n");
+        return OUT_OF_MEMORY;
+    }
+    bi->block_sn =  block_sn;
+    bi->block_size = block_size;
+    bi->output_updated_idx = 0;
+    bi->files_array_updated = NULL;
+    bi->files_array = NULL;
+    bi->shared_by_num_files = 0;
+    //(file->blocks_array)[file->ind_blocks] = bi;
+    //(file->ind_blocks)++;
+
+    return SUCCESS;
+}
 
 ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx){
     if(file == NULL){
@@ -254,8 +268,9 @@ void file_add_merged_block(File file , Block bi , char* file_id){
     ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B', &object_exists);
     if(object_exists == false){ //Check if block exists already - do not increase counter
         // Update correspondly file_sn at each block contain this file.
-        bi->files_array_updated[*(bi->output_updated_idx)] = file->file_sn;
-        (*(bi->output_updated_idx))++;
+        //TODO - fix it !!!!
+        bi->files_array_updated[(bi->output_updated_idx)] = file->file_sn;
+        (bi->output_updated_idx)++;
         (file->num_base_objects)++;
     }
     //Check if first physical file and changed id
@@ -337,7 +352,7 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     }
     dir->depth = -1;
 
-    dir->dir_id = malloc((sizeof(char)*DIR_NAME_LEN));
+    dir->dir_id = malloc((sizeof(char)*(strlen(dir_id) + 1)));
     if(!(dir->dir_id)){
         free(dir);
         return NULL;
@@ -348,6 +363,8 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->num_of_files = num_of_files;
     dir->num_of_subdirs = num_of_sub_dirs;
     dir->parent_dir_sn = parent_dir_sn;
+
+    printf("num_of_files is: %d\n", num_of_files);
 
     dir->files_array = calloc(num_of_files , sizeof(unsigned long));
     if(dir->files_array== NULL){
@@ -363,7 +380,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
         return NULL;
     }
     dir->merged_file = NULL;
-
     return dir;
 }
 

@@ -8,228 +8,6 @@
 #define NUM_INPUT_FILES 1
 
 /**********************************************************/
-/*void print_ht_to_CSV(char dedup_type , char** files_to_read){
-    Entry pair = NULL;
-    FILE *results_file = NULL;
-    char* fileName = calloc(777 , sizeof(char));
-    strcpy(fileName , "Parsing_Results_");
-
-    for(int i = 0 ; i < NUM_INPUT_FILES ; i++){
-        char file_proc[5];
-        strncpy(file_proc , files_to_read[i] , 4);
-        file_proc[5] = '\0';
-        strcat(fileName, file_proc);
-        if(i < NUM_INPUT_FILES -1){
-            strcat(fileName , "_");
-        }
-    }
-    if( dedup_type == 'B'){
-        strcat(fileName , "_B.csv");
-    } else {
-        strcat(fileName , "_F.csv");
-    }
-    results_file = fopen(fileName , "w+");
-
-    fprintf(results_file ,"# Output type: heuristic\n");
-    // I think she doesn't mention we need to print it
-    /*
-    if(dedup_type == 'B'){
-        fprintf(results_file ,"# Output type: block-level\n");
-    } else {
-        fprintf(results_file ,"# Output type: file-level\n");
-    }
-     */
-//    fprintf(results_file ,"# Input files: ");
-//    for(int i =0 ; i < NUM_INPUT_FILES ; i++){
-//        fprintf(results_file ,"%s" , files_to_read[i]);
-//    }
-//    fprintf(results_file ,"\n");
-//    Printing the results header:
-//    fprintf(results_file ,"# Target level: %d\n" , goal); //TODO - insert the givven goal
-//    fprintf(results_file ,"# Run time (seconds): %f\n" , time); //TODO - calculate the time
-//    fprintf(results_file ,"# Memory usage (GB): %f\n" , memory); //TODO - memory usage
-//    fprintf(results_file ,"# Num files in input: %d\n" , num_of_input_files); //TODO - num of input files
-//    fprintf(results_file ,"# Num files in output: %d\n" , num_of_output_files); //TODO - num of output files
-//    fprintf(results_file ,"# Num directories in input: %d\n" , num_of_input_directories); //TODO - num of input directories
-//    fprintf(results_file ,"# Num directories in output: %d\n" , num_of_output_directories); //TODO - num of output directories
-    /*
-    if(dedup_type == 'B'){
-        fprintf(results_file ,"# Num Blocks: %lu\n", (blocks_sn));
-    } else {
-        fprintf(results_file ,"# Num physical files: %lu\n", (physical_files_sn));
-    }
-     */
-
-//    if(dedup_type == 'B'){ //Block level deduplication
-//        //Print Files - Logical
-//        for(int i = 0 ; i < (ht_files->size_table) ;i++){
-//            pair = ht_files->table[i];
-//            while( pair != NULL && pair->key != NULL) {
-//                File temp_file = ((File)(pair->data));
-//                fprintf(results_file , "F,%lu,%s,%lu,%d,",
-//                        temp_file->file_sn, temp_file->file_id , temp_file->dir_sn,
-//                        temp_file->num_blocks);
-//                //Object_Info temp_oi;
-//                LIST_FOREACH(Block_Info , iter ,temp_file->blocks_list){
-//                    unsigned long block_sn = ((Block)(ht_get(ht_blocks , iter->id)))->block_sn;
-//                    fprintf(results_file ,"%lu,%d," , block_sn , iter->size);
-//                }
-//                //temp_oi = listGetFirst(temp_file->blocks_list);
-//                fprintf(results_file ,"\n");
-//                pair = pair->next;
-//            }
-//        }
-//        //Print Blocks
-//        for(int i = 0 ; i < (ht_blocks->size_table) ;i++){
-//            pair = ht_blocks->table[i];
-//            while( pair != NULL && pair->key != NULL) {
-//                Block temp_block = ((Block)(pair->data));
-//                fprintf(results_file , "B,%lu,%s,%d,",
-//                        temp_block->block_sn , temp_block->block_id,
-//                        temp_block->shared_by_num_files);
-//                printf("%s\n", temp_block->block_id);
-//                for(int j = 0 ; j < (temp_block->files_ht->size_table) ; j++){
-//                    EntryF pair_file_id = temp_block->files_ht->table[j];
-//                    while( pair_file_id != NULL && pair_file_id->key != NULL) {
-//                        unsigned long file_sn = ((File)(ht_get(ht_files , pair_file_id->key)))->file_sn;
-//                        fprintf(results_file ,"%lu," , file_sn);
-//                        pair_file_id = pair_file_id->next;
-//                    }
-//                }
-//                fprintf(results_file ,"\n");
-//                pair = pair->next;
-//            }
-//        }
-//    }else{
-//        printf("File Level Dedup\n");
-//
-//        //Print logical files
-//        for(int i = 0 ; i < (ht_files->size_table) ;i++){
-//            pair = ht_files->table[i];
-//            while( pair != NULL && pair->key != NULL) {
-//                File temp_file = ((File)(pair->data));
-//                fprintf(results_file , "F,%lu,%s,%lu,%d,%lu,%d\n",
-//                        temp_file->file_sn, temp_file->file_id , temp_file->dir_sn,
-//                        1, temp_file->physical_sn, temp_file->file_size);
-//                pair = pair->next;
-//            }
-//        }
-//        //Print physical files
-//        for(int i = 0 ; i < (ht_physical_files->size_table) ;i++){
-//            pair = ht_physical_files->table[i];
-//            while( pair != NULL && pair->key != NULL) {
-//                File temp_file = ((File)(pair->data));
-//                fprintf(results_file , "P,%lu,%s,%d,",
-//                        temp_file->physical_sn, temp_file->file_id ,
-//                        temp_file->num_files);
-//                for(int j = 0 ; j < (temp_file->files_ht->size_table) ; j++){
-//                    EntryF pair_file_id = temp_file->files_ht->table[j];
-//                    while( pair_file_id != NULL && pair_file_id->key != NULL) {
-//                        unsigned long file_sn = ((File)(ht_get(ht_files , pair_file_id->key)))->file_sn;
-//                        fprintf(results_file ,"%lu," , file_sn);
-//                        pair_file_id = pair_file_id->next;
-//                    }
-//                }
-//                fprintf(results_file ,"\n");
-//                pair = pair->next;
-//            }
-//        }
-//
-//    }
-//
-//    //Print Directories
-//    for(int i = 0 ; i < (ht_dirs->size_table) ;i++){
-//        pair = ht_dirs->table[i];
-//        while( pair != NULL && pair->key != NULL) {
-//            Dir temp_dir = ((Dir)(pair->data));
-//
-//            if(temp_dir->dir_depth == -1){
-//                fprintf(results_file , "R,");
-//            }else {
-//                fprintf(results_file , "D,");
-//            }
-//            fprintf(results_file , "%lu,%s,%lu,%d,%d," ,
-//                    temp_dir->dir_sn, temp_dir->dir_id, temp_dir->parent_dir_sn,
-//                    temp_dir->num_of_subdirs, temp_dir->num_of_files);
-//            LIST_FOREACH(unsigned long* , iter , temp_dir->dirs_list){
-//                fprintf(results_file ,"%lu," , *(iter));
-//            }
-//            LIST_FOREACH(unsigned long* , iter , temp_dir->files_list){
-//                fprintf(results_file ,"%lu," , *(iter));
-//            }
-//            fprintf(results_file , "\n");
-//            pair = pair->next;
-//        }
-//    }
-//    fclose(results_file);
-//    free(fileName);
-//}
-
-/*
- *
- *# Output type: heuristic
- *# Input files: <file1>, <file2>
- *# Target level: <int>
- *# Run time (seconds):
- *# Memory usage (GB):
- *# Num files in input
- *# Num files in output
- *# Num directories in input
- *# Num directories in output
- *
- */
-//void print_ht_to_CSV(char* dedup_type , char** files_to_read, unsigned long num_file_objects,
-//                     unsigned long num_dir_objects, unsigned long num_block_objects, unsigned long num_phys_file_objects,
-//                     unsigned long file_objects_cnt, unsigned long dir_objects_cnt, unsigned long root_objects_cnt,
-//                     unsigned long block_objects_cnt, unsigned long phys_file_objects_cnt, int goal_depth){
-//    FILE *results_file = NULL;
-//    char* fileName = calloc(777 , sizeof(char));
-//    strcpy(fileName , "Parsing_Results_");
-//
-//    for(int i = 0 ; i < NUM_INPUT_FILES ; i++){
-//        char file_proc[5];
-//        strncpy(file_proc , files_to_read[i] , 4);
-//        file_proc[5] = '\0';
-//        strcat(fileName, file_proc);
-//        if(i < NUM_INPUT_FILES -1){
-//            strcat(fileName , "_");
-//        }
-//    }
-//    if( dedup_type[0] == 'B'){
-//        strcat(fileName , "_B.csv");
-//    } else {
-//        strcat(fileName , "_F.csv");
-//    }
-//    results_file = fopen(fileName , "w+");
-//
-//    fprintf(results_file ,"# Output type: heuristic\n");
-//// I think she doesn't mention we need to print it
-////    if(dedup_type == 'B'){
-////        fprintf(results_file ,"# Output type: block-level\n");
-////    } else {
-////        fprintf(results_file ,"# Output type: file-level\n");
-////    }
-////
-//    fprintf(results_file ,"# Input files: ");
-//    for(int i =0 ; i < NUM_INPUT_FILES ; i++){
-//        if(i == NUM_INPUT_FILES - 1){
-//
-//
-//        }
-//        fprintf(results_file ,"%s, " , files_to_read[i]);
-//    }
-//    fprintf(results_file ,"\n");
-//    // Printing the results header:
-//    fprintf(results_file ,"# Target level: %d\n" , goal_de); //TODO - insert the givven goal
-//    fprintf(results_file ,"# Run time (seconds): %f\n" , time); //TODO - calculate the time
-//    fprintf(results_file ,"# Memory usage (GB): %f\n" , memory); //TODO - memory usage
-//    fprintf(results_file ,"# Num files in input: %d\n" , num_of_input_files); //TODO - num of input files
-//    fprintf(results_file ,"# Num files in output: %d\n" , num_of_output_files); //TODO - num of output files
-//    fprintf(results_file ,"# Num directories in input: %d\n" , num_of_input_directories); //TODO - num of input directories
-//    fprintf(results_file ,"# Num directories in output: %d\n" , num_of_output_directories); //TODO - num of output directories
-//
-//}
-
 
 int main() {
     /* ------------------------------------------ Define Variables ----------------------------------------- */
@@ -405,7 +183,7 @@ int main() {
 
     /* ----------------- Define Output Directories and Files arrays -----------------  */
 
-    calculateDepthAndMergeFiles(roots_array, num_roots,
+    calculate_depth_and_merge_files(roots_array, num_roots,
     dirs_array, num_dir_objects, files_array,  num_file_objects,
     blocks_array, num_block_objects, physical_files_array, num_phys_file_objects,
     dedup_type[0], goal_depth, output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx);
@@ -464,6 +242,7 @@ int main() {
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
         //print_dir(output_dirs_array[i]);
+        printf("%lu\n" ,output_dirs_array[i]->dir_sn);
         print_dir_to_cvs(output_dirs_array[i] , temp_output_line );
         fprintf(results_file , temp_output_line);
         memset(temp_output_line , 0 , sizeof(temp_output_line));
@@ -483,15 +262,11 @@ int main() {
     if(err != SUCCESS){
         return 0;
     }
-    //TODO free the blocks/physical files array
-//    free(blocks_array);
-//    if(dedup_type[0] == 'F'){
-//        free(physical_files_array);
-//    }
-//    //TODO free the Files array
-//    free(files_array);
-//    //TODO free the Directories array
-//    free(dirs_array);
+    //TODO Check that freeing are done correctly
+//    freeStructuresArrays(files_array , physical_files_array ,dirs_array , blocks_array,
+//                         num_file_objects , num_dir_objects ,num_block_objects,
+//                         num_phys_file_objects ,dedup_type);
+
     /* ------------------------------------- Free all allocated Data ------------------------------------ */
     return 0;
 }

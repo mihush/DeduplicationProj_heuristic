@@ -31,7 +31,7 @@ struct block_t{
     unsigned int shared_by_num_files;
     unsigned long* files_array;
     unsigned long* files_array_updated;
-    unsigned long* output_updated_idx;
+    unsigned long output_updated_idx;
 };
 typedef struct block_t *Block;
 
@@ -243,7 +243,7 @@ int file_get_num_base_objects(File file);
  *  @block_size - size of the block
  *  @idx        - ...
  */
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size , int idx);
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size /*, int idx*/);
 
 /*
  *  file_add_logical_file - ....
