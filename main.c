@@ -57,21 +57,21 @@ int main() {
     //Get the number of files that were read - use the input file names line
     fgets(input_files_list , MAX_LINE_LEN , input_file);
     num_roots = countRootsInInput(input_files_list);
-    printf("%d\n" , num_roots);
+//    printf("%d\n" , num_roots);
 
     //Get the number of File objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(line , sep);
     tok = strtok(NULL , sep); //get the number with leading space
     num_file_objects = atol(tok);
-    printf("%lu \n" , num_file_objects);
+//    printf("%lu \n" , num_file_objects);
 
     //Get the number of Directory objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(line , sep);
     tok = strtok(NULL , sep); //get the number with leading space
     num_dir_objects = atol(tok);
-    printf("%lu \n" , num_dir_objects);
+//    printf("%lu \n" , num_dir_objects);
 
     //Get the number of Blocks/Physical Files objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
@@ -79,10 +79,10 @@ int main() {
     tok = strtok(NULL , sep);
     if(dedup_type[0] == 'B'){
         num_block_objects = atol(tok);
-        printf("%lu \n" , num_block_objects);
+//        printf("%lu \n" , num_block_objects);
     }else{
         num_phys_file_objects = atol(tok);
-        printf("%lu \n" , num_phys_file_objects);
+//        printf("%lu \n" , num_phys_file_objects);
     }
 
     //Allocate Arrays For Files, Block/Physical Files , Directories and roots
@@ -114,11 +114,11 @@ int main() {
     Block res_block = NULL;
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
-        printf("%s" , line);
+//        printf("%s" , line);
         switch(line[0]){
             case 'F':
                 res_file = readFileLine(line , dedup_type);
-                printf("SN : %lu , num_file_objects : %lu\n" , res_file->file_sn , num_file_objects);
+//                printf("SN : %lu , num_file_objects : %lu\n" , res_file->file_sn , num_file_objects);
                 files_array[res_file->file_sn] = res_file;
                 file_objects_cnt++;
                 break;
@@ -151,20 +151,20 @@ int main() {
     }
 
     //TODO Remove this prints later
-    printf(" #-#-# The Files array #-#-# \n");
-    for( int i=0 ; i<num_file_objects ; i++){
-        print_file((files_array[i]));
-    }
-
-    printf(" #-#-# The Directories array #-#-# \n");
-    for( int i=0 ; i<num_dir_objects ; i++){
-        print_dir((dirs_array[i]));
-    }
-
-    printf(" #-#-# The Blocks array #-#-# \n");
-    for( int i=0 ; i<num_block_objects ; i++){
-        print_block((blocks_array[i]));
-    }
+//    printf(" #-#-# The Files array #-#-# \n");
+//    for( int i=0 ; i<num_file_objects ; i++){
+//        print_file((files_array[i]));
+//    }
+//
+//    printf(" #-#-# The Directories array #-#-# \n");
+//    for( int i=0 ; i<num_dir_objects ; i++){
+//        print_dir((dirs_array[i]));
+//    }
+//
+//    printf(" #-#-# The Blocks array #-#-# \n");
+//    for( int i=0 ; i<num_block_objects ; i++){
+//        print_block((blocks_array[i]));
+//    }
 
     //Build the tree hierarchy of the file systems
     gettimeofday(&tv_start, NULL);
@@ -194,6 +194,23 @@ int main() {
                                                                     ((double)(tv_end.tv_sec - tv_start.tv_sec)));
 
     //TODO Save Output to File
+
+    printf(" #-#-# The Files array #-#-# \n");
+    for( int i=0 ; i<output_files_idx ; i++){
+        print_file((output_files_array[i]));
+    }
+
+    printf(" #-#-# The Directories array #-#-# \n");
+    for( int i=0 ; i<output_dirs_idx ; i++){
+        print_dir((output_dirs_array[i]));
+    }
+
+    printf(" #-#-# The Blocks array #-#-# \n");
+    for( int i=0 ; i<num_block_objects ; i++){
+        print_block((blocks_array[i]));
+    }
+
+
     char temp_output_line[MAX_LINE_LEN];
     //Open the Output File
     FILE *results_file = NULL;

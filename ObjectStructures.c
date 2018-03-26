@@ -72,13 +72,9 @@ ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long 
     if(block == NULL || files_array == NULL){ //Check input is valid
         return INVALID_INPUT;
     }
-    printf(" ~~~~~~ the file_sn is : %lu\n" , file_sn);
-    printf(" ~~~~~~ the ind_blocks is : %lu\n" , files_array[file_sn]->ind_blocks);
-    printf(" ~~~~~~ the num_base_object is: %lu\n", files_array[file_sn]->num_base_objects );
 //    assert(files_array[file_sn]->ind_blocks<= files_array[file_sn]->num_base_objects );
     files_array[file_sn]->blocks_array[(files_array[file_sn]->ind_blocks)] = block;
     (files_array[file_sn]->ind_blocks)++;
-    printf(" ~~~~~~ the ind_blocks2 is : %lu\n" , files_array[file_sn]->ind_blocks);
 
 
     return SUCCESS;
@@ -105,7 +101,7 @@ void print_block_to_csv(Block block , char* output_line){
     char temp[100];
     sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
     //Print all file serial numbers the block belongs to
-    for(int i = 0 ; i < block->output_updated_idx ; i++){
+    for(int i = 0 ; i < block->output_updated_idx ;  i++){
         sprintf(temp , "%lu," , (block->files_array_updated)[i]);
         strcat(output_line , temp);
     }
@@ -127,7 +123,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->depth = -1;
     file->isMergedF = isMerged;
-    printf("1 (create file)\n");
     file->file_id = calloc((FILE_ID_LEN + 1) , sizeof(char));
     if(file->file_id == NULL){
         free(file);
@@ -135,7 +130,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->file_id = strcpy(file->file_id , file_id);
     file->file_sn = file_sn;
-//    file->ind_blocks = 0;
 
     file->ht_base_objects = ht_createF();
     if(file->ht_base_objects == NULL){
@@ -144,7 +138,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
         return NULL;
     }
     if(dedup_type == 'B') { //Block level deduplication
-        printf("2 (B) (create file)\n");
         file->dir_sn = parent_dir_sn;
         file->num_base_objects = num_of_blocks;
         file->flag = 'F';
@@ -156,7 +149,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             return NULL;
         }
     }else{
-        printf("2 (P) (create file)\n");
         if(file_type == 'P') { //Physical File
             file->shared_by_num_files = num_of_files;
             file->flag = 'P';
@@ -174,7 +166,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             file->flag = 'L';
         }
     }
-    printf("2 (B) (create file)\n");
     return file;
 }
 
@@ -363,9 +354,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->num_of_files = num_of_files;
     dir->num_of_subdirs = num_of_sub_dirs;
     dir->parent_dir_sn = parent_dir_sn;
-
-    printf("num_of_files is: %d\n", num_of_files);
-
     dir->files_array = calloc(num_of_files , sizeof(unsigned long));
     if(dir->files_array== NULL){
         free(dir->dir_id);
