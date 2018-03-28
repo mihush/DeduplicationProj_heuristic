@@ -278,7 +278,7 @@ void merge_file_blocks(File merged_file , File file_to_insert){
 }
 
 void merge_file_physical_files(File merged_file , File file_to_insert){
-    file_add_merged_physical(merged_file , file_to_insert->physical_sn , file_to_insert->file_id);
+    file_add_merged_physical(merged_file , file_to_insert , file_to_insert->file_id);
 }
 
 void update_outputArray_and_sn(Dir current_dir , File* files_array , File* output_files_array , unsigned long* output_files_idx){
@@ -309,7 +309,15 @@ void update_dir_values(Dir current_dir , int goal_depth,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx,
                        char dedup_type){
-    int current_depth = dir_get_depth(current_dir);
+    int parent_depth = 0;
+    int current_depth = 0;
+    if(current_dir->dir_sn == 0){
+        current_depth = current_dir->depth;
+    } else {
+        parent_depth = dir_get_depth(dirs_array[(current_dir->parent_dir_sn)]);
+        dir_set_depth(current_dir,(parent_depth + 1));
+        current_depth = current_dir->depth;
+    }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
     if(current_dir->num_of_subdirs == 0){ //
@@ -318,17 +326,20 @@ void update_dir_values(Dir current_dir , int goal_depth,
             return;
         } else { //There are still some files in the directory
 //            printf("-------> No more directories BUT there are files to process ... \n");
-            if(current_depth < (goal_depth - 1)){
+            if(current_depth <= (goal_depth - 1)){
 //                printf("###$$$###(1) --- current_depth < (goal_depth - 1)\n ");
                 // Update yhe output array with all current directory files
                 update_outputArray_and_sn(current_dir, files_array, output_files_array, output_files_idx);
 //                printf("---------> Haven't reached the goal depth - just save the files \n");
-            } else { // current_depth >= (goal_depth -1)
+            }
+            else { // current_depth >= (goal_depth -1)
 //                printf("###$$$###(1) --- current_depth >= (goal_depth -1)\n ");
 
                 //add all the file blocks to the merged file - meaning current_dir->mergedFile
                 if(current_depth == (goal_depth -1)){ //Create merged file
 //                    printf("###$$$###(2) --- current_depth == (goal_depth -1)\n ");
+                    update_outputArray_and_sn(current_dir, files_array, output_files_array, output_files_idx);
+
                     if(dedup_type == 'B'){
 //                        printf("#####$$$#####(3) creating merged_file - F\n");
                         current_dir->merged_file = file_create("sarit_hadad" , *output_files_idx , current_dir->dir_sn ,
@@ -366,6 +377,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
 //        printf("------> Current dir depth %d < %d (goal depth) \n" , current_dir->depth , (goal_depth -1));
         update_outputArray_and_sn(current_dir, files_array, output_files_array, output_files_idx);
 
+
 //        printf("#####$$$#####(5) printing sub_directories sn of  current_dir\n");
         for(int d = 0 ; d < current_dir->num_of_subdirs ; d++){
 //            printf(" -- >Current Subdir : %lu \n" ,dirs_array[(current_dir->dirs_array)[d]]->dir_sn);
@@ -374,7 +386,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
                 continue;
             }
             //update dir depth and sn
-            dir_set_depth(dirs_array[(current_dir->dirs_array)[d]] ,(current_dir->depth + 1));
+//            dir_set_depth(dirs_array[(current_dir->dirs_array)[d]] ,(current_dir->depth + 1));
 
             //add dir to output_dirs_array
             output_dirs_array[*output_dirs_idx] = dirs_array[(current_dir->dirs_array)[d]];

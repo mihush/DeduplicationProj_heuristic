@@ -238,6 +238,7 @@ int main() {
 
     if(dedup_type[0] == 'B'){
         //Print Blocks to output CSV
+        printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
         for(int i = 0 ; i < num_block_objects ; i++){
             //print_block(blocks_array[i]);
             printf("%lu\n" , blocks_array[i]->block_sn);
@@ -249,6 +250,7 @@ int main() {
         //Print Physical files to output CSV
         for(int i = 0 ; i < num_phys_file_objects ; i++){
             //print_file(physical_files_array[i]);
+            printf(" #-#-# The OUTPUT physical_Files array #-#-# \n");
             print_file_to_csv(physical_files_array[i] , temp_output_line);
             fprintf(results_file , temp_output_line);
             memset(temp_output_line , 0 , sizeof(temp_output_line));
