@@ -307,7 +307,7 @@ void print_file_to_csv(File file, char* output_line){
 
     if(file_type == 'F'){
         sprintf(output_line , "F,%lu,%s,%lu,%d,",file->file_sn,file->file_id,file->dir_sn,file->num_base_objects);
-        //TODO differntiate between merged file and original
+        //TODO differentiate between merged file and original
 //        for(int i = 0 ; i < file->num_base_objects ; i++){
 //            sprintf(temp , "%lu,%d" , ((file->blocks_array)[i])->block_sn , ((file->blocks_array)[i])->size);
 //            strcat(output_line , temp);

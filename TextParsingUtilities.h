@@ -168,17 +168,18 @@ File readFileLine(char* line , char* dedup_type){
                            num_of_blocks , 0,
                            0 , 0,
                            dedup_type[0] , file_type[0] , false);
-        printf(" -- blocks list -- \n");
-        unsigned long block_sn = 0;
-        unsigned int block_size = 0;
-        for(int i = 0 ; i < num_of_blocks ; i++){
-            tok = strtok(NULL , sep);
-            block_sn = atol(tok);
-            printf("%lu " , block_sn);
-            tok = strtok(NULL , sep);
-            block_size = atoi(tok);
-//            file_add_block(file , block_sn , block_size , i);
-        }
+//        printf(" -- blocks list -- \n");
+//        unsigned long block_sn = 0;
+//        unsigned int block_size = 0;
+//        for(int i = 0 ; i < num_of_blocks ; i++){
+//            tok = strtok(NULL , sep);
+//            block_sn = atol(tok);
+//            printf("%lu " , block_sn);
+//            tok = strtok(NULL , sep);
+//            block_size = atoi(tok);
+//            //file_add_block(file , block_sn , block_size , i);
+//        }
+        //TODO - For FILE LEVEL Deduplication - save block infos !!!!!!!!!!!!!!!!!!!!!!!!!
         printf("\n");
 
     } else { //File level deduplication
@@ -192,6 +193,7 @@ File readFileLine(char* line , char* dedup_type){
                                0 , 0,
                                dedup_type[0] , file_type[0] , false);
 
+            //TODO Update physical File Pointers later when adding physical files
             unsigned long logical_files_sn = 0;
             for(int i = 0 ; i < num_of_files ; i++){
                 tok = strtok(NULL , sep);
@@ -357,16 +359,19 @@ void merge_file_physical_files(File merged_file , File file_to_insert){
  *  @output_files_array - ...
  *  @output_files_array - ...
  */
-void update_outputArray_and_sn(Dir current_dir , File* files_array , File* output_files_array , unsigned long* output_files_idx){
+void update_outputArray_and_sn(Dir current_dir , File* files_array , File* output_files_array ,
+                               unsigned long* output_files_idx){
     // add all of the files to output_files_array
     for(int f = 0 ; f < current_dir->num_of_files  ; f++){
         //Update the sn of the inserted file .
         File curr_file = files_array[(current_dir->files_array)[f]];
+        curr_file->dir_sn = current_dir->dir_sn;
         // Update sn
         curr_file->file_sn = *output_files_idx;
         output_files_array[*output_files_idx] = curr_file;
+        (current_dir->files_array)[f] = curr_file->file_sn; //Updated file SN at the parent dir
         (*output_files_idx)++;
-        // Update correspondly file_sn at each block contain this file
+        // Update correspondingly file_sn at each block that contains this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){ //num_base_objects --> num_of_blocks
             Block curr_block = curr_file->blocks_array[j];
             curr_block->files_array_updated[*(curr_block->output_updated_idx)] = curr_file->file_sn;
@@ -416,25 +421,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
             if(current_depth < (goal_depth - 1)){
                 // Update yhe output array with all current directory files
                 update_outputArray_and_sn(current_dir, files_array, output_files_array, output_files_idx);
-//                // add all of the files to output_files_array
-//                for(int f = 0 ; f < current_dir->num_of_files  ; f++){
-//                    //Update the sn of the inserted file .
-//                    File curr_file = files_array[(current_dir->files_array)[f]];
-//                    // Update sn
-//                    curr_file->file_sn = *output_files_idx;
-//                    output_files_array[*output_files_idx] = curr_file;
-//                    (*output_files_idx)++;
-//                    // Update correspondly file_sn at each block contain this file
-//                    for(int j = 0 ; j < curr_file->num_base_objects ; j++){ //num_base_objects --> num_of_blocks
-//                        Block curr_block = curr_file->blocks_array[j];
-//                        curr_block->files_array_updated[*(curr_block->output_updated_idx)] = curr_file->file_sn;
-//                        (*(curr_block->output_updated_idx))++;
-//                    }
-//                }
                 printf("---------> Haven't reached the goal depth - just save the files \n");
-//                if(current_depth == (goal_depth -1)){ //create
-//                    current_dir -> merged_file = dirs_array[current_dir->dir_sn]->merged_file;
-//                }
             } else { // current_depth >= (goal_depth -1)
                 //add all the file blocks to the merged file - meaning current_dir->mergedFile
                 if(current_depth == (goal_depth -1)){ //Create merged file
@@ -457,9 +444,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
                     } else {
                         merge_file_physical_files(current_dir->merged_file, files_array[(current_dir->files_array)[f]]);
                     }
-//                    Destroy the file that was merged
-//                    file_destroy(files_array[(current_dir->files_array)[f]]);
-//                    files_array[(current_dir->files_array)[f]] = NULL;
                 }
             }
             return;
@@ -471,29 +455,13 @@ void update_dir_values(Dir current_dir , int goal_depth,
     // Get Here ONLY if we have dirs to process !!!!!!!!!
     if(current_depth < (goal_depth - 1)){ //we HAVEN'T Reached the desired depth
         printf("------> Current dir depth %d < %d (goal depth) \n" , current_dir->depth , (goal_depth -1));
+        //update all subfiles ....
         update_outputArray_and_sn(current_dir, files_array, output_files_array, output_files_idx);
-//        //add all files to output_files_array
-//        for(int f = 0 ; f < current_dir->num_of_files  ; f++){
-//            //Update the sn of the inserted file .
-//            File curr_file = files_array[(current_dir->files_array)[f]];
-//            // Update sn
-//            curr_file->file_sn = *output_files_idx;
-//            output_files_array[*output_files_idx] = curr_file;
-//            (*output_files_idx)++;
-//            // Update correspondly file_sn at each block contain this file
-//            for(int j = 0 ; j < curr_file->num_base_objects ; j++){ //num_base_objects --> num_of_blocks
-//                Block curr_block = curr_file->blocks_array[j];
-//                curr_block->files_array_updated[*(curr_block->output_updated_idx)] = curr_file->file_sn;
-//                (*(curr_block->output_updated_idx))++;
-//            }
-//        }
-
         //Update all directory depths
         //Add all of the directories to the output_dirs_array
         //For each directory - call update_dir_values
         for(int d = 0 ; d < current_dir->num_of_subdirs ; d++){
             printf(" -- >Current Subdir : %lu \n" ,dirs_array[(current_dir->dirs_array)[d]]->dir_sn);
-
             if((current_dir->dirs_array)[d] == current_dir->dir_sn){
                 continue;
             }
@@ -503,10 +471,10 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //add dir to output_dirs_array
             output_dirs_array[*output_dirs_idx] = dirs_array[(current_dir->dirs_array)[d]];
             output_dirs_array[*output_dirs_idx]->dir_sn = *output_dirs_idx;
+            (current_dir->dirs_array)[d] = output_dirs_array[*output_dirs_idx]->dir_sn;
             (*output_dirs_idx)++;
 
             //For each directory - call update_dir_values
-
             update_dir_values(dirs_array[(current_dir->dirs_array)[d]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files,
                               blocks_array, num_blocks, physical_files_array, num_physical_files,
@@ -543,9 +511,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
             } else {
                 merge_file_physical_files( current_dir->merged_file , files_array[(current_dir->files_array)[f]]);
             }
-            //Destroy the file that was merged
-//            file_destroy(files_array[(current_dir->files_array)[f]]);
-//            files_array[(current_dir->files_array)[f]] = NULL;
+
         }
         //update all directory depths
         //For each directory - call update_dir_values
@@ -553,7 +519,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //update dir depth
             dir_set_depth(dirs_array[(current_dir->dirs_array)[j]] ,(current_dir->depth + 1));
             (dirs_array[(current_dir->dirs_array)[j]])->merged_file = (dirs_array[current_dir->dir_sn])->merged_file;
-            //TODO - free this directory from the array ????
 
             //For each directory - call update_dir_values
             if((current_dir->dirs_array)[j] == current_dir->dir_sn){
@@ -605,6 +570,7 @@ void calculateDepthAndMergeFiles(Dir* roots_array, int num_roots,
         //add root to output_dirs_array
         //TODO - update the dir_sn from a global param
         output_dirs_array[*output_dirs_idx] = roots_array[r];
+        roots_array[r]->dir_sn = *output_dirs_idx;
         (*output_dirs_idx)++;
 
         printf("-->Updating values for directory : %lu \n" , roots_array[r]->dir_sn);
