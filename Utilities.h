@@ -5,7 +5,6 @@
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_UTILITIES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_UTILITIES_H
 
-
 typedef enum{
     SUCCESS,
     INVALID_INPUT,
@@ -50,6 +49,7 @@ struct block_info{ //helper struct
     int size;
     unsigned long block_sn;
 };
+
 typedef struct block_info* Block_Info;
 
 static ListElement copy_block_info(ListElement block_info){

@@ -72,9 +72,10 @@ ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long 
     if(block == NULL || files_array == NULL){ //Check input is valid
         return INVALID_INPUT;
     }
-    assert(files_array[file_sn]->ind_blocks< files_array[file_sn]->num_base_objects );
+//    assert(files_array[file_sn]->ind_blocks<= files_array[file_sn]->num_base_objects );
     files_array[file_sn]->blocks_array[(files_array[file_sn]->ind_blocks)] = block;
     (files_array[file_sn]->ind_blocks)++;
+
 
     return SUCCESS;
 }
@@ -100,7 +101,7 @@ void print_block_to_csv(Block block , char* output_line){
     char temp[100];
     sprintf(output_line , "B,%lu,%s,%d,", block->block_sn , block->block_id, block->shared_by_num_files);
     //Print all file serial numbers the block belongs to
-    for(int i = 0 ; i < block->shared_by_num_files ; i++){
+    for(int i = 0 ; i < block->output_updated_idx ;  i++){
         sprintf(temp , "%lu," , (block->files_array_updated)[i]);
         strcat(output_line , temp);
     }
@@ -122,7 +123,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     }
     file->depth = -1;
     file->isMergedF = isMerged;
-
     file->file_id = calloc((FILE_ID_LEN + 1) , sizeof(char));
     if(file->file_id == NULL){
         free(file);
@@ -131,33 +131,46 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
     file->file_id = strcpy(file->file_id , file_id);
     file->file_sn = file_sn;
 
-    file->ht_base_objects = ht_createF();
-    if(file->ht_base_objects == NULL){
-        free(file->file_id);
-        free(file);
-        return NULL;
-    }
     if(dedup_type == 'B') { //Block level deduplication
+        if(isMerged){
+            file->objects_bin_array = calloc(num_of_blocks , sizeof(bool));;
+            if(file->objects_bin_array == NULL){
+                free(file->file_id);
+                free(file);
+                return NULL;
+            }
+        }
         file->dir_sn = parent_dir_sn;
         file->num_base_objects = num_of_blocks;
         file->flag = 'F';
         file->blocks_array = malloc(num_of_blocks*sizeof(Block));
+        file->ind_blocks = 0;
         if(file->blocks_array == NULL){
+            free(file->objects_bin_array);
             free(file->file_id);
             free(file);
             return NULL;
         }
     }else{
+        file->files_array = calloc(num_of_files , sizeof(unsigned long));
+        if(file->files_array == NULL){
+            free(file->file_id);
+            free(file);
+            return NULL;
+        }
         if(file_type == 'P') { //Physical File
+            if(isMerged){
+                file->objects_bin_array = calloc(num_of_files , sizeof(bool));
+                if(file->objects_bin_array == NULL){
+                    free(file->files_array);
+                    free(file->file_id);
+                    free(file);
+                    return NULL;
+                }
+            }
             file->shared_by_num_files = num_of_files;
             file->flag = 'P';
-            file->files_array = calloc(num_of_files , sizeof(unsigned long));
-            if(file->files_array == NULL){
-                free(file->file_id);
-                free(file);
-                return NULL;
-            }
-        }else{
+        } else {
             file->dir_sn = parent_dir_sn;
             file->num_base_objects = num_of_blocks;
             file->physical_sn = physical_sn;
@@ -165,7 +178,6 @@ File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir
             file->flag = 'L';
         }
     }
-
     return file;
 }
 
@@ -177,6 +189,10 @@ void file_destroy(File file){
     }else if(file->flag == 'F'){
         free(file->blocks_array);
     }
+    //TODO- free hashtable
+//    if(file->isMergedF){
+//        hashTableF_destroy(file->ht_base_objects,)
+//    }
     free(file);
 }
 
@@ -220,22 +236,27 @@ int file_get_num_base_objects(File file){
     return file->num_base_objects;
 }
 
-//ErrorCode file_add_block(File file , unsigned long block_sn , int block_size, int idx){
-//    if(file == NULL || block_size < 0){
-//        printf("!!1\n");
-//        return INVALID_INPUT;
-//    }
-//    Block_Info bi = malloc(sizeof(*bi));
-//    if(bi == NULL){
-//        printf("!!2\n");
-//        return OUT_OF_MEMORY;
-//    }
-//    bi->block_sn =  block_sn;
-//    bi->size = block_size;
-//    (file->blocks_array)[idx] = bi;
-//
-//    return SUCCESS;
-//}
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size/* int idx*/){
+    if(file == NULL || block_size < 0){
+        printf("!!1\n");
+        return INVALID_INPUT;
+    }
+    Block bi = malloc(sizeof(*bi));
+    if(bi == NULL){
+        printf("!!2\n");
+        return OUT_OF_MEMORY;
+    }
+    bi->block_sn =  block_sn;
+    bi->block_size = block_size;
+    bi->output_updated_idx = 0;
+    bi->files_array_updated = NULL;
+    bi->files_array = NULL;
+    bi->shared_by_num_files = 0;
+    //(file->blocks_array)[file->ind_blocks] = bi;
+    //(file->ind_blocks)++;
+
+    return SUCCESS;
+}
 
 ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx){
     if(file == NULL){
@@ -251,14 +272,18 @@ ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int
 void file_add_merged_block(File file , Block bi , char* file_id){
     assert(file);
     bool object_exists = false;
-    ht_setF(file->ht_base_objects , bi->block_sn , bi , 'B', &object_exists);
+    if(file->objects_bin_array[(bi->block_sn)]){
+        object_exists = true;
+    }
     if(object_exists == false){ //Check if block exists already - do not increase counter
-        // Update correspondly file_sn at each block contain this file.
-        bi->files_array_updated[*(bi->output_updated_idx)] = file->file_sn;
-        (*(bi->output_updated_idx))++;
+        // Update correspondingly file_sn at each block contain this file.
+        bi->files_array_updated[(bi->output_updated_idx)] = file->file_sn;
+        (bi->output_updated_idx)++;
         (file->num_base_objects)++;
+        file->objects_bin_array[(bi->block_sn)] = true;
     }
     //Check if first physical file and changed id
+    //TODO - treat merged file differently
     if(file->num_base_objects == 1){
         char new_file_id[FILE_ID_LEN];
         sprintf(new_file_id , "MF_");
@@ -268,12 +293,16 @@ void file_add_merged_block(File file , Block bi , char* file_id){
     return;
 }
 
-void file_add_merged_physical(File file , unsigned long sn_of_physical , char* file_id){
+void file_add_merged_physical(File file , File physical_file , char* file_id){
     assert(file);
     bool object_exists = false;
-    ht_setF(file->ht_base_objects , sn_of_physical , NULL , 'F', &object_exists);
+    if(file->objects_bin_array[physical_file->file_sn]){
+        object_exists = true;
+    }
     if(object_exists == false){ //Check if block exists already - do not increase counter
+        file->files_array[(file->num_base_objects)] = physical_file->file_sn;
         (file->num_base_objects)++;
+        file->objects_bin_array[(physical_file->file_sn)] = true;
     }
     //Check if first physical file and changed id
     if(file->num_base_objects == 1){
@@ -337,7 +366,7 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     }
     dir->depth = -1;
 
-    dir->dir_id = malloc((sizeof(char)*DIR_NAME_LEN));
+    dir->dir_id = malloc((sizeof(char)*(strlen(dir_id) + 1)));
     if(!(dir->dir_id)){
         free(dir);
         return NULL;
@@ -348,7 +377,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->num_of_files = num_of_files;
     dir->num_of_subdirs = num_of_sub_dirs;
     dir->parent_dir_sn = parent_dir_sn;
-
     dir->files_array = calloc(num_of_files , sizeof(unsigned long));
     if(dir->files_array== NULL){
         free(dir->dir_id);
@@ -363,7 +391,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
         return NULL;
     }
     dir->merged_file = NULL;
-
     return dir;
 }
 
@@ -442,9 +469,10 @@ void print_dir_to_cvs(Dir dir , char* output_line){
         dir_type = 'D';
     }
 
-    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type,
+    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d,\n" ,dir_type,
             dir->dir_sn, dir->dir_id, dir->parent_dir_sn,
             dir->num_of_subdirs, dir->num_of_files);
+    //TODO - add printing hirarchy of dirs printing
 
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */

@@ -2,7 +2,6 @@
 // Created by Polina on 05-Mar-18.
 //
 
-
 #include "HashTable.h"
 
 

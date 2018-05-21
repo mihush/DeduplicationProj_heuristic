@@ -13,12 +13,14 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "Utilities.h"
-
+/* **************************************************** INCLUDES **************************************************** */
+/* ****************************************************************************************************************** */
+/* **************************************************** DEFINES ***************************************************** */
 #define GROWTH_FACTOR 2
 #define INIT_SIZE 5007
 #define BLOCKS_IN_FILE_SIZE 300
 #define BLOCKS_INIT_SIZE 20000
-
+//#define BLOCKS_INIT_SIZE 1000000
 typedef void* DataF;
 
 struct entryf_t {

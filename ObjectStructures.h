@@ -31,7 +31,7 @@ struct block_t{
     unsigned int shared_by_num_files;
     unsigned long* files_array;
     unsigned long* files_array_updated;
-    unsigned long* output_updated_idx;
+    unsigned long output_updated_idx;
 };
 typedef struct block_t *Block;
 
@@ -63,10 +63,13 @@ struct file_t{
     //For File level deduplication
     //Physical File - P flag
     unsigned int shared_by_num_files; // should be use only for flag = 'P'
-    unsigned long* files_array; // array of file serial number that share the same physical file
+    //In case of physical file (P) - contains sn of logical files that share this physical file
+    //In case of logical file (L) - use in case of merged file, contains sn of physical files
+    //                              that were merged into it
+    unsigned long* files_array;
 
     //For the Merged File
-    HashTableF ht_base_objects;
+    bool* objects_bin_array;
 
 };
 typedef struct file_t *File;
@@ -243,7 +246,7 @@ int file_get_num_base_objects(File file);
  *  @block_size - size of the block
  *  @idx        - ...
  */
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size , int idx);
+ErrorCode file_add_block(File file , unsigned long block_sn , int block_size /*, int idx*/);
 
 /*
  *  file_add_logical_file - ....
@@ -270,7 +273,7 @@ void file_add_merged_block(File file , Block block , char* file_id);
  *  @sn_of_physical  - ...
  *  @file_id         - ...
  */
-void file_add_merged_physical(File file , unsigned long sn_of_physical , char* file_id);
+void file_add_merged_physical(File file , File physical_file , char* file_id);
 
 /*
  *  print_file - ....
