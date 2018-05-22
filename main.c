@@ -256,7 +256,7 @@ int main() {
             memset(temp_output_line , 0 , sizeof(temp_output_line));
         }
     }
-
+    //queen Sarit-Hadad
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
