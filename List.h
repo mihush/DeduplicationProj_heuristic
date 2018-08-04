@@ -67,8 +67,8 @@ typedef void* ListElement;
 * used for storing strings in a list:
 * @code
 * ListElement copyString(ListElement str) {
-*   assert(str);
 *   char* copy = malloc(strlen(str) + 1);
+*   assert(str);
 *   return copy ? strcpy(copy, str) : NULL;
 * }
 * @endcode

@@ -37,19 +37,19 @@ int countRootsInInput(char* line);
  * @files_array - array of file objects
  * @physical_files_array - array of physical file objects
  * @dirs_array - array of directories objects
- * @blocks_array - array of block objects
+ * @base_objects_arr - array of block objects
  *
  * @num_file_objects - number of file objects in the files_array
  * @num_dir_objects - number of dir objects in the dirs_array
- * @num_block_objects - number of block objects in the blocks_array
+ * @num_block_objects - number of block objects in the base_objects_arr
  * @num_phys_file_objects - number of file objects in the physical_files_array
  *
  * @dedup_type - the type of deduplication that was performed on the input file
  */
-ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,Dir* dirs_array , Block* blocks_array,
-                               unsigned long num_file_objects , unsigned long num_dir_objects ,
-                               unsigned long num_block_objects, unsigned long num_phys_file_objects ,
-                               char* dedup_type);
+//ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,Dir* dirs_array , Block* blocks_array,
+//                               unsigned long num_file_objects , unsigned long num_dir_objects ,
+//                               unsigned long num_block_objects, unsigned long num_phys_file_objects ,
+//                               char* dedup_type);
 
 /*
  * readFileLine - Parses the input line into a file object to be saved
@@ -58,15 +58,16 @@ ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,D
  * @line - the line that represents a file object to be parsed
  * @file_type - could be either B for block_level or F for file_level
  */
-File readFileLine(char* line , char* dedup_type);
+File readFileLine(char* line, PMemory_pool memory_pool,
+                  Base_Object* base_objects_arr);
 
 /*
- * readBlockLine - Parses the input line into a block object to be saved
+ * readBaseObjectLine - Parses the input line into a block object to be saved
  *                 Returns a pointer to the block object
  *
  * @line - the line that represents a block object to be parsed
  */
-Block readBlockLine(char* line, File* files_array);
+Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memory_pool, Base_Object* base_objects_arr);
 
 /*
  * readRootDirLine - Parses the input line into a directory object to be saved
@@ -75,15 +76,15 @@ Block readBlockLine(char* line, File* files_array);
  * @line - the line that represents a directory object to be parsed
  * @tile_type - could be either D for regular directory or R for Root directory
  */
-Dir readDirLine(char* line, char dir_type);
+Dir readDirLine(char* line , PMemory_pool memory_pool);
 
 /*
- *  merge_file_blocks - ...
+ *  aux_add_base_object_to_merge_file - ...
  *
  *  @merged_file    - ...
  *  @file_to_insert - ...
  */
-void merge_file_blocks(File merged_file , File file_to_insert);
+void aux_add_base_object_to_merge_file(File merged_file, File file_to_insert);
 
 /*
  *  merge_file_physical_files - ...
@@ -91,7 +92,7 @@ void merge_file_blocks(File merged_file , File file_to_insert);
  *  @merged_file    - ...
  *  @file_to_insert - ...
  */
-void merge_file_physical_files(File merged_file , File file_to_insert);
+//void merge_file_physical_files(File merged_file , File file_to_insert);
 
 /*
  *  update_outputArray_and_sn - ...
@@ -114,7 +115,7 @@ void update_outputArray_and_sn(Dir current_dir , File* files_array , File* outpu
  * @num_dirs             - ...
  * @files_array          - ...
  * @num_files            - ...
- * @blocks_array         - ...
+ * @base_objects_arr         - ...
  * @num_blocks           - ...
  * @physical_files_array - ...
  * @num_physical_files   - ...
@@ -127,11 +128,10 @@ void update_outputArray_and_sn(Dir current_dir , File* files_array , File* outpu
 void update_dir_values(Dir current_dir , int goal_depth,
                        Dir* dirs_array, unsigned long num_dirs,
                        File* files_array,  unsigned long num_files,
-                       Block* blocks_array, unsigned long num_blocks,
-                       File* physical_files_array, unsigned long num_physical_files,
+                       Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx,
-                       char dedup_type);
+                       PMemory_pool memory_pool);
 
 /*
  *  calculate_depth_and_merge_files - ...
@@ -142,7 +142,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
  * @num_dirs             - ...
  * @files_array          - ...
  * @num_files            - ...
- * @blocks_array         - ...
+ * @base_objects_arr         - ...
  * @num_blocks           - ...
  * @physical_files_array - ...
  * @num_physical_files   - ...
@@ -156,11 +156,9 @@ void update_dir_values(Dir current_dir , int goal_depth,
 void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
                                  Dir* dirs_array, unsigned long num_dirs,
                                  File* files_array,  unsigned long num_files,
-                                 Block* blocks_array, unsigned long num_blocks,
-                                 File* physical_files_array, unsigned long num_physical_files,
-                                 char dedup_type , int goal_depth ,
-                                 File* output_files_array , unsigned long* output_files_idx ,
-                                 Dir* output_dirs_array , unsigned long* output_dirs_idx );
+                                 Base_Object* base_object_array, unsigned long num_base_object,
+                                 int goal_depth, File* output_files_array , unsigned long* output_files_idx ,
+                                 Dir* output_dirs_array , unsigned long* output_dirs_idx , PMemory_pool memory_pool);
 
 
 /*
@@ -178,7 +176,7 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
  *
  */
 void print_output_csv_header(FILE* results_file , char dedup_type , char* input_files_list, int goal_depth,
-                             double run_time , unsigned long num_files_input , unsigned long num_files_output,
+                             unsigned long num_files_input , unsigned long num_files_output,
                              unsigned long num_dirs_input , unsigned long num_dirs_output);
 
 /*

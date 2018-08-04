@@ -43,6 +43,7 @@ List listCreate(CopyListElement copyElement, FreeListElement freeElement) {
     if (!newList) {
         return NULL;
     }
+
     newList->copyElement = copyElement;
     newList->freeElement = freeElement;
     newList->first = NULL;
@@ -263,7 +264,7 @@ static Node nodeCreate(ListElement data, CopyListElement copyFunction) {
     if (!data) {
         return NULL;
     }
-    Node newNode = malloc(sizeof(*newNode));
+    Node newNode = malloc(sizeof(*newNode)); //memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)))
     if (!newNode) {
         return NULL;
     }

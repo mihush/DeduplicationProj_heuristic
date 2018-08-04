@@ -17,23 +17,25 @@
 /* ****************************************************************************************************************** */
 /* ***************** START ****************** Structure Object Definitions ****************** START ***************** */
 /*
- * Definition of a block structure:
- *            - block_sn -> a running index on all blocks read from the file system
- *            - block_id -> a hushed id as appears in the input file
- *            - block_size -> the size of a block
+ * Definition of a base_object_structure:
+ *            base_object_structure will be either for a block (B level) or physical_file (F level)
+ *            - sn -> a running index on all base objects read from the file system
+ *            - id -> a hushed id as appears in the input file
+ *            - size -> the size of the object
  *            - shared_by_num_files -> number of files sharing this block
  *            - files_array -> array of file serial number that share the same physical file
  */
-struct block_t{
-    unsigned long block_sn; // running index
-    char* block_id; // Hashed
-    unsigned int block_size;
+//struct block_t{
+struct base_object_t{
+    unsigned long sn; // running index
+    char* id; // Hashed
+    unsigned int size;
+
     unsigned int shared_by_num_files;
-    unsigned long* files_array;
     unsigned long* files_array_updated;
     unsigned long output_updated_idx;
 };
-typedef struct block_t *Block;
+typedef struct base_object_t *Base_Object;
 
 /*
  * Definition of a File structure:
@@ -45,32 +47,23 @@ typedef struct block_t *Block;
  *            - file_size -> the size of the file
  *            - blocks_list -> List of Block_info elements of blocks contained in the file
  */
-struct file_t{
+struct file_t{ // Only logical file
     int depth;
-    char flag; // L - logical_file , P - physical_file
-    unsigned long file_sn;
-    char* file_id;
+    unsigned long sn;
+    char* id;
     unsigned long dir_sn;
-    int num_base_objects;
-    unsigned int file_size;
-    unsigned long physical_sn;
+
+    unsigned int num_base_objects;
+    unsigned int size;
     bool isMergedF;
 
     //For Block level deduplication
-    Block* blocks_array;
-    unsigned long ind_blocks;
+    Base_Object* base_objects_arr;
+    unsigned long base_object_arr_idx;
 
-    //For File level deduplication
-    //Physical File - P flag
-    unsigned int shared_by_num_files; // should be use only for flag = 'P'
-    //In case of physical file (P) - contains sn of logical files that share this physical file
-    //In case of logical file (L) - use in case of merged file, contains sn of physical files
-    //                              that were merged into it
-    unsigned long* files_array;
 
     //For the Merged File
     bool* objects_bin_array;
-
 };
 typedef struct file_t *File;
 
@@ -87,8 +80,8 @@ typedef struct file_t *File;
  *            - merged_file    -> ....
  */
 struct dir_t{
-    unsigned long dir_sn;
-    char* dir_id;
+    unsigned long sn;
+    char* id;
     unsigned long parent_dir_sn;
     int depth;
 
@@ -119,29 +112,10 @@ typedef struct dir_t *Dir;
  * @block_sn   - serial number of the block
  * @block_size - the size of the block
  */
-Block block_create(char* block_id , unsigned long block_sn , unsigned int block_size ,
-                   unsigned short shared_by_num_files);
+Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_object_size, PMemory_pool memory_pool);
 
-/*
- *  block_destroy - Destroys and frees space of a block structure
- *
- *  @block - pointer to the block structure to be destroyed
- */
-void block_destroy(Block block);
-
-/*
- *  block_get_SN - returns the SN of the block
- *
- *  @block - pointer to the block structure
- */
-long block_get_SN(Block block);
-
-/*
- *  block_get_ID - Returns the hashed id of the block
- *
- *  @block - pointer to the block structure
- */
-char* block_get_ID(Block block);
+Base_Object base_object_update(Base_Object base_object, char *base_object_id,
+                               unsigned short shared_by_num_files, PMemory_pool memory_pool);
 
 /*
  *  block_add_file - adds the file containing the block to the files array saved in the block structure
@@ -149,16 +123,15 @@ char* block_get_ID(Block block);
  *  @block   - pointer to the block structure to which we want to add the file
  *  @file_sn - the serial number of the file that contains the block
  */
-//ErrorCode block_add_file(Block block , unsigned long file_sn);
-ErrorCode add_blockptr_to_files(Block block , File* files_array , unsigned long file_sn);
+ErrorCode add_base_object_ptr_to_file(Base_Object base_object, File *files_array, unsigned long file_sn);
 
 
 /*
- *  print_block - Prints the data saved in the block structure
+ *  print_base_object - Prints the data saved in the block structure
  *
  *  @block   - pointer to the block structure to be printed
  */
-void print_block(Block block);
+void print_base_object(Base_Object block);
 
 /*
  *  print_block_to_csv - ....
@@ -166,7 +139,7 @@ void print_block(Block block);
  *  @block       - pointer to the block structure to be printed
  *  @output_line - ...
  */
-void print_block_to_csv(Block block , char* output_line);
+void print_base_object_to_csv(Base_Object base_object, char* output_line, char dedup_type);
 
 /* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
 /* ****************************************************************************************************************** */
@@ -191,62 +164,18 @@ void print_block_to_csv(Block block , char* output_line);
  * @dedup_type    -
  * @file_type     -
  */
-File file_create(char* file_id , unsigned long file_sn ,unsigned long parent_dir_sn,
-                 unsigned long num_of_blocks , unsigned long num_of_files,
-                 unsigned int size , unsigned long physical_sn ,
-                 char dedup_type , char file_type , bool isMerged);
-
+File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
+                 unsigned int num_base_object, unsigned int size ,
+                 bool isMerged , PMemory_pool memory_pool);
 /*
- *  file_destroy - Destroys and frees space of a file structure
- *
- *  @file - Pointer to the file object to be destroyed
- */
-void file_destroy(File file);
-
-/*
- *  file_get_SN - Returns the SN of the file
- *
- *  @file - Pointer to the file object
- */
-unsigned long file_get_SN(File file);
-
-/*
- * file_get_ID - Returns pointer to the hashed ID of the file
- *
- * @file - Pointer to the file object
- */
-char* file_get_ID(File file);
-
-/*
- *  file_get_depth - Returns the depth of the file in the hierarchy
- *
- *  @file - Pointer to the file object
- */
-int file_get_depth(File file);
-
-/*
- *  file_set_depth - update the depth of the file in the hierarchy
- *
- *  @file - Pointer to the file object
- */
-void file_set_depth(File file, int depth);
-
-/*
- *  file_get_num_base_objects - returns the number of blocks the file contains
- *
- *  @file - Pointer to the file object
- */
-int file_get_num_base_objects(File file);
-
-/*
- *  file_add_block - ....
+ *  add_block_to_file - ....
  *
  *  @file       - Pointer to the file object
  *  @block_sn   - hashed id of the block
  *  @block_size - size of the block
  *  @idx        - ...
  */
-ErrorCode file_add_block(File file , unsigned long block_sn , int block_size /*, int idx*/);
+//ErrorCode add_block_to_file(File file, unsigned long block_sn, int block_size /*, int idx*/ , PMemory_pool memory_pool);
 
 /*
  *  file_add_logical_file - ....
@@ -255,30 +184,21 @@ ErrorCode file_add_block(File file , unsigned long block_sn , int block_size /*,
  *  @logical_files_sn - ...
  *  @idx              - ...
  */
-ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx);
+//ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx);
 
 /*
- *  file_add_merged_block - ...
+ *  add_base_object_to_merged_file - ...
  *
  *  @file    - Pointer to the file object
  *  @bi      - ...
  *  @file_id - ...
  */
-void file_add_merged_block(File file , Block block , char* file_id);
-
-/*
- *  file_add_merged_physical - ...
- *
- *  @file            - Pointer to the file object
- *  @sn_of_physical  - ...
- *  @file_id         - ...
- */
-void file_add_merged_physical(File file , File physical_file , char* file_id);
+void add_base_object_to_merged_file(File file, Base_Object base_object, char *file_id);//TODO change BLOCK to only sn
 
 /*
  *  print_file - ....
  *
- *  @file - Pointer to the file objectstructure to be printed
+ *  @file - Pointer to the file object structure to be printed
  */
 void print_file(File file);
 
@@ -308,63 +228,28 @@ void print_file_to_csv(File file, char* output_line);
  * @num_of_sub_dirs - ...
  */
 Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn ,
-               unsigned long num_of_files , unsigned long num_of_sub_dirs);
+               unsigned long num_of_files , unsigned long num_of_sub_dirs , PMemory_pool memory_pool);
 
 /*
- * dir_destroy - Destroys struct of Directory
- *
- * @dir - Pointer to the directory structure that should be destroyed
- */
-void dir_destroy(Dir dir);
-
-/*
- * dir_get_SN - Return the serial number of directory
- *
- * @dir - pointer to the directory
- */
-unsigned long dir_get_SN(Dir dir);
-
-/*
- * dir_get_ID - Return pointer to the ID of directory
- *
- * @dir - pointer to the directory
- */
-char* dir_get_ID(Dir dir);
-
-/*
- * dir_get_depth - Return the depth of the directory
- *
- * @dir - pointer to the directory
- */
-unsigned int dir_get_depth(Dir dir);
-
-/*
- * dir_set_depth - updates the depth of the directory
- *
- * @dir - pointer to the directory
- */
-void dir_set_depth(Dir dir , int depth);
-
-/*
- * dir_add_file - Adds file to a directory object by saving its' ID in the files list of the directory
+ * add_file_sn_to_dir - Adds file to a directory object by saving its' ID in the files list of the directory
  *                and updates the files counter of the folder
  *
  *  @dir     - pointer to the directory
  *  @file_sn - the serial number of the file that should be added to the directory
  *  @idx     - ...
  */
-ErrorCode dir_add_file(Dir dir , unsigned long file_sn , int idx);
+ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx);
 
 /* Adding sub_dir into the directory */
 /*
- * dir_add_sub_dir - Adds a sub-directory to a directory object by saving its' ID in the sub-directories list of
+ * add_sub_dir_sn_to_dir - Adds a sub-directory to a directory object by saving its' ID in the sub-directories list of
  *                   the directory and updates the files counter of the folder
  *
  *  @dir    - pointer to the directory
  *  @dir_sn - the serial number of the sub-directory that should be added to the directory
  *  @idx    - ...
  */
-ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn , int idx);
+ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx);
 
 /*
  *  print_dir - ....
@@ -374,12 +259,12 @@ ErrorCode dir_add_sub_dir(Dir dir , unsigned long dir_sn , int idx);
 void print_dir(Dir dir);
 
 /*
- *  print_dir_to_cvs - ....
+ *  print_dir_to_csv - ....
  *
  *  @dir         -  Pointer to the directory object structure to be printed
  *  @output_line - ...
  */
-void print_dir_to_cvs(Dir dir , char* output_line);
+void print_dir_to_csv(Dir dir, char *output_line);
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
