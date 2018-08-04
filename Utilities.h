@@ -11,6 +11,7 @@ typedef enum{
     OUT_OF_MEMORY
 } ErrorCode;
 #include "List.h"
+#include "memory_pool.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +34,7 @@ typedef enum{
 #define FILE_ATTRIBUTE_DIRECTORY 0x00000010
 #define ROOT_ID_LEN 8
 #define FILE_NAME_LEN 5
+#define FILE_SYSTEM_ID_LEN 3
 #define NUM_OF_INPUT_FILE 208
 #define MAX_LINE_LEN 1500
 
