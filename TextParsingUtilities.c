@@ -58,10 +58,13 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
         tok = strtok(NULL , sep);
         base_object_size = atoi(tok);
 
-        base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+        // In case we have files which share the same base_object don't need to create him again
+        if(base_objects_arr[base_object_sn] == NULL){
+            base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+        }
+
         file->base_objects_arr[i] = base_objects_arr[base_object_sn];
-        file->base_object_arr_idx++; //TODO - check if should remove
-        //file->num_base_objects++;
+        //file->base_object_arr_idx++; //TODO - check if should remove
         file->size += base_object_size;
     }
 
@@ -144,8 +147,7 @@ Dir readDirLine(char* line , PMemory_pool memory_pool){
 
 void aux_add_base_object_to_merge_file(File merged_file, File file_to_insert){
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
-
-        add_base_object_to_merged_file(merged_file, file_to_insert->base_objects_arr[i], file_to_insert->id); //TODO change BLOCK to only sn
+        add_base_object_to_merged_file(merged_file, (file_to_insert->base_objects_arr)[i], file_to_insert->id); //TODO change BLOCK to only sn
     }
 }
 
@@ -160,7 +162,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         curr_file->sn = *output_files_idx;
         output_files_array[*output_files_idx] = curr_file;
 
-        (current_dir->files_array)[f] = curr_file->sn; //Updated file sn at the parent dir
+//        TODO - (current_dir->files_array)[f] = curr_file->sn; //Updated file sn at the parent dir
         (*output_files_idx)++;
 
         // Update file_sn at each base_object containing this file
@@ -188,7 +190,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
     if(current_dir->sn == current_dir->parent_dir_sn){
         current_depth = current_dir->depth;
     } else {
-        parent_depth = dirs_array[(current_dir->parent_dir_sn)]->depth;
+        parent_depth = output_dirs_array[(current_dir->parent_dir_sn)]->depth;
         current_dir->depth = (parent_depth + 1);
         current_depth = current_dir->depth;
     }
@@ -269,7 +271,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //update dir depth
             dirs_array[(current_dir->dirs_array)[j]]->depth = current_dir->depth + 1;
             dirs_array[(current_dir->dirs_array)[j]]->merged_file = current_dir->merged_file;
-            dirs_array[(current_dir->dirs_array)[j]]->parent_dir_sn = current_dir->sn;
+            //TODO - dirs_array[(current_dir->dirs_array)[j]]->parent_dir_sn = current_dir->sn;
 
             //For each directory - call update_dir_values
             update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
