@@ -38,15 +38,15 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     return base_object;
 }
 
-ErrorCode add_base_object_ptr_to_file(Base_Object base_object, File *files_array, unsigned long file_sn){
-    if(base_object == NULL || files_array == NULL){ //Check input is valid
-        return INVALID_INPUT;
-    }
-    files_array[file_sn]->base_objects_arr[(files_array[file_sn]->base_object_arr_idx)] = base_object;
-    (files_array[file_sn]->base_object_arr_idx)++;
-
-    return SUCCESS;
-}
+//ErrorCode add_base_object_ptr_to_file(Base_Object base_object, File *files_array, unsigned long file_sn){
+//    if(base_object == NULL || files_array == NULL){ //Check input is valid
+//        return INVALID_INPUT;
+//    }
+//    files_array[file_sn]->base_objects_arr[(files_array[file_sn]->base_object_arr_idx)] = base_object;
+//    (files_array[file_sn]->base_object_arr_idx)++;
+//
+//    return SUCCESS;
+//}
 
 void print_base_object(Base_Object base_object){
     printf("# ------- Block : %lu ------- #\n" , base_object->sn);
@@ -151,7 +151,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
 void add_base_object_to_merged_file(File file, Base_Object base_object, char *file_id){
     assert(file);
-    bool object_exists = false;
+    bool object_exists = false, is_first_object = false;
     if(file->objects_bin_array[(base_object->sn)]){
         object_exists = true;
     }
@@ -159,11 +159,16 @@ void add_base_object_to_merged_file(File file, Base_Object base_object, char *fi
         // Update correspondingly file_sn at each block contain this file.
         base_object->files_array_updated[(base_object->output_updated_idx)] = file->sn;
         (base_object->output_updated_idx)++;
-        (file->num_base_objects)++;
+
+        file->base_objects_arr[file->base_object_arr_idx] = base_object;
+        if(file->base_object_arr_idx == 0){
+            is_first_object = true;
+        }
+        (file->base_object_arr_idx)++;
         file->objects_bin_array[(base_object->sn)] = true;
     }
     //Check if first physical file and changed id
-    if(file->num_base_objects == 1){
+    if(is_first_object){
         char new_file_id[FILE_ID_LEN];
         sprintf(new_file_id , "MF_");
         strcat(new_file_id , file_id);
@@ -187,7 +192,7 @@ void print_file_to_csv(File file, char* output_line){
 
     sprintf(output_line , "F,%lu,%s,%lu,%d,",file->sn,file->id,file->dir_sn,file->num_base_objects);
     for(int i = 0 ; i < file->num_base_objects ; i++){
-        sprintf(temp , "%lu,%d" , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
+        sprintf(temp , "%lu,%u" , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
         strcat(output_line , temp);
     }
     strcat(output_line , "\n");
