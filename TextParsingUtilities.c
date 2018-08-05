@@ -62,9 +62,7 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
         if(base_objects_arr[base_object_sn] == NULL){
             base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
         }
-
         file->base_objects_arr[i] = base_objects_arr[base_object_sn];
-        //file->base_object_arr_idx++; //TODO - check if should remove
         file->size += base_object_size;
     }
 
@@ -88,9 +86,6 @@ Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memor
 
     Base_Object base_object = base_object_update(base_objects_arr[base_object_sn], base_object_id,
                                             shared_by_num_files, memory_pool);
-    //TODO  - check if need to update pounters to base_objects
-    //add_base_object_ptr_to_file(block, files_array, file_sn);
-
     return base_object;
 }
 
@@ -147,8 +142,8 @@ Dir readDirLine(char* line , PMemory_pool memory_pool){
 
 void aux_add_base_object_to_merge_file(File merged_file, File file_to_insert){
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
-        add_base_object_to_merged_file(merged_file, (file_to_insert->base_objects_arr)[i], file_to_insert->id); //TODO change BLOCK to only sn
-    }
+        add_base_object_to_merged_file(merged_file, (file_to_insert->base_objects_arr)[i], file_to_insert->id);
+}
 }
 
 void move_files_to_output_array(Dir current_dir , File* files_array , File* output_files_array , unsigned long* output_files_idx){
@@ -161,7 +156,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         // Update file sn with the global output index
         curr_file->sn = *output_files_idx;
         output_files_array[*output_files_idx] = curr_file;
-
 //        TODO - (current_dir->files_array)[f] = curr_file->sn; //Updated file sn at the parent dir
         (*output_files_idx)++;
 
@@ -208,9 +202,13 @@ void update_dir_values(Dir current_dir , int goal_depth,
                 assert(current_dir->merged_file);
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++) {
                     //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
-                    aux_add_base_object_to_merge_file(current_dir->merged_file,
-                                                      files_array[(current_dir->files_array)[f]]);
-               }
+                    aux_add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]]);
+                }
+//                printf("(1) ******************************** Printing Output Dirs ********************************\n");
+//                for(int z = 0 ; z < *output_files_idx ; z++){
+//                    print_file(output_files_array[z]);
+//                }
+//                printf("\n\n");
             }
             return;
         }
@@ -219,7 +217,11 @@ void update_dir_values(Dir current_dir , int goal_depth,
     // CALCULATE RECURSION - Get Here ONLY if we have dirs to process !!!!!!!!!
     if(current_depth < (goal_depth - 1)){ //we HAVEN'T Reached the desired depth
         move_files_to_output_array(current_dir, files_array, output_files_array, output_files_idx);
-
+//        printf("(2) ******************************** Printing Output Dirs ********************************\n");
+//        for(int z = 0 ; z < *output_files_idx ; z++){
+//            print_file(output_files_array[z]);
+//        }
+//        printf("\n\n");
         for(int d = 0 ; d < current_dir->num_of_subdirs ; d++){
             if((current_dir->dirs_array)[d] == current_dir->sn){ // root dir contains its own sn in the subdirs array
                 continue;
@@ -247,13 +249,12 @@ void update_dir_values(Dir current_dir , int goal_depth,
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
             //create new merged file and save it to output_files_array
-            current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad", current_dir->sn ,
+            current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_1234567891", current_dir->sn ,
                                                     num_base_object , 0 , true , memory_pool);
             output_files_array[*output_files_idx] = current_dir->merged_file;
             (*output_files_idx)++;
 
         }
-
 
         //merge all child file blocks to the merged file of the parent directory
         assert(current_dir->merged_file);
@@ -261,6 +262,11 @@ void update_dir_values(Dir current_dir , int goal_depth,
             //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
             aux_add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]]);
         }
+//        printf("(3) ******************************** Printing Output Dirs ********************************\n");
+//        for(int z = 0 ; z < *output_files_idx ; z++){
+//            print_file(output_files_array[z]);
+//        }
+//        printf("\n\n");
         //update all directory depths
         //For each directory - call update_dir_values
         for(int j = 0 ; j < current_dir->num_of_subdirs ; j++){
@@ -336,3 +342,11 @@ void clear_line(char* line){
     printf("%s\n" , line);
 }
 
+void print_all_files_to_csv(File* output_files_array , unsigned long output_files_idx){
+    char temp_output_line[MAX_LINE_LEN];
+    printf(" #-#-# The OUTPUT Files array #-#-# \n");
+    for( int i = 0 ; i < output_files_idx ; i++){
+        print_file((output_files_array[i]));
+        print_file_to_csv(output_files_array[i] , temp_output_line);
+    }
+}

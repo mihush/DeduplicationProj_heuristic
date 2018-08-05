@@ -187,4 +187,5 @@ void print_output_csv_header(FILE* results_file , char dedup_type , char* input_
  */
 void clear_line(char* line);
 
+void print_all_files_to_csv(File* output_files_array , unsigned long output_files_idx);
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

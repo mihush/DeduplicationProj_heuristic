@@ -38,16 +38,6 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     return base_object;
 }
 
-//ErrorCode add_base_object_ptr_to_file(Base_Object base_object, File *files_array, unsigned long file_sn){
-//    if(base_object == NULL || files_array == NULL){ //Check input is valid
-//        return INVALID_INPUT;
-//    }
-//    files_array[file_sn]->base_objects_arr[(files_array[file_sn]->base_object_arr_idx)] = base_object;
-//    (files_array[file_sn]->base_object_arr_idx)++;
-//
-//    return SUCCESS;
-//}
-
 void print_base_object(Base_Object base_object){
     printf("# ------- Block : %lu ------- #\n" , base_object->sn);
     printf("        id : %s\n" , base_object->id);
@@ -99,7 +89,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     file->size = size;
     file->num_base_objects = num_base_object;
     file->base_object_arr_idx = 0;
-    file->base_objects_arr = memory_pool_alloc(memory_pool , (sizeof(Base_Object)*num_base_object));
+    file->base_objects_arr = memory_pool_alloc(memory_pool , ((sizeof(Base_Object))*num_base_object));
     if(file->base_objects_arr == NULL){
         return NULL;
     }
@@ -115,39 +105,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     return file;
 }
 
-//ErrorCode add_block_to_file(File file, unsigned long block_sn, int block_size/* int idx*/ , PMemory_pool memory_pool){
-//    if(file == NULL || block_size < 0){
-//        printf("!!1\n");
-//        return INVALID_INPUT;
-//    }
-//    Block block = memory_pool_alloc(memory_pool , (sizeof(*block)));
-//    if(block == NULL){
-//        printf("!!2\n");
-//        return OUT_OF_MEMORY;
-//    }
-//    block->block_sn =  block_sn;
-//    block->block_size = block_size;
-//    block->output_updated_idx = 0;
-//    block->files_array_updated = NULL;
-//    block->files_array = NULL;
-//    block->shared_by_num_files = 0;
-//    (file->base_objects_arr)[file->base_object_arr_idx] = block;
-//    (file->base_object_arr_idx)++;
-//
-//    return SUCCESS;
-//}
-
-//ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx){
-//    if(file == NULL){
-//        return INVALID_INPUT;
-//    }
-//
-//    (file->files_array)[idx] = logical_files_sn;
-//    (file->shared_by_num_files)++;
-//
-//    return SUCCESS;
-//}
-
 void add_base_object_to_merged_file(File file, Base_Object base_object, char *file_id){
     assert(file);
     bool object_exists = false, is_first_object = false;
@@ -156,15 +113,15 @@ void add_base_object_to_merged_file(File file, Base_Object base_object, char *fi
     }
     if(object_exists == false){ //Check if block exists already - do not increase counter
         // Update correspondingly file_sn at each block contain this file.
-        base_object->files_array_updated[(base_object->output_updated_idx)] = file->sn;
+        (base_object->files_array_updated)[(base_object->output_updated_idx)] = file->sn;
         (base_object->output_updated_idx)++;
 
-        file->base_objects_arr[file->base_object_arr_idx] = base_object;
+        (file->base_objects_arr)[file->base_object_arr_idx] = base_object;
         if(file->base_object_arr_idx == 0){
             is_first_object = true;
         }
-        (file->base_object_arr_idx)++;
-        file->objects_bin_array[(base_object->sn)] = true;
+        file->base_object_arr_idx = file->base_object_arr_idx + 1;
+        file->objects_bin_array[base_object->sn] = true;
     }
     //Check if first physical file and changed id
     if(is_first_object){
@@ -180,8 +137,23 @@ void print_file(File file){
     assert(file);
     printf("# ------- Logical File : %lu ------- #\n", file->sn);
     printf("         id : %s\n" , file->id);
-    printf(" num_blocks : %d\n" , file->num_base_objects);
+    if(file->isMergedF){
+        printf(" num_blocks : %d\n" , file->base_object_arr_idx);
+    }else{
+        printf(" num_blocks : %d\n" , file->num_base_objects);
+    }
     printf(" parent_dir : %lu\n" , file->dir_sn);
+    printf(" base obj sn's:");
+    int num_itr = 0;
+    if(file->isMergedF){
+        num_itr = file->base_object_arr_idx;
+    }else{
+        num_itr = file->num_base_objects;
+    }
+    for(int i = 0 ; i < num_itr ; i++){
+        printf("%d," , (file->base_objects_arr)[i]->sn);
+    }
+    printf("\n");
     printf("# ------------------------- #\n");
 }
 
@@ -190,7 +162,13 @@ void print_file_to_csv(File file, char* output_line){
     char temp[100];
 
     sprintf(output_line , "F,%lu,%s,%lu,%d,",file->sn,file->id,file->dir_sn,file->num_base_objects);
-    for(int i = 0 ; i < file->num_base_objects ; i++){
+    int num_itr;
+    if(file->isMergedF){
+        num_itr = file->base_object_arr_idx;
+    }else {
+        num_itr = file->num_base_objects;
+    }
+    for(int i = 0 ; i < num_itr ; i++){
         sprintf(temp , "%lu,%u" , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
         strcat(output_line , temp);
     }

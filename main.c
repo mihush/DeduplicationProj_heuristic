@@ -134,21 +134,18 @@ int main(int argc , char** argv){
         //TODO - check if need to use the clearLine function
     }
 
-
-    printf(" #-#-# The Files array #-#-# \n");
-    for( int i = 0 ; i < num_file_objects ; i++){
-        print_file((files_array[i]));
-    }
-    printf(" #-#-# The Blocks array #-#-# \n");
-    for(int i = 0 ; i < num_base_objects; i++){
-        print_base_object(base_objects_arr[i]);
-    }
-    printf(" #-#-# The Directories array #-#-# \n");
-    for( int i = 0 ; i < num_dir_objects ; i++){
-        print_dir(dirs_array[i]);
-    }
-
-
+//    printf(" #-#-# The Files array #-#-# \n");
+//    for( int i = 0 ; i < num_file_objects ; i++){
+//        print_file((files_array[i]));
+//    }
+//    printf(" #-#-# The Blocks array #-#-# \n");
+//    for(int i = 0 ; i < num_base_objects; i++){
+//        print_base_object(base_objects_arr[i]);
+//    }
+//    printf(" #-#-# The Directories array #-#-# \n");
+//    for( int i = 0 ; i < num_dir_objects ; i++){
+//        print_dir(dirs_array[i]);
+//    }
 
     //Build the tree hierarchy of the file systems
     /* ----------------- Define Output Directories and Files arrays -----------------  */
@@ -188,11 +185,12 @@ int main(int argc , char** argv){
                             num_file_objects , output_files_idx , num_dir_objects , output_dirs_idx);
 
     //Print Files to Output CSV
-    printf(" #-#-# The OUTPUT Files array #-#-# \n");
-    for( int i = 0 ; i < output_files_idx ; i++){
-        print_file((output_files_array[i]));
-        print_file_to_csv(output_files_array[i] , temp_output_line);
-    }
+//    printf(" #-#-# The OUTPUT Files array #-#-# \n");
+//    for( int i = 0 ; i < output_files_idx ; i++){
+//        print_file((output_files_array[i]));
+//        print_file_to_csv(output_files_array[i] , temp_output_line);
+//    }
+    print_all_files_to_csv(output_files_array , output_files_idx);
 
     //Print Base_object (physhcal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
