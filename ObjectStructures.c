@@ -112,7 +112,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
             file->objects_bin_array[i] = false;
         }
     }
-
     return file;
 }
 
