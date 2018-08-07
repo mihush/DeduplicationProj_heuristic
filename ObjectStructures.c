@@ -169,7 +169,7 @@ void print_file_to_csv(File file, char* output_line){
         num_itr = file->num_base_objects;
     }
     for(int i = 0 ; i < num_itr ; i++){
-        sprintf(temp , "%lu,%u" , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
+        sprintf(temp , "%lu,%u," , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
         strcat(output_line , temp);
     }
     strcat(output_line , "\n");
