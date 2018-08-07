@@ -134,19 +134,6 @@ int main(int argc , char** argv){
         //TODO - check if need to use the clearLine function
     }
 
-//    printf(" #-#-# The Files array #-#-# \n");
-//    for( int i = 0 ; i < num_file_objects ; i++){
-//        print_file((files_array[i]));
-//    }
-//    printf(" #-#-# The Blocks array #-#-# \n");
-//    for(int i = 0 ; i < num_base_objects; i++){
-//        print_base_object(base_objects_arr[i]);
-//    }
-//    printf(" #-#-# The Directories array #-#-# \n");
-//    for( int i = 0 ; i < num_dir_objects ; i++){
-//        print_dir(dirs_array[i]);
-//    }
-
     //Build the tree hierarchy of the file systems
     /* ----------------- Define Output Directories and Files arrays -----------------  */
     File* output_files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*output_files_array)));
@@ -169,15 +156,17 @@ int main(int argc , char** argv){
 
     //TODO - correct the output file name by using the input file name (adding hurisctic or some other shit)!
     char temp_output_line[MAX_LINE_LEN];
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    printf("==> %s\n" , input_file_name);
     //Open the Output File
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
-    strcpy(output_file_name , "Heuristic_Results_");
-    if( dedup_type[0] == 'B'){
-        strcat(output_file_name , "_B.csv");
-    } else {
-        strcat(output_file_name , "_F.csv");
-    }
+    strncpy(output_file_name , input_file_name , 2);
+    input_file_name += 7;
+    //strncpy(output_file_name , input_file_name , );
+    strcat(output_file_name , "heuristic");
+    strcpy(output_file_name + 11 , input_file_name);
+    printf("==> %s\n" , input_file_name);
 
     // Open the output file
     results_file = fopen(output_file_name , "w+");
@@ -185,26 +174,28 @@ int main(int argc , char** argv){
                             num_file_objects , output_files_idx , num_dir_objects , output_dirs_idx);
 
     //Print Files to Output CSV
-//    printf(" #-#-# The OUTPUT Files array #-#-# \n");
-//    for( int i = 0 ; i < output_files_idx ; i++){
-//        print_file((output_files_array[i]));
-//        print_file_to_csv(output_files_array[i] , temp_output_line);
-//    }
-    print_all_files_to_csv(output_files_array , output_files_idx);
+    printf(" #-#-# The OUTPUT Files array #-#-# \n");
+    for( int i = 0 ; i < output_files_idx ; i++){
+        print_file((output_files_array[i]));
+        print_file_to_csv(output_files_array[i] , temp_output_line);
+        fprintf(results_file , "%s" ,temp_output_line);
+    }
+    //print_all_files_to_csv(output_files_array , output_files_idx);
 
-    //Print Base_object (physhcal_file or block) output CSV
+    //Print Base_object (physichal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){
         print_base_object(base_objects_arr[i]);
         print_base_object_to_csv(base_objects_arr[i] , temp_output_line, dedup_type[0]);
+        fprintf(results_file , "%s" ,temp_output_line);
     }
 
-    //queen Sarit-Hadad
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
         print_dir(output_dirs_array[i]);
         print_dir_to_csv(output_dirs_array[i], temp_output_line);
+        fprintf(results_file , "%s" ,temp_output_line);
     }
 
     /* ----------------------------------------- Read Data Objects ---------------------------------------- */

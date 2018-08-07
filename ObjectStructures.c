@@ -256,7 +256,7 @@ void print_dir_to_csv(Dir dir, char *output_line){
         dir_type = 'D';
     }
 
-    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d,\n" ,dir_type, dir->sn, dir->id, dir->parent_dir_sn,
+    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type, dir->sn, dir->id, dir->parent_dir_sn,
             dir->num_of_subdirs, dir->num_of_files);
     for(int i = 0 ; i < dir->num_of_subdirs ; i++){
         sprintf(temp , "%lu," , (dir->dirs_array)[i]);
