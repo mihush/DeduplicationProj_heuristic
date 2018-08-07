@@ -154,19 +154,14 @@ int main(int argc , char** argv){
                                     base_objects_arr, num_base_objects, goal_depth,
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
-    //TODO - correct the output file name by using the input file name (adding hurisctic or some other shit)!
     char temp_output_line[MAX_LINE_LEN];
     char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    printf("==> %s\n" , input_file_name);
-    //Open the Output File
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);
     input_file_name += 7;
-    //strncpy(output_file_name , input_file_name , );
     strcat(output_file_name , "heuristic");
     strcpy(output_file_name + 11 , input_file_name);
-    printf("==> %s\n" , input_file_name);
 
     // Open the output file
     results_file = fopen(output_file_name , "w+");
@@ -180,7 +175,6 @@ int main(int argc , char** argv){
         print_file_to_csv(output_files_array[i] , temp_output_line);
         fprintf(results_file , "%s" ,temp_output_line);
     }
-    //print_all_files_to_csv(output_files_array , output_files_idx);
 
     //Print Base_object (physichal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
