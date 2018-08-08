@@ -163,6 +163,7 @@ int main(int argc , char** argv){
     strcat(output_file_name , "heuristic");
     strcpy(output_file_name + 11 , input_file_name);
 
+    //...
     // Open the output file
     results_file = fopen(output_file_name , "w+");
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth ,
