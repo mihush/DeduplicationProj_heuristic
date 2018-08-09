@@ -5,23 +5,15 @@
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
 
-#include "Utilities.h"
 #include "ObjectStructures.h"
-/*
- * readInputParams - Reads from the input_params.txt file the path of the input file and the type of
- *                   deduplication that it was created with
- *                   The input_params.txt file format is expected to be:
- *                              Full_Input_File_path
- *                              B/F
- *                   The Output type can be B for Block Level Deduplication or F for File level Deduplication
- *                   Make Sure The input_params File is in the same folder as the executable file
- *
- * @dedup_type - is a  pointer where the input read from file will be saved,
- *                it will be allocated inside the function and should be released from outside.
- * @input_file_path - is a  pointer where the input read from file will be saved,
- *                    it will be allocated inside the function and should be released from outside.
- */
-ErrorCode readInputParams(char** input_file_path);
+#include "memory_pool.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+/********************************************* Definitions& Magic Numbers *********************************************/
 
 /*
  * countRootsInInput - Counts the number of roots in the input file.

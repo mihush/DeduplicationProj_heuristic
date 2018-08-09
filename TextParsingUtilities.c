@@ -186,6 +186,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         //update parent directory with new file sn
         (current_dir->upd_files_array)[current_dir->upd_num_of_files] = curr_file->sn;
         (current_dir->upd_num_of_files)++;
+//        (current_dir->files_array)[f] = curr_file->sn; //TODO check if correct
 
         // Update file_sn at each base_object containing this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
@@ -203,7 +204,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
                        PMemory_pool memory_pool){
-//    int parent_depth = 0;
     int current_depth = 0;
     int new_sub_dir_sn = 0;
     if(current_dir == NULL){
@@ -213,7 +213,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
     if(current_dir->sn == current_dir->parent_dir_sn){
         current_depth = current_dir->depth;
     } else {
-//        parent_depth = output_dirs_array[(current_dir->parent_dir_sn)]->depth;
         current_dir->depth = (parent_depth + 1);
         current_depth = current_dir->depth;
     }

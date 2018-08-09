@@ -42,9 +42,6 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size) {
 
         pool->next_free_pool_ptr = pool_to_alloc_from->next_pool;
         pool_to_alloc_from = pool->next_free_pool_ptr;
-        //FILE* monitor_file = fopen("Monitor.txt" , "w+");
-        //fprintf(monitor_file, "(MemoryPool)--> ----- New Memory Pool Has Been Allocated ----- \n");
-        //fclose(monitor_file);
     }
 
     /* place the address of the memory in res and update the free index */

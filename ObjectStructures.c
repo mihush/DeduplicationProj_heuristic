@@ -105,33 +105,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     return file;
 }
 
-void add_base_object_to_merged_file(File file, Base_Object base_object, char *file_id){
-    assert(file);
-    bool object_exists = false, is_first_object = false;
-    if(file->objects_bin_array[(base_object->sn)]){
-        object_exists = true;
-    }
-    if(object_exists == false){ //Check if block exists already - do not increase counter
-        // Update correspondingly file_sn at each block contain this file.
-        (base_object->files_array_updated)[(base_object->output_updated_idx)] = file->sn;
-        (base_object->output_updated_idx)++;
-
-        (file->base_objects_arr)[file->base_object_arr_idx] = base_object;
-        if(file->base_object_arr_idx == 0){
-            is_first_object = true;
-        }
-        file->base_object_arr_idx = file->base_object_arr_idx + 1;
-        file->objects_bin_array[base_object->sn] = true;
-    }
-    //Check if first physical file and changed id
-    if(is_first_object){
-        char new_file_id[FILE_ID_LEN];
-        sprintf(new_file_id , "MF_");
-        strcat(new_file_id , file_id);
-        strcpy(file->id , new_file_id);
-    }
-    return;
-}
 
 void print_file(File file){
     assert(file);

@@ -5,9 +5,6 @@
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_MEMORY_POOL_H
 #define DEDUPLICATIONPROJ_HEURISTIC_MEMORY_POOL_H
 
-
-#ifndef DEDUPLICATIONPROJECT_MEMORY_POOL_H
-#define DEDUPLICATIONPROJECT_MEMORY_POOL_H
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,8 +47,6 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size);
 	@Desc:		All memory of the pool will be freed.
 */
 void memory_pool_destroy(PMemory_pool pool);
-
-#endif //DEDUPLICATIONPROJECT_MEMORY_POOL_H
 
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_MEMORY_POOL_H

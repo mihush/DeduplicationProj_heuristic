@@ -5,13 +5,22 @@
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 /* **************************************************** INCLUDES **************************************************** */
-#include "List.h"
-#include "HashTable.h"
-#include "Utilities.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "memory_pool.h"
+
+
+typedef enum{
+    SUCCESS,
+    INVALID_INPUT
+} ErrorCode;
+
+/* Magic Numbers */
+#define FILE_ID_LEN 30
+#define MAX_LINE_LEN 1500
+
 /* **************************************************** INCLUDES **************************************************** */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
