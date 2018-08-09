@@ -138,7 +138,7 @@ void print_file(File file){
     printf("# ------- Logical File : %lu ------- #\n", file->sn);
     printf("         id : %s\n" , file->id);
     if(file->isMergedF){
-        printf(" num_blocks : %d\n" , file->base_object_arr_idx);
+        printf(" num_blocks : %lu\n" , file->base_object_arr_idx);
     }else{
         printf(" num_blocks : %d\n" , file->num_base_objects);
     }
@@ -151,7 +151,7 @@ void print_file(File file){
         num_itr = file->num_base_objects;
     }
     for(int i = 0 ; i < num_itr ; i++){
-        printf("%d," , (file->base_objects_arr)[i]->sn);
+        printf("%lu," , (file->base_objects_arr)[i]->sn);
     }
     printf("\n");
     printf("# ------------------------- #\n");
@@ -161,7 +161,7 @@ void print_file_to_csv(File file, char* output_line){
     assert(file);
     char temp[100];
 
-    sprintf(output_line , "F,%lu,%s,%lu,%d,",file->sn,file->id,file->dir_sn,file->num_base_objects);
+    sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
     int num_itr;
     if(file->isMergedF){
         num_itr = file->base_object_arr_idx;
@@ -174,11 +174,11 @@ void print_file_to_csv(File file, char* output_line){
     }
     strcat(output_line , "\n");
 }
+
 /* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */
 /* ****************** START ****************** Directory STRUCT Functions ****************** START ****************** */
-
 Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn ,
                unsigned long num_of_files , unsigned long num_of_sub_dirs , PMemory_pool memory_pool){
     Dir dir = memory_pool_alloc(memory_pool , (sizeof(*dir)));

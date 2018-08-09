@@ -16,6 +16,8 @@ int main(int argc , char** argv){
 
     char dedup_type[2];
     dedup_type[1] = '\0';
+    int goal_depth = 0;
+
 
     char* input_file_path;
     char line[MAX_LINE_LEN];
@@ -29,7 +31,6 @@ int main(int argc , char** argv){
     char input_files_list[MAX_LINE_LEN] ;
     char* tok = NULL;
     char sep[2] = ":";
-    int goal_depth = 2;
 
     /* ------------------------------------------ Define Variables ---------------------------------------- */
     /* ---------------------------------------------------------------------------------------------------- */
@@ -39,8 +40,9 @@ int main(int argc , char** argv){
         return 0;
     }
 
-    input_file_path = (char*)memory_pool_alloc(mem_pool , (strlen(argv[1]) + 1)*sizeof(char));
-    strcpy(input_file_path, argv[1]);
+    goal_depth = atoi(argv[1]);
+    input_file_path = (char*)memory_pool_alloc(mem_pool , (strlen(argv[2]) + 1)*sizeof(char));
+    strcpy(input_file_path, argv[2]);
 
     //Open the Input File
     FILE* input_file = fopen(input_file_path , "r");
@@ -155,7 +157,7 @@ int main(int argc , char** argv){
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
     char temp_output_line[MAX_LINE_LEN];
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);
@@ -163,7 +165,6 @@ int main(int argc , char** argv){
     strcat(output_file_name , "heuristic");
     strcpy(output_file_name + 11 , input_file_name);
 
-    //...
     // Open the output file
     results_file = fopen(output_file_name , "w+");
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth ,
@@ -181,7 +182,12 @@ int main(int argc , char** argv){
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){
         print_base_object(base_objects_arr[i]);
-        print_base_object_to_csv(base_objects_arr[i] , temp_output_line, dedup_type[0]);
+        if(dedup_type[0] == 'B'){
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B');
+        } else{
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P');
+
+        }
         fprintf(results_file , "%s" ,temp_output_line);
     }
 

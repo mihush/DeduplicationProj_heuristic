@@ -130,7 +130,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
                        File* files_array,  unsigned long num_files,
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
-                       Dir* output_dirs_array , unsigned long* output_dirs_idx,
+                       Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
                        PMemory_pool memory_pool);
 
 /*
