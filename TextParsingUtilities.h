@@ -24,26 +24,6 @@
 int countRootsInInput(char* line);
 
 /*
- * freeStructuresArrays - frees all data objects that are in each of the input arrays
- *
- * @files_array - array of file objects
- * @physical_files_array - array of physical file objects
- * @dirs_array - array of directories objects
- * @base_objects_arr - array of block objects
- *
- * @num_file_objects - number of file objects in the files_array
- * @num_dir_objects - number of dir objects in the dirs_array
- * @num_block_objects - number of block objects in the base_objects_arr
- * @num_phys_file_objects - number of file objects in the physical_files_array
- *
- * @dedup_type - the type of deduplication that was performed on the input file
- */
-//ErrorCode freeStructuresArrays(File* files_array , File* physical_files_array ,Dir* dirs_array , Block* blocks_array,
-//                               unsigned long num_file_objects , unsigned long num_dir_objects ,
-//                               unsigned long num_block_objects, unsigned long num_phys_file_objects ,
-//                               char* dedup_type);
-
-/*
  * readFileLine - Parses the input line into a file object to be saved
  *                 Returns a pointer to the file object
  *
@@ -77,14 +57,6 @@ Dir readDirLine(char* line , PMemory_pool memory_pool);
  *  @file_to_insert - ...
  */
 void aux_add_base_object_to_merge_file(File merged_file, File file_to_insert);
-
-/*
- *  merge_file_physical_files - ...
- *
- *  @merged_file    - ...
- *  @file_to_insert - ...
- */
-//void merge_file_physical_files(File merged_file , File file_to_insert);
 
 /*
  *  update_outputArray_and_sn - ...
@@ -171,13 +143,4 @@ void print_output_csv_header(FILE* results_file , char dedup_type , char* input_
                              unsigned long num_files_input , unsigned long num_files_output,
                              unsigned long num_dirs_input , unsigned long num_dirs_output);
 
-/*
- * clear_line - receives a line in dos format (New line is represented by \r\n
- *              and converts it to Unix format (only \n for New Line)
- *
- * @line - Pointer to the line to be cleared.
- */
-void clear_line(char* line);
-
-void print_all_files_to_csv(File* output_files_array , unsigned long output_files_idx);
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

@@ -186,7 +186,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         //update parent directory with new file sn
         (current_dir->upd_files_array)[current_dir->upd_num_of_files] = curr_file->sn;
         (current_dir->upd_num_of_files)++;
-//        (current_dir->files_array)[f] = curr_file->sn; //TODO check if correct
 
         // Update file_sn at each base_object containing this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
@@ -354,12 +353,3 @@ void print_output_csv_header(FILE* results_file , char dedup_type , char* input_
     fprintf(results_file ,"# Num directories in output: %lu\n",num_dirs_output);
 }
 
-void clear_line(char* line){
-    if(strlen(line) >= 2){
-        int len_buff = strcspn(line , "\r\n");
-        line[len_buff] = '\n';
-        line[len_buff + 1] = '\0';
-        printf("%d\n",len_buff);
-    }
-    printf("%s\n" , line);
-}

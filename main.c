@@ -11,13 +11,9 @@ int main(int argc , char** argv){
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
     memory_pool_init(mem_pool);
 
-    /* Root Directory */
-    Dir* roots = NULL;
-
     char dedup_type[2];
     dedup_type[1] = '\0';
     int goal_depth = 0;
-
 
     char* input_file_path;
     char line[MAX_LINE_LEN];
@@ -133,7 +129,6 @@ int main(int argc , char** argv){
                 break;
         }
         fgets(line , MAX_LINE_LEN , input_file);
-        //TODO - check if need to use the clearLine function
     }
 
     //Build the tree hierarchy of the file systems
@@ -157,7 +152,7 @@ int main(int argc , char** argv){
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
     char temp_output_line[MAX_LINE_LEN];
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);
@@ -173,7 +168,7 @@ int main(int argc , char** argv){
     //Print Files to Output CSV
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){
-        print_file((output_files_array[i]));
+        //print_file((output_files_array[i]));
         print_file_to_csv(output_files_array[i] , temp_output_line);
         fprintf(results_file , "%s" ,temp_output_line);
     }
@@ -181,7 +176,7 @@ int main(int argc , char** argv){
     //Print Base_object (physichal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){
-        print_base_object(base_objects_arr[i]);
+        //print_base_object(base_objects_arr[i]);
         if(dedup_type[0] == 'B'){
             print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B');
         } else{
@@ -194,7 +189,7 @@ int main(int argc , char** argv){
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
-        print_dir(output_dirs_array[i]);
+        //print_dir(output_dirs_array[i]);
         print_dir_to_csv(output_dirs_array[i], temp_output_line);
         fprintf(results_file , "%s" ,temp_output_line);
     }
@@ -205,6 +200,7 @@ int main(int argc , char** argv){
     /* -------------------------------------- Free all allocated Data ------------------------------------- */
     fclose(input_file);
     fclose(results_file);
+    free(output_file_name);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);
