@@ -77,7 +77,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     if(file == NULL){
         return NULL;
     }
-    file->depth = -1;
     file->isMergedF = isMerged;
     file->id = memory_pool_alloc(memory_pool, (sizeof(char)*(strlen(id) + 1)));
     if(file->id == NULL){
@@ -171,8 +170,8 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->num_of_files = num_of_files;
     dir->num_of_subdirs = num_of_sub_dirs;
 
-    dir->upd_num_of_files = 0;
-    dir->upd_num_of_subdirs = 0;
+    dir->upd_files_array_idx = 0;
+    dir->upd_subdirs_array_idx = 0;
 
     dir->parent_dir_sn = parent_dir_sn;
 
@@ -191,8 +190,8 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     if(dir->dirs_array == NULL){
         return NULL;
     }
-    dir->upd_dirs_array = memory_pool_alloc(memory_pool , (sizeof(unsigned long)*num_of_sub_dirs));
-    if(dir->upd_dirs_array == NULL){
+    dir->upd_subdirs_array = memory_pool_alloc(memory_pool , (sizeof(unsigned long)*num_of_sub_dirs));
+    if(dir->upd_subdirs_array == NULL){
         return NULL;
     }
 
@@ -223,14 +222,14 @@ ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx){
 void print_dir(Dir dir){
     assert(dir);
     printf("# ------- : %lu ------- #\n" , dir->sn);
-    printf("- num_of_files : %hu \n" , dir->upd_num_of_files);
-    for(int i = 0 ; i < dir->upd_num_of_files ; i++){
+    printf("- num_of_files : %hu \n" , dir->upd_files_array_idx);
+    for(int i = 0 ; i < dir->upd_files_array_idx ; i++){
         printf("%lu - ", (dir->upd_files_array)[i]);
     }
     printf("\n");
-    printf("- num_of_subdirs : %hu \n" , dir->upd_num_of_subdirs);
-    for(int i = 0 ; i < dir->upd_num_of_subdirs ; i++){
-        printf("%lu - ", (dir->upd_dirs_array)[i]);
+    printf("- num_of_subdirs : %hu \n" , dir->upd_subdirs_array_idx);
+    for(int i = 0 ; i < dir->upd_subdirs_array_idx ; i++){
+        printf("%lu - ", (dir->upd_subdirs_array)[i]);
     }
     printf("\n");
     printf("# ------------------------- #\n");
@@ -248,12 +247,12 @@ void print_dir_to_csv(Dir dir, char *output_line){
     }
 
     sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type, dir->sn, dir->id, dir->parent_dir_sn,
-            dir->upd_num_of_subdirs, dir->upd_num_of_files);
-    for(int i = 0 ; i < dir->upd_num_of_subdirs ; i++){
-        sprintf(temp , "%lu," , (dir->upd_dirs_array)[i]);
+            dir->upd_subdirs_array_idx, dir->upd_files_array_idx);
+    for(int i = 0 ; i < dir->upd_subdirs_array_idx ; i++){
+        sprintf(temp , "%lu," , (dir->upd_subdirs_array)[i]);
         strcat(output_line , temp);
     }
-    for(int i = 0 ; i < dir->upd_num_of_files ; i++){
+    for(int i = 0 ; i < dir->upd_files_array_idx ; i++){
         sprintf(temp , "%lu," , (dir->upd_files_array)[i]);
         strcat(output_line , temp);
     }

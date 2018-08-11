@@ -34,7 +34,7 @@ typedef enum{
  *            - shared_by_num_files -> number of files sharing this block
  *            - files_array -> array of file serial number that share the same physical file
  */
-//struct block_t{
+//struct base_object_t{
 struct base_object_t{
     unsigned long sn; // running index
     char* id; // Hashed
@@ -57,7 +57,6 @@ typedef struct base_object_t *Base_Object;
  *            - blocks_list -> List of Block_info elements of blocks contained in the file
  */
 struct file_t{ // Only logical file
-    int depth;
     unsigned long sn;
     char* id;
     unsigned long dir_sn;
@@ -66,12 +65,10 @@ struct file_t{ // Only logical file
     unsigned int size;
     bool isMergedF;
 
-    //For Block level deduplication
     Base_Object* base_objects_arr;
     unsigned long base_object_arr_idx;
 
-
-    //For the Merged File
+    //For Merged File only (indicate if object already inserted)
     bool* objects_bin_array;
 };
 typedef struct file_t *File;
@@ -94,18 +91,18 @@ struct dir_t{
     unsigned long parent_dir_sn;
     int depth;
 
-    //Sub-Files
+    //Files in directory
     unsigned short num_of_files;
     unsigned long* files_array; //array of serial numbers
-    unsigned short upd_num_of_files;
     unsigned long* upd_files_array; //array of serial numbers
+    unsigned short upd_files_array_idx;
 
 
     //Sub-Dirs
     unsigned short num_of_subdirs;
     unsigned long* dirs_array; // array of serial numbers
-    unsigned short upd_num_of_subdirs;
-    unsigned long* upd_dirs_array; // array of serial numbers
+    unsigned long* upd_subdirs_array; // array of serial numbers
+    unsigned short upd_subdirs_array_idx;
 
     //For heuristic part
     File merged_file;
@@ -130,15 +127,6 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
 
 Base_Object base_object_update(Base_Object base_object, char *base_object_id,
                                unsigned short shared_by_num_files, PMemory_pool memory_pool);
-
-/*
- *  block_add_file - adds the file containing the block to the files array saved in the block structure
- *
- *  @block   - pointer to the block structure to which we want to add the file
- *  @file_sn - the serial number of the file that contains the block
- */
-ErrorCode add_base_object_ptr_to_file(Base_Object base_object, File *files_array, unsigned long file_sn);
-
 
 /*
  *  print_base_object - Prints the data saved in the block structure
@@ -181,33 +169,6 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char d
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size ,
                  bool isMerged , PMemory_pool memory_pool);
-/*
- *  add_block_to_file - ....
- *
- *  @file       - Pointer to the file object
- *  @block_sn   - hashed id of the block
- *  @block_size - size of the block
- *  @idx        - ...
- */
-//ErrorCode add_block_to_file(File file, unsigned long block_sn, int block_size /*, int idx*/ , PMemory_pool memory_pool);
-
-/*
- *  file_add_logical_file - ....
- *
- *  @file             - Pointer to the file object
- *  @logical_files_sn - ...
- *  @idx              - ...
- */
-//ErrorCode file_add_logical_file(File file , unsigned long logical_files_sn , int idx);
-
-/*
- *  add_base_object_to_merged_file - ...
- *
- *  @file    - Pointer to the file object
- *  @bi      - ...
- *  @file_id - ...
- */
-void add_base_object_to_merged_file(File file, Base_Object base_object, char *file_id);//TODO change BLOCK to only sn
 
 /*
  *  print_file - ....
@@ -215,7 +176,6 @@ void add_base_object_to_merged_file(File file, Base_Object base_object, char *fi
  *  @file - Pointer to the file object structure to be printed
  */
 void print_file(File file);
-
 
 /*
  *  print_file_to_csv - ....

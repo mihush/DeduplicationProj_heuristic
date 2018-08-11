@@ -11,9 +11,6 @@ int main(int argc , char** argv){
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
     memory_pool_init(mem_pool);
 
-    /* Root Directory */
-    Dir* roots = NULL;
-
     char dedup_type[2];
     dedup_type[1] = '\0';
     int goal_depth = 0;
@@ -133,10 +130,8 @@ int main(int argc , char** argv){
                 break;
         }
         fgets(line , MAX_LINE_LEN , input_file);
-        //TODO - check if need to use the clearLine function
     }
 
-    //Build the tree hierarchy of the file systems
     /* ----------------- Define Output Directories and Files arrays -----------------  */
     File* output_files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*output_files_array)));
     if(output_files_array == NULL){
@@ -151,7 +146,7 @@ int main(int argc , char** argv){
     unsigned long output_files_idx = 0 , output_dirs_idx = 0;
 
     /* ----------------- Define Output Directories and Files arrays -----------------  */
-
+    //Build the tree hierarchy of the file systems
     calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
                                     base_objects_arr, num_base_objects, goal_depth,
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
@@ -205,6 +200,7 @@ int main(int argc , char** argv){
     /* -------------------------------------- Free all allocated Data ------------------------------------- */
     fclose(input_file);
     fclose(results_file);
+    free(output_file_name);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);
