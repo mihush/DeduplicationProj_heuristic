@@ -23,7 +23,9 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-
+    if( base_object->sn == 1){
+        printf("sarit hadad the queen\n");
+    }
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
     if(base_object->id == NULL){ //check successful allocation
         return NULL;
@@ -38,25 +40,13 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     return base_object;
 }
 
-void print_base_object(Base_Object base_object){
-    printf("# ------- Block : %lu ------- #\n" , base_object->sn);
-    printf("        id : %s\n" , base_object->id);
-    printf("      size : %d\n" , base_object->size);
-    printf(" num_files : %d\n" , base_object->shared_by_num_files);
-    for(int i = 0 ; i < base_object->shared_by_num_files ; i++){
-        if( i == ((base_object->shared_by_num_files)-1)){
-            printf("%lu\n", base_object->files_array_updated[i]);
-        } else {
-            printf("%lu - ", base_object->files_array_updated[i]);
-        }
-    }
-    printf("# ------------------------- #\n");
-}
-
 void print_base_object_to_csv(Base_Object base_object, char* output_line, char object_type){
     char temp[100];
     sprintf(output_line , "%c,%lu,%s,%d,", object_type, base_object->sn, base_object->id , base_object->shared_by_num_files);
 
+    if(base_object->sn == 1){
+        printf("saritushhhh\n");
+    }
     //Print all file serial numbers the block belongs to
     for(int i = 0 ; i < base_object->output_updated_idx ;  i++){
         sprintf(temp , "%lu," , (base_object->files_array_updated)[i]);
@@ -78,7 +68,13 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
         return NULL;
     }
     file->isMergedF = isMerged;
-    file->id = memory_pool_alloc(memory_pool, (sizeof(char)*(strlen(id) + 1)));
+    int id_length = 0;
+    if(isMerged){
+        id_length = MERGED_FILE_ID;
+    } else {
+        id_length = (strlen(id) + 1);
+    }
+    file->id = memory_pool_alloc(memory_pool, (sizeof(char)*id_length));
     if(file->id == NULL){
         return NULL;
     }

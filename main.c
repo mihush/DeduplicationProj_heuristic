@@ -151,7 +151,7 @@ int main(int argc , char** argv){
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
     char temp_output_line[MAX_LINE_LEN];
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);

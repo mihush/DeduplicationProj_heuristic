@@ -20,6 +20,7 @@ typedef enum{
 /* Magic Numbers */
 #define FILE_ID_LEN 30
 #define MAX_LINE_LEN 1500
+#define MERGED_FILE_ID 120
 
 /* **************************************************** INCLUDES **************************************************** */
 /* ****************************************************************************************************************** */
@@ -127,13 +128,6 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
 
 Base_Object base_object_update(Base_Object base_object, char *base_object_id,
                                unsigned short shared_by_num_files, PMemory_pool memory_pool);
-
-/*
- *  print_base_object - Prints the data saved in the block structure
- *
- *  @block   - pointer to the block structure to be printed
- */
-void print_base_object(Base_Object block);
 
 /*
  *  print_block_to_csv - ....

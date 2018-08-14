@@ -176,6 +176,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         //Update the sn of the inserted file .
         File curr_file = files_array[(current_dir->files_array)[f]]; // Get file ptr from files array
         curr_file->dir_sn = current_dir->sn;
+
         // Update file sn with the global output index
         curr_file->sn = *output_files_idx;
         output_files_array[*output_files_idx] = curr_file;
@@ -188,7 +189,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         // Update file_sn at each base_object containing this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             Base_Object curr_object = curr_file->base_objects_arr[j];
-            curr_object->files_array_updated[(curr_object->output_updated_idx)] = curr_file->sn;
+            (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
             (curr_object->output_updated_idx)++;
         }
     }
