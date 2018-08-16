@@ -23,7 +23,7 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-    base_object->output_files_ht = ht_createF(shared_by_num_files, memory_pool);
+    base_object->output_files_ht = ht_createF((shared_by_num_files+1), memory_pool);
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
     if(base_object->id == NULL || base_object->output_files_ht == NULL){ //check successful allocation
         return NULL;

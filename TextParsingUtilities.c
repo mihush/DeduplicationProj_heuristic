@@ -201,6 +201,9 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = curr_file->base_objects_arr[j];
+            if(current_dir->depth == 2){
+                printf("SH\n");
+            }
             ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;

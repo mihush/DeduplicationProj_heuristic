@@ -16,7 +16,7 @@ int main(int argc , char** argv){
     int goal_depth = 0;
 
     char* input_file_path;
-    char line[MAX_LINE_LEN];
+    char* line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     int num_roots = 0;
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_base_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, base_objects_cnt = 0;
@@ -151,7 +151,7 @@ int main(int argc , char** argv){
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
     char temp_output_line[MAX_LINE_LEN];
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     FILE *results_file = NULL;
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);

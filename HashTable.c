@@ -16,7 +16,7 @@ HashTableF ht_createF(unsigned short shared_by_num_files, PMemory_pool mem_pool)
     ht->size_table = shared_by_num_files;
 
     /* Allocate pointers to the head nodes */
-    ht -> table = memory_pool_alloc(mem_pool , (sizeof(EntryF) * (ht->size_table)));
+    ht -> table = (EntryF*)memory_pool_alloc(mem_pool , (sizeof(EntryF) * (ht->size_table)));
     if(!ht -> table ){ //check array of pointers was allocated successfully
         return NULL; //All is allocated in POOL - Nothing to Free
     }
