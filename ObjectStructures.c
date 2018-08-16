@@ -121,14 +121,15 @@ void print_file_to_csv(File file, char* output_line){
     assert(file);
     char temp[100];
 
+//    unsigned long num_itr;
+//    if(file->isMergedF){
+//        num_itr = file->base_object_arr_idx;
+//    }else {
+//        num_itr = file->num_base_objects;
+//    }
     sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
-    int num_itr;
-    if(file->isMergedF){
-        num_itr = file->base_object_arr_idx;
-    }else {
-        num_itr = file->num_base_objects;
-    }
-    for(int i = 0 ; i < num_itr ; i++){
+
+    for(int i = 0 ; i < file->base_object_arr_idx ; i++){
         sprintf(temp , "%lu,%u," , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
         strcat(output_line , temp);
     }

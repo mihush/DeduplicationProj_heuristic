@@ -64,6 +64,7 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
         }
         file->base_objects_arr[i] = base_objects_arr[base_object_sn];
         file->size += base_object_size;
+        (file->base_object_arr_idx)++;
     }
 
     return file;
@@ -200,10 +201,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = curr_file->base_objects_arr[j];
-            if(curr_object->sn == 1){
-                printf("Sarit_hadad !!! : idx = %lu\n",curr_object->output_updated_idx);
-            }
-            EntryF result = (ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool));
+            ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
                 (curr_object->output_updated_idx)++;

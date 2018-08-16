@@ -24,7 +24,7 @@ int main(int argc , char** argv){
     Dir* dirs_array = NULL;
     Dir* roots_array = NULL;
     Base_Object* base_objects_arr = NULL;
-    char input_files_list[MAX_LINE_LEN] ;
+    char input_files_list[MAX_LINE_LEN];
     char* tok = NULL;
     char sep[2] = ":";
 
