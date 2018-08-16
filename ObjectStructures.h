@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "HashTable.h"
 #include "memory_pool.h"
 
 
@@ -42,6 +43,8 @@ struct base_object_t{
     unsigned int size;
 
     unsigned int shared_by_num_files;
+    HashTableF output_files_ht; // Hash Table for the output files contain this block
+
     unsigned long* files_array_updated;
     unsigned long output_updated_idx;
 };

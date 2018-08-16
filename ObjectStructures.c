@@ -10,7 +10,7 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-
+    base_object->output_files_ht = NULL;
     base_object->sn = base_object_sn;
     base_object->shared_by_num_files = 0;
     base_object->size = base_object_size;
@@ -23,30 +23,22 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-    if( base_object->sn == 1){
-        printf("sarit hadad the queen\n");
-    }
+    base_object->output_files_ht = ht_createF(shared_by_num_files, memory_pool);
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
-    if(base_object->id == NULL){ //check successful allocation
+    if(base_object->id == NULL || base_object->output_files_ht == NULL){ //check successful allocation
         return NULL;
     }
     base_object->id = strcpy(base_object->id , base_object_id);
     base_object->shared_by_num_files = shared_by_num_files;
     base_object->files_array_updated = memory_pool_alloc(memory_pool, sizeof(unsigned long)*shared_by_num_files);
-    if(base_object->files_array_updated == NULL){
-        return NULL;
-    }
 
     return base_object;
 }
 
 void print_base_object_to_csv(Base_Object base_object, char* output_line, char object_type){
     char temp[100];
-    sprintf(output_line , "%c,%lu,%s,%d,", object_type, base_object->sn, base_object->id , base_object->shared_by_num_files);
+    sprintf(output_line , "%c,%lu,%s,%lu,", object_type, base_object->sn, base_object->id , base_object->output_updated_idx);
 
-    if(base_object->sn == 1){
-        printf("saritushhhh\n");
-    }
     //Print all file serial numbers the block belongs to
     for(int i = 0 ; i < base_object->output_updated_idx ;  i++){
         sprintf(temp , "%lu," , (base_object->files_array_updated)[i]);
@@ -112,7 +104,7 @@ void print_file(File file){
     }
     printf(" parent_dir : %lu\n" , file->dir_sn);
     printf(" base obj sn's:");
-    int num_itr = 0;
+    unsigned long num_itr = 0;
     if(file->isMergedF){
         num_itr = file->base_object_arr_idx;
     }else{
