@@ -162,7 +162,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
             if(file_to_insert->sn == 15540 && i==29){
-                printf("(22) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
+                printf(" -> Reached the error Object ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
             }
             Base_Object bo = base_object_array[481641];
 
