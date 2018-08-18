@@ -23,7 +23,12 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-    base_object->output_files_ht = ht_createF((shared_by_num_files+1), memory_pool);
+
+    if(strcmp(base_object_id , "c298236f9f") == 0){
+        printf("ERROR...\n");
+    }
+    unsigned short ht_size = shared_by_num_files + 1;
+    base_object->output_files_ht = ht_createF(ht_size, memory_pool);
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
     if(base_object->id == NULL || base_object->output_files_ht == NULL){ //check successful allocation
         return NULL;
@@ -31,6 +36,7 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     base_object->id = strcpy(base_object->id , base_object_id);
     base_object->shared_by_num_files = shared_by_num_files;
     base_object->files_array_updated = memory_pool_alloc(memory_pool, sizeof(unsigned long)*shared_by_num_files);
+
 
     return base_object;
 }
@@ -121,12 +127,6 @@ void print_file_to_csv(File file, char* output_line){
     assert(file);
     char temp[100];
 
-//    unsigned long num_itr;
-//    if(file->isMergedF){
-//        num_itr = file->base_object_arr_idx;
-//    }else {
-//        num_itr = file->num_base_objects;
-//    }
     sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
 
     for(int i = 0 ; i < file->base_object_arr_idx ; i++){
