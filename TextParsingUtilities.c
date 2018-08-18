@@ -68,9 +68,6 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
         file->base_objects_arr[i] = base_objects_arr[base_object_sn];
         file->size += base_object_size;
         (file->base_object_arr_idx)++;
-        if(base_object_sn == 481641){
-            printf("ERROR (1)...\n");
-        }
     }
 
     return file;
@@ -156,28 +153,18 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
         if(merged_file->objects_bin_array[(base_object->sn)]){
             object_exists = true;
         }
-        if((base_object_array[481641]->output_files_ht)->size_table !=2){
-            printf("(13) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-        }
+
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
-            if(file_to_insert->sn == 15540 && i==29){
-                printf(" -> Reached the error Object ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-            }
-            Base_Object bo = base_object_array[481641];
+            base_object->files_array_updated[(base_object->output_updated_idx)] = merged_file->sn;
 
-            int idx = base_object->output_updated_idx;
-            base_object->files_array_updated[idx] = merged_file->sn;
-
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(21) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
+            // Weird BUG =\
+            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
+                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
+                printf("(21) -> CHANGED ... %lu(size) \n" , (base_object->output_files_ht)->size_table);
             }
 
             (base_object->output_updated_idx)++;
-
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(20) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-            }
 
             (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
             if(merged_file->base_object_arr_idx == 0){
@@ -185,16 +172,8 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             }
             merged_file->base_object_arr_idx = (merged_file->base_object_arr_idx) + 1;
             merged_file->objects_bin_array[base_object->sn] = true;
-
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(15) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-            }
-
             EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
 
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(16) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-            }
             if(result == NULL){ //Check for memory allocation
                 return;
             }
@@ -230,12 +209,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
-            if(current_dir->depth == 2){
-                printf("SH\n");
-            }
-            if(curr_object->sn == 481641){
-                printf("ERROR (1)...\n");
-            }
             ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
@@ -271,26 +244,14 @@ void update_dir_values(Dir current_dir , int goal_depth,
             return;
         } else { //There are still some files in the directory
             if(current_depth <= (goal_depth - 1)){
-                if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                    printf("(7) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-                }
                 move_files_to_output_array(current_dir, files_array, output_files_array, output_files_idx, memory_pool);
-                if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                    printf("(8) -> CHANGED ... %lu(size) \n" , (base_object_array[481641]->output_files_ht)->size_table);
-                }
             }
             else { // current_depth > (goal_depth -1)
                 // Add all the file blocks to the merged file - meaning current_dir->mergedFile
                 assert(current_dir->merged_file);
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++) {
                     //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
-                    if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                        printf("(6) -> CHANGED ... %d  - %lu(size) \n" , f , (base_object_array[481641]->output_files_ht)->size_table);
-                    }
                     add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]], memory_pool , base_object_array);
-                    if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                        printf("(2) -> CHANGED ... %d  - %lu(size) \n" , f , (base_object_array[481641]->output_files_ht)->size_table);
-                    }
                 }
             }
             return;
@@ -319,10 +280,6 @@ void update_dir_values(Dir current_dir , int goal_depth,
             (current_dir->upd_subdirs_array)[current_dir->upd_subdirs_array_idx] = new_sub_dir_sn;
             (current_dir->upd_subdirs_array_idx)++;
 
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(3) ->CHANGED ... \n");
-            }
-
             //For each directory - call update_dir_values
             update_dir_values(output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files,
@@ -343,18 +300,12 @@ void update_dir_values(Dir current_dir , int goal_depth,
             (current_dir->upd_files_array_idx)++;
         }
 
-        if((base_object_array[481641]->output_files_ht)->size_table !=2){
-            printf("(4) ->CHANGED ... \n");
-        }
 
         //merge all child file blocks to the merged file of the parent directory
         assert(current_dir->merged_file);
         for(int f = 0 ; f < current_dir->num_of_files  ; f++){
             //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
             add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]], memory_pool , base_object_array);
-            if((base_object_array[481641]->output_files_ht)->size_table !=2){
-                printf("(5) ->CHANGED ... %d \n" , f);
-            }
         }
 
         //Update all directory depths : for each directory - call update_dir_values
@@ -387,9 +338,6 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
-        if((base_object_array[481641]->output_files_ht)->size_table !=2){
-            printf("(1)->CHANGED ... \n");
-        }
         roots_array[r]->depth = 0;
 
         // Add root to output_dirs_array - update the dir_sn from a global param
