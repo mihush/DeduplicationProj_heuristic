@@ -158,7 +158,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             // Update correspondingly file_sn at each block contain this file.
             base_object->files_array_updated[(base_object->output_updated_idx)] = merged_file->sn;
 
-            // Weird BUG =\
+            // Weird BUG =[
             if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
                 (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
                 printf("(21) -> CHANGED ... %lu(size) \n" , (base_object->output_files_ht)->size_table);
