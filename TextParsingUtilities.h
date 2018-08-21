@@ -139,8 +139,9 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
  * @num_dirs_output - number of directories in the output (means num of dir objects witch left after deduplication)
  *
  */
-void print_output_csv_header(FILE* results_file , char dedup_type , char* input_files_list, int goal_depth,
-                             unsigned long num_files_input , unsigned long num_files_output,
-                             unsigned long num_dirs_input , unsigned long num_dirs_output);
+void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
+                             unsigned long num_files_input, unsigned long num_files_output,
+                             unsigned long num_dirs_input, unsigned long num_dirs_output,
+                             unsigned long num_base_object);
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

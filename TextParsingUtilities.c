@@ -52,9 +52,7 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
 
     unsigned long base_object_sn = 0;
     unsigned int base_object_size = 0;
-    Base_Object bo = NULL;
     for(int i = 0 ; i < num_base_objects ; i++){
-
         tok = strtok(NULL , sep);
         base_object_sn = atol(tok);
         tok = strtok(NULL , sep);
@@ -62,8 +60,7 @@ File readFileLine(char* line, PMemory_pool memory_pool, Base_Object* base_object
 
         // In case we have files which share the same base_object don't need to create him again
         if(base_objects_arr[base_object_sn] == NULL){
-            bo = base_object_create(base_object_sn, base_object_size, memory_pool);
-            base_objects_arr[base_object_sn] = bo;
+            base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
         }
         file->base_objects_arr[i] = base_objects_arr[base_object_sn];
         file->size += base_object_size;
@@ -88,7 +85,8 @@ Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memor
     tok = strtok(NULL , sep); //reading num_of_files
     shared_by_num_files = atoi(tok);
 
-    Base_Object base_object = base_object_update(base_objects_arr[base_object_sn], base_object_id, shared_by_num_files, memory_pool);
+    Base_Object base_object = base_object_update(base_objects_arr[base_object_sn], base_object_id,
+                                            shared_by_num_files, memory_pool);
     if(base_object == NULL){
         return NULL;
     }
@@ -146,24 +144,17 @@ Dir readDirLine(char* line , PMemory_pool memory_pool){
     return directory;
 }
 
-void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool , Base_Object* base_object_array){
+void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool, Base_Object* base_object_array ){
+    Base_Object base_object = NULL;
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
         bool object_exists = false, is_first_object = false;
-        Base_Object base_object = (file_to_insert->base_objects_arr)[i];
+        base_object = (file_to_insert->base_objects_arr)[i];
         if(merged_file->objects_bin_array[(base_object->sn)]){
             object_exists = true;
         }
-
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
-            base_object->files_array_updated[(base_object->output_updated_idx)] = merged_file->sn;
-
-            // Weird BUG =[
-            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
-                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
-                printf("(21) -> CHANGED ... %lu(size) \n" , (base_object->output_files_ht)->size_table);
-            }
-
+            (base_object->files_array_updated)[(base_object->output_updated_idx)] = merged_file->sn;
             (base_object->output_updated_idx)++;
 
             (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
@@ -172,11 +163,6 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             }
             merged_file->base_object_arr_idx = (merged_file->base_object_arr_idx) + 1;
             merged_file->objects_bin_array[base_object->sn] = true;
-            EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
-
-            if(result == NULL){ //Check for memory allocation
-                return;
-            }
         }
         //Check if first physical file and changed id
         if(is_first_object){
@@ -184,6 +170,12 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             sprintf(new_file_id , "MF_");
             strcat(new_file_id , file_to_insert->id);
             strcpy(merged_file->id , new_file_id);
+        }
+        if(object_exists == false){
+            EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
+            if(result == NULL){ //Check for memory allocation
+                return;
+            }
         }
     }
 }
@@ -208,7 +200,10 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         // Update file_sn at each base_object containing this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
-            Base_Object curr_object = (curr_file->base_objects_arr)[j];
+            Base_Object curr_object = curr_file->base_objects_arr[j];
+            if(current_dir->depth == 2){
+                printf("SH\n");
+            }
             ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
@@ -230,7 +225,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
     if(current_dir == NULL){
         return;
     }
-    // Check if current dir is a root directory or not 
+    // Check if current dir is a root directory or not
     if(current_dir->sn == current_dir->parent_dir_sn){
         current_depth = current_dir->depth;
     } else {
@@ -239,7 +234,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
     }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
-    if(current_dir->num_of_subdirs == 0){ 
+    if(current_dir->num_of_subdirs == 0){
         if(current_dir->num_of_files == 0){
             return;
         } else { //There are still some files in the directory
@@ -300,12 +295,11 @@ void update_dir_values(Dir current_dir , int goal_depth,
             (current_dir->upd_files_array_idx)++;
         }
 
-
         //merge all child file blocks to the merged file of the parent directory
         assert(current_dir->merged_file);
         for(int f = 0 ; f < current_dir->num_of_files  ; f++){
             //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
-            add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]], memory_pool , base_object_array);
+            add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]], memory_pool, base_object_array);
         }
 
         //Update all directory depths : for each directory - call update_dir_values
@@ -315,7 +309,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
                 continue;
             }
 
-            dirs_array[(current_dir->dirs_array)[j]]->depth = (current_dir->depth) + 1; //update dir depth
+            dirs_array[(current_dir->dirs_array)[j]]->depth = current_dir->depth + 1; //update dir depth
             dirs_array[(current_dir->dirs_array)[j]]->merged_file = current_dir->merged_file; //update dir merged file - taken from parent
             dirs_array[(current_dir->dirs_array)[j]]->parent_dir_sn = current_dir->sn; //update the directory's parent dir sn
 
@@ -357,9 +351,10 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
     }
 }
 
-void print_output_csv_header(FILE* results_file , char dedup_type , char* input_files_list, int goal_depth,
-                             unsigned long num_files_input , unsigned long num_files_output,
-                             unsigned long num_dirs_input , unsigned long num_dirs_output){
+void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
+                             unsigned long num_files_input, unsigned long num_files_output,
+                             unsigned long num_dirs_input, unsigned long num_dirs_output,
+                             unsigned long num_base_object){
     if(dedup_type == 'B'){
         fprintf(results_file ,"# Output type: block-level\n");
     } else if(dedup_type == 'F'){
@@ -367,11 +362,12 @@ void print_output_csv_header(FILE* results_file , char dedup_type , char* input_
     }
     //TODO - check the requirements for the header titles
     fprintf(results_file ,"%s" , input_files_list);
-    fprintf(results_file ,"# Target Level: %d\n" , goal_depth);
-    fprintf(results_file ,"# Run Time: %d\n", -173);
-    fprintf(results_file ,"# Memory Usage: ... \n"); //TODO find a way
-    fprintf(results_file ,"# Num files in input: %lu\n",num_files_input);
-    fprintf(results_file ,"# Num files in output: %lu\n",num_files_output);
-    fprintf(results_file ,"# Num directories in input: %lu\n",num_dirs_input);
-    fprintf(results_file ,"# Num directories in output: %lu\n",num_dirs_output);
+    fprintf(results_file ,"# Target depth: %d\n" , goal_depth);
+    fprintf(results_file ,"# Num files: %lu\n",num_files_input);
+    fprintf(results_file ,"# Num directories: %lu\n",num_dirs_input);
+    if(dedup_type == 'B'){
+        fprintf(results_file ,"# Num Blocks: %lu\n", num_base_object);
+    } else {
+        fprintf(results_file ,"# Num physical files: %lu\n", num_base_object);
+    }
 }
