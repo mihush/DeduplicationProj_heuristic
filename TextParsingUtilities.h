@@ -30,7 +30,7 @@ int countRootsInInput(char* line);
  * @line - the line that represents a file object to be parsed
  * @file_type - could be either B for block_level or F for file_level
  */
-File readFileLine(char* line, PMemory_pool memory_pool,
+File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
                   Base_Object* base_objects_arr);
 
 /*
@@ -143,5 +143,14 @@ void print_output_csv_header(FILE *results_file, char dedup_type, char *input_fi
                              unsigned long num_files_input, unsigned long num_files_output,
                              unsigned long num_dirs_input, unsigned long num_dirs_output,
                              unsigned long num_base_object);
+
+
+// Function calculate a power x^y
+unsigned int pow_aux(int x, int y);
+
+
+void read_fragmented_line_File(FILE* input_file, char* line, PMemory_pool memory_pool, Base_Object* base_objects_arr,
+                               int base_objects_arr_idx, unsigned long num_base_objects);
+//TODO - add same function for Dirs (not need sn & size cases - because it's only files sn's)
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

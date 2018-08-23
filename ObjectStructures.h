@@ -20,7 +20,7 @@ typedef enum{
 
 /* Magic Numbers */
 #define FILE_ID_LEN 30
-#define MAX_LINE_LEN 700000
+#define MAX_LINE_LEN (1024*32)
 #define MERGED_FILE_ID 120
 
 /* **************************************************** INCLUDES **************************************************** */

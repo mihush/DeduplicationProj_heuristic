@@ -101,9 +101,11 @@ int main(int argc , char** argv){
     Base_Object base_object = NULL;
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
+        if(strlen(line)>MAX_LINE_LEN){
+        }
         switch(line[0]){
             case 'F':
-                file = readFileLine(line, mem_pool, base_objects_arr);
+                file = readFileLine(input_file, line, mem_pool, base_objects_arr);
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
