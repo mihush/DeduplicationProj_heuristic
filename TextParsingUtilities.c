@@ -52,7 +52,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
 
     // Check if we have an extremely big line which need to be parse fragmented
     // TODO - check this function - CAREFULLY !!!!!
-    if(strlen(line) > MAX_LINE_LEN){
+    if((strlen(line) == MAX_LINE_LEN-1) && (line[(strlen(line)-1)] == '\n')){
         read_fragmented_line_File(input_file, line, memory_pool, base_objects_arr,
         0, num_base_objects);
     }
@@ -398,7 +398,7 @@ void read_fragmented_line_File(FILE* input_file, char* line, PMemory_pool memory
     // --> incording that we will read each line with fragments of buffer with const size.
     //  accordingly - need to check if the buffer contains the entire line, end at the middle of number, at comma etc.
 
-    bool line_end_with_comma = false, last_line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
+    bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
     char last_char = line[strlen(line) - 1];
     if (last_char == ',') {
         line_end_with_comma = true;
