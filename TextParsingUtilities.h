@@ -147,8 +147,8 @@ void print_output_csv_header(FILE *results_file, char dedup_type, char *input_fi
 unsigned int pow_aux(int x, int y);
 
 
-void read_fragmented_line_File(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool, Base_Object* base_objects_arr,
-                               int base_objects_arr_idx, unsigned long num_base_objects);
+void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool,
+                               Base_Object* base_objects_arr , File file_obj);
 //TODO - add same function for Dirs (not need sn & size cases - because it's only files sn's)
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

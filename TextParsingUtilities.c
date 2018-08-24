@@ -52,9 +52,8 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
 
     // Check if we have an extremely big line which need to be parse fragmented
     // TODO - check this function - CAREFULLY !!!!!
-    printf("--> %d \n" ,strlen(line));
     if(((input_line_len + 1) == MAX_LINE_LEN) && (line[input_line_len-1] != '\n')){ //Enter This condition only if we haven't read the entire line
-        read_fragmented_line_File(input_file, line,input_line_len, memory_pool, base_objects_arr, 0, num_base_objects);
+        read_fragmented_line_File(input_file, line,input_line_len, memory_pool, base_objects_arr , file);
     }else{ //The Line is not fragmented proceed as regular
         unsigned long base_object_sn = 0;
         unsigned int base_object_size = 0;
@@ -73,10 +72,6 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
             (file->base_object_arr_idx)++;
         }
     }
-    input_line_len = strlen(line);
-
-
-
     return file;
 }
 
@@ -397,10 +392,9 @@ unsigned int pow_aux(int x, int y){
 //          - Line was cut in the middle : Either end with a comma or a sign or number or with a new line sign.
 //
 // fgets will read until the first new line, maximum bytes to read at once, or EOF, which ever is sent first
-void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool, Base_Object* base_objects_arr,
-                               int base_objects_arr_idx, unsigned long num_base_objects){
+void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool,
+                               Base_Object* base_objects_arr , File file_obj){
     bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
-    Base_Object base_object = NULL;
     char last_char = line[input_line_len - 1];
 
     if(last_char == ',') {
@@ -416,7 +410,7 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
 
 
     tok = strtok(NULL, ","); // Get the SN of the first Block
-    while(strcmp(tok, "\n") != 0) {  //TODO Check This condition is correct
+    while(strcmp(tok, "\n") != 0) {
         if (counter_of_size == counter_of_sn) {
             base_object_sn = atol(tok);
             counter_of_sn++;
@@ -425,10 +419,12 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
             base_object_size = atoi(tok);
             counter_of_size++;
         }
-        // create a New Block if it doesn't exist
-        if((counter_of_size == counter_of_sn) &&(base_objects_arr[base_object_sn] == NULL)){
-            base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
-            base_objects_arr_idx++;// TODO - don't think this is even relevant - we add blocks to array based on sn
+
+        if(base_object_sn == 341997 || base_object_sn == 344541 || base_object_sn == 347147 || base_object_sn == 349679 ||
+           base_object_sn == 352073 || base_object_sn == 354368 || base_object_sn == 356881 || base_object_sn == 359473 ||
+           base_object_sn == 361767 || base_object_sn == 364202 || base_object_sn == 366852 || base_object_sn == 369349 ||
+           base_object_sn == 371716 || base_object_sn == 374098){
+            printf("Stop, wait a minute ... \n");
         }
 
         tok = strtok(NULL, ",");// Get Next Value
@@ -448,16 +444,29 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
             }
 
             tok = strtok(line, ",");
+
             // Case the first char are a continued number from previous buffer
-            if (!last_line_ended_with_comma && (counter_of_sn > counter_of_size)) { // Case we cut the row in the middle of base_object sn
-                (base_objects_arr[base_objects_arr_idx]->sn) *= pow_aux(10, strlen(tok));
-                (base_objects_arr[base_objects_arr_idx]->sn) += atoi(tok);
-                tok = strtok(NULL, ",");
-            } else { // Case we cut the row in the middle of base_object size
-                (base_objects_arr[base_objects_arr_idx]->size) *= pow_aux(10, strlen(tok));
-                (base_objects_arr[base_objects_arr_idx]->size) += atoi(tok);
-                tok = strtok(NULL, ",");
+            if(!last_line_ended_with_comma){
+                if (counter_of_sn > counter_of_size) { // Case we cut the row in the middle of base_object sn
+                    base_object_sn *= pow_aux(10, strlen(tok));
+                    base_object_sn += atoi(tok);
+                    tok = strtok(NULL, ",");
+                } else { // Case we cut the row in the middle of base_object size
+                    base_object_size *= pow_aux(10, strlen(tok));
+                    base_object_size += atoi(tok);
+                    tok = strtok(NULL, ",");
+                }
             }
+        }
+
+        if(counter_of_size == counter_of_sn){ //Finished Reading a Base Object
+            if(base_objects_arr[base_object_sn] == NULL){ // create a New Block if it doesn't exist
+                base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+            }
+            //Save pointer to the block in the File Object
+            file_obj->base_objects_arr[file_obj->base_object_arr_idx] = base_objects_arr[base_object_sn];
+            file_obj->size += base_object_size;
+            (file_obj->base_object_arr_idx)++;
         }
     }
     return;
