@@ -1,13 +1,8 @@
 #include "TextParsingUtilities.h"
-#include <sys/time.h>
-
-
 #define  OUTPUT_TYPE_CHAR_LOC 15
 
-/**********************************************************/
-
 int main(int argc , char** argv){
-    /* ------------------------------------------ Define Variables ----------------------------------------- */
+    /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
     memory_pool_init(mem_pool);
 
@@ -28,9 +23,9 @@ int main(int argc , char** argv){
     char* tok = NULL;
     char sep[2] = ":";
 
-    /* ------------------------------------------ Define Variables ---------------------------------------- */
-    /* ---------------------------------------------------------------------------------------------------- */
-    /* -------------------------------------- Read Global Parameters -------------------------------------- */
+    /* ---------------------------------------------- Define Variables ---------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
     if(argc == 1){
         printf("No Extra Command Line Argument Passed Other Than Program Name\n");
         return 0;
@@ -92,25 +87,23 @@ int main(int argc , char** argv){
         base_objects_arr[i] = NULL;
     }
 
-    /* -------------------------------------- Read Global Parameters -------------------------------------- */
-    /* ---------------------------------------------------------------------------------------------------- */
-    /* ---------------------------------------------------------------------------------------------------- */
-    /* ----------------------------------------- Read Data Objects ---------------------------------------- */
+    /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     Dir dir = NULL;
     File file = NULL;
     Base_Object base_object = NULL;
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
-        if(strlen(line)>MAX_LINE_LEN){
-        }
         switch(line[0]){
-            case 'F':
+            case 'F': //This Lines can be too long for the buffer
                 file = readFileLine(input_file, line, mem_pool, base_objects_arr);
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
             case 'B':
-            case 'P':
+            case 'P': //This Lines Shouldn't be extremely long
                 base_object = readBaseObjectLine(line, files_array, mem_pool, base_objects_arr);
                 base_objects_arr[base_object->sn] = base_object;
                 base_objects_cnt++;
@@ -133,7 +126,10 @@ int main(int argc , char** argv){
         fgets(line , MAX_LINE_LEN , input_file);
     }
 
-    /* ----------------- Define Output Directories and Files arrays -----------------  */
+    /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
+
     File* output_files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*output_files_array)));
     if(output_files_array == NULL){
         return 0;
@@ -146,13 +142,19 @@ int main(int argc , char** argv){
 
     unsigned long output_files_idx = 0 , output_dirs_idx = 0;
 
-    /* ----------------- Define Output Directories and Files arrays -----------------  */
+    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+
     //Build the tree hierarchy of the file systems
     calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
-                                    base_objects_arr, num_base_objects, goal_depth,
-                                    output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
+                                    base_objects_arr, num_base_objects, goal_depth, output_files_array,
+                                    &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
 
-    //P_heuristic_depth3_118_120.csv
+    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* --------------------------------------- Create Output File Name String --------------------------------------- */
+    //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     char* input_file_name = (strrchr(input_file_path , '/') + 1);
     FILE *results_file = NULL;
@@ -164,16 +166,17 @@ int main(int argc , char** argv){
     strcat(output_file_name , "heuristic");
     strcat(output_file_name , depth_to_output);
     strcpy(output_file_name + 11 + (strlen(depth_to_output)) , input_file_name);
-
+    /* --------------------------------------- Create Output File Name String --------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     // Open the output file
     results_file = fopen(output_file_name , "w+");
-    print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth ,
-                            num_file_objects , output_files_idx , num_dir_objects , output_dirs_idx , num_base_objects);
+    print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , output_files_idx ,
+                            output_dirs_idx , num_base_objects);
 
     //Print Files to Output CSV
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){
-        //print_file((output_files_array[i]));
         print_file_to_csv(output_files_array[i] , temp_output_line);
         fprintf(results_file , "%s" ,temp_output_line);
     }
@@ -181,7 +184,6 @@ int main(int argc , char** argv){
     //Print Base_object (physichal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){
-        //print_base_object(base_objects_arr[i]);
         if(dedup_type[0] == 'B'){
             print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B');
         } else{
@@ -194,15 +196,13 @@ int main(int argc , char** argv){
     //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){
-        //print_dir(output_dirs_array[i]);
         print_dir_to_csv(output_dirs_array[i], temp_output_line);
         fprintf(results_file , "%s" ,temp_output_line);
     }
 
-    /* ----------------------------------------- Read Data Objects ---------------------------------------- */
-    /* ---------------------------------------------------------------------------------------------------- */
-    /* ---------------------------------------------------------------------------------------------------- */
-    /* -------------------------------------- Free all allocated Data ------------------------------------- */
+    /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     fclose(input_file);
     fclose(results_file);
     free(output_file_name);
@@ -211,6 +211,6 @@ int main(int argc , char** argv){
     memory_pool_destroy(mem_pool);
     free(mem_pool);
 
-    /* ------------------------------------- Free all allocated Data ------------------------------------ */
+    /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     return 0;
 }

@@ -28,6 +28,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     unsigned long file_sn = 0;
     unsigned long parent_dir_sn = 0;
     unsigned long num_base_objects = 0;
+    int input_line_len = strlen(line);
 
     char* tok = NULL;
     char sep[2] = ",";
@@ -37,8 +38,8 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     file_sn = atol(tok);
     file_id = strtok(NULL , sep); // reading the file_id
 
-    // Block Level: F - file_sn     - file_id     - dir_sn    - num_blocks - block1_sn - block1_size - block2_sn - block2_size ....
-    // File Level: F - file_sn     - file_id     - dir_sn    - num_blocks - physical1_sn - physical1_size
+    // Block Level: F - file_sn - file_id - dir_sn - num_blocks - block1_sn - block1_size - ....
+    // File Level : F - file_sn - file_id - dir_sn - num_blocks - physical1_sn - physical1_size
 
     // reading parent_sir_sn
     tok = strtok(NULL , sep);
@@ -47,32 +48,34 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     tok = strtok(NULL , sep);
     num_base_objects = atol(tok);
 
-    file = file_create(file_sn, file_id, parent_dir_sn,
-                       num_base_objects, 0, false, memory_pool);
+    file = file_create(file_sn, file_id, parent_dir_sn, num_base_objects, 0, false, memory_pool);
 
     // Check if we have an extremely big line which need to be parse fragmented
     // TODO - check this function - CAREFULLY !!!!!
-    if((strlen(line) == MAX_LINE_LEN-1) && (line[(strlen(line)-1)] == '\n')){
-        read_fragmented_line_File(input_file, line, memory_pool, base_objects_arr,
-        0, num_base_objects);
-    }
+    printf("--> %d \n" ,strlen(line));
+    if(((input_line_len + 1) == MAX_LINE_LEN) && (line[input_line_len-1] != '\n')){ //Enter This condition only if we haven't read the entire line
+        read_fragmented_line_File(input_file, line,input_line_len, memory_pool, base_objects_arr, 0, num_base_objects);
+    }else{ //The Line is not fragmented proceed as regular
+        unsigned long base_object_sn = 0;
+        unsigned int base_object_size = 0;
+        for(int i = 0 ; i < num_base_objects ; i++){
+            tok = strtok(NULL , sep);
+            base_object_sn = atol(tok);
+            tok = strtok(NULL , sep);
+            base_object_size = atoi(tok);
 
-    unsigned long base_object_sn = 0;
-    unsigned int base_object_size = 0;
-    for(int i = 0 ; i < num_base_objects ; i++){
-        tok = strtok(NULL , sep);
-        base_object_sn = atol(tok);
-        tok = strtok(NULL , sep);
-        base_object_size = atoi(tok);
-
-        // In case we have files which share the same base_object don't need to create him again
-        if(base_objects_arr[base_object_sn] == NULL){
-            base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+            // In case we have files which share the same base_object don't need to create him again
+            if(base_objects_arr[base_object_sn] == NULL){
+                base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+            }
+            file->base_objects_arr[i] = base_objects_arr[base_object_sn];
+            file->size += base_object_size;
+            (file->base_object_arr_idx)++;
         }
-        file->base_objects_arr[i] = base_objects_arr[base_object_sn];
-        file->size += base_object_size;
-        (file->base_object_arr_idx)++;
     }
+    input_line_len = strlen(line);
+
+
 
     return file;
 }
@@ -208,9 +211,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = curr_file->base_objects_arr[j];
-            if(current_dir->depth == 2){
-                printf("SH\n");
-            }
             ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
@@ -359,9 +359,7 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
 }
 
 void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
-                             unsigned long num_files_input, unsigned long num_files_output,
-                             unsigned long num_dirs_input, unsigned long num_dirs_output,
-                             unsigned long num_base_object){
+                             unsigned long num_files_output, unsigned long num_dirs_output, unsigned long num_base_object){
     if(dedup_type == 'B'){
         fprintf(results_file ,"# Output type: block-level\n");
     } else if(dedup_type == 'F'){
@@ -370,8 +368,8 @@ void print_output_csv_header(FILE *results_file, char dedup_type, char *input_fi
     //TODO - check the requirements for the header titles
     fprintf(results_file ,"%s" , input_files_list);
     fprintf(results_file ,"# Target depth: %d\n" , goal_depth);
-    fprintf(results_file ,"# Num files: %lu\n",num_files_input);
-    fprintf(results_file ,"# Num directories: %lu\n",num_dirs_input);
+    fprintf(results_file ,"# Num files: %lu\n",num_files_output);
+    fprintf(results_file ,"# Num directories: %lu\n",num_dirs_output);
     if(dedup_type == 'B'){
         fprintf(results_file ,"# Num Blocks: %lu\n", num_base_object);
     } else {
@@ -392,50 +390,50 @@ unsigned int pow_aux(int x, int y){
     return res;
 }
 
-void read_fragmented_line_File(FILE* input_file, char* line, PMemory_pool memory_pool, Base_Object* base_objects_arr,
+// Input file may contain extremely long lines -  over 22M chars
+// The Solution is to read each line in fragments of buffer with const size
+// For each line read the following conditions will be checked and treated accordingly:
+//          - Buffer Contains the Entire Line.
+//          - Line was cut in the middle : Either end with a comma or a sign or number or with a new line sign.
+//
+// fgets will read until the first new line, maximum bytes to read at once, or EOF, which ever is sent first
+void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool, Base_Object* base_objects_arr,
                                int base_objects_arr_idx, unsigned long num_base_objects){
-    // Input file may contain enormous/huge/crazy lines upper than 22M chars
-    // --> incording that we will read each line with fragments of buffer with const size.
-    //  accordingly - need to check if the buffer contains the entire line, end at the middle of number, at comma etc.
-
     bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
-    char last_char = line[strlen(line) - 1];
-    if (last_char == ',') {
+    Base_Object base_object = NULL;
+    char last_char = line[input_line_len - 1];
+
+    if(last_char == ',') {
         line_end_with_comma = true;
     }
 
-    // The get all base_objects (Blocks) their sn and size
+    // Variable to get all base_objects (Blocks) : their sn and size
     char* tok = NULL;
     unsigned long base_object_sn = 0;
     unsigned int base_object_size = 0;
-    int counter_of_sn = 0;
-    int counter_of_size = 0;
+    int counter_of_sn = 0; // Counter For object sns Read
+    int counter_of_size = 0; // Counter For object sizes Read
 
-    //TODO - need to check if the condition in while are OK ??
-    tok = strtok(NULL, ",");
-    while(strcmp(tok, "\n") != 0) {
+
+    tok = strtok(NULL, ","); // Get the SN of the first Block
+    while(strcmp(tok, "\n") != 0) {  //TODO Check This condition is correct
         if (counter_of_size == counter_of_sn) {
             base_object_sn = atol(tok);
-            base_objects_arr[base_objects_arr_idx]->sn = base_object_sn;
             counter_of_sn++;
+
         } else { // (counter_of_size < counter_of_sn){
             base_object_size = atoi(tok);
-            base_objects_arr[base_objects_arr_idx]->size = base_object_size;
             counter_of_size++;
         }
+        // create a New Block if it doesn't exist
+        if((counter_of_size == counter_of_sn) &&(base_objects_arr[base_object_sn] == NULL)){
+            base_objects_arr[base_object_sn] = base_object_create(base_object_sn, base_object_size, memory_pool);
+            base_objects_arr_idx++;// TODO - don't think this is even relevant - we add blocks to array based on sn
+        }
 
-//        maybe redundant - I think :
-//        if (line_end_with_comma && (counter_of_size == counter_of_sn)) {
-//            base_object_sn = atol(tok);
-//            base_objects_arr[base_objects_arr_idx]->sn = base_object_sn;
-//            counter_of_sn++;
-//        } else if (line_end_with_comma && (counter_of_size < counter_of_sn)) {
-//            tok = strtok(NULL, ',');
-//            base_object_size = atoi(tok);
-//            counter_of_size++;
-//        }
+        tok = strtok(NULL, ",");// Get Next Value
 
-        tok = strtok(NULL, ",");
+        //If we Reached the end of the Line - treat it differently
         if (!tok) {
             // There is a line over flow, we need to fix last block size
             bool last_line_ended_with_comma = line_end_with_comma;
@@ -460,9 +458,6 @@ void read_fragmented_line_File(FILE* input_file, char* line, PMemory_pool memory
                 (base_objects_arr[base_objects_arr_idx]->size) += atoi(tok);
                 tok = strtok(NULL, ",");
             }
-        }
-        if (counter_of_size == counter_of_sn) {
-            base_objects_arr_idx++;
         }
     }
     return;

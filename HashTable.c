@@ -97,7 +97,6 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     }
 }
 
-
 DataF ht_getF(HashTableF ht, char *key ) {
     long int hash_key = ht_hashF(ht, key);
     EntryF pair = ht->table[hash_key];

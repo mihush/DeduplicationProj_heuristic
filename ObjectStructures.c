@@ -24,9 +24,6 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
         return NULL;
     }
 
-//    if(strcmp(base_object_id , "c298236f9f") == 0){
-//        printf("ERROR...\n");
-//    }
     unsigned short ht_size = shared_by_num_files + 1;
     base_object->output_files_ht = ht_createF(ht_size, memory_pool);
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
@@ -96,31 +93,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
         }
     }
     return file;
-}
-
-
-void print_file(File file){
-    assert(file);
-    printf("# ------- Logical File : %lu ------- #\n", file->sn);
-    printf("         id : %s\n" , file->id);
-    if(file->isMergedF){
-        printf(" num_blocks : %lu\n" , file->base_object_arr_idx);
-    }else{
-        printf(" num_blocks : %d\n" , file->num_base_objects);
-    }
-    printf(" parent_dir : %lu\n" , file->dir_sn);
-    printf(" base obj sn's:");
-    unsigned long num_itr = 0;
-    if(file->isMergedF){
-        num_itr = file->base_object_arr_idx;
-    }else{
-        num_itr = file->num_base_objects;
-    }
-    for(int i = 0 ; i < num_itr ; i++){
-        printf("%lu," , (file->base_objects_arr)[i]->sn);
-    }
-    printf("\n");
-    printf("# ------------------------- #\n");
 }
 
 void print_file_to_csv(File file, char* output_line){
@@ -206,22 +178,6 @@ ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx){
     (dir->dirs_array)[idx] = dir_sn;
 
     return SUCCESS;
-}
-
-void print_dir(Dir dir){
-    assert(dir);
-    printf("# ------- : %lu ------- #\n" , dir->sn);
-    printf("- num_of_files : %hu \n" , dir->upd_files_array_idx);
-    for(int i = 0 ; i < dir->upd_files_array_idx ; i++){
-        printf("%lu - ", (dir->upd_files_array)[i]);
-    }
-    printf("\n");
-    printf("- num_of_subdirs : %hu \n" , dir->upd_subdirs_array_idx);
-    for(int i = 0 ; i < dir->upd_subdirs_array_idx ; i++){
-        printf("%lu - ", (dir->upd_subdirs_array)[i]);
-    }
-    printf("\n");
-    printf("# ------------------------- #\n");
 }
 
 void print_dir_to_csv(Dir dir, char *output_line){
