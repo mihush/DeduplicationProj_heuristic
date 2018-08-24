@@ -420,12 +420,12 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
             counter_of_size++;
         }
 
-        if(base_object_sn == 341997 || base_object_sn == 344541 || base_object_sn == 347147 || base_object_sn == 349679 ||
-           base_object_sn == 352073 || base_object_sn == 354368 || base_object_sn == 356881 || base_object_sn == 359473 ||
-           base_object_sn == 361767 || base_object_sn == 364202 || base_object_sn == 366852 || base_object_sn == 369349 ||
-           base_object_sn == 371716 || base_object_sn == 374098){
-            printf("Stop, wait a minute ... \n");
-        }
+//        if(base_object_sn == 341997 || base_object_sn == 344541 || base_object_sn == 347147 || base_object_sn == 349679 ||
+//           base_object_sn == 352073 || base_object_sn == 354368 || base_object_sn == 356881 || base_object_sn == 359473 ||
+//           base_object_sn == 361767 || base_object_sn == 364202 || base_object_sn == 366852 || base_object_sn == 369349 ||
+//           base_object_sn == 371716 || base_object_sn == 374098){
+//            printf("Stop, wait a minute ... \n");
+//        }
 
         tok = strtok(NULL, ",");// Get Next Value
 
