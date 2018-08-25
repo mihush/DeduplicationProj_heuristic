@@ -104,19 +104,19 @@ int main(int argc , char** argv){
                 break;
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
-                base_object = readBaseObjectLine(line, files_array, mem_pool, base_objects_arr);
+                base_object = readBaseObjectLine(line, mem_pool, base_objects_arr);
                 base_objects_arr[base_object->sn] = base_object;
                 base_objects_cnt++;
                 break;
             case 'R':
-                dir = readDirLine(line, mem_pool);
+                dir = readDirLine(input_file, line, mem_pool);
                 roots_array[root_objects_cnt] = dir;
                 dirs_array[dir->sn] = dir;
                 root_objects_cnt++;
                 dir_objects_cnt++;
                 break;
             case 'D':
-                dir = readDirLine(line, mem_pool);
+                dir = readDirLine(input_file, line, mem_pool);
                 dirs_array[dir->sn] = dir;
                 dir_objects_cnt++;
                 break;
@@ -156,7 +156,7 @@ int main(int argc , char** argv){
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     FILE *results_file = NULL;
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);

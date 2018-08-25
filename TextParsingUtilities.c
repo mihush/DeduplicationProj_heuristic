@@ -75,7 +75,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     return file;
 }
 
-Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memory_pool , Base_Object* base_objects_arr){
+Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool , Base_Object* base_objects_arr){
     char* base_object_id = NULL;
     unsigned long base_object_sn = 0;
     unsigned short shared_by_num_files = 0;
@@ -98,12 +98,14 @@ Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memor
     return base_object;
 }
 
-Dir readDirLine(char* line , PMemory_pool memory_pool){
+Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
     char* dir_id = NULL;
     unsigned long dir_sn = 0;
     unsigned long parent_dir_sn = 0;
     unsigned long num_of_sub_dirs = 0;
     unsigned long num_of_files = 0;
+    int input_line_len = strlen(line);
+
     char* tok = NULL;
     char sep[2] = ",";
 
@@ -128,24 +130,28 @@ Dir readDirLine(char* line , PMemory_pool memory_pool){
     num_of_files = atol(tok);
     Dir directory = dir_create(dir_id , dir_sn , parent_dir_sn , num_of_files , num_of_sub_dirs , memory_pool);
 
-    //reading dir_sn
-    unsigned long sub_dir_sn = 0;
-    for(int i = 0 ; i < num_of_sub_dirs ; i++){
-        tok = strtok(NULL , sep);
-        sub_dir_sn = atol(tok);
-        //add sub_dir to directory
-        add_sub_dir_sn_to_dir(directory, sub_dir_sn, i);
-    }
+    // Need to get the directory using fragments
+    if(((input_line_len + 1) == MAX_LINE_LEN) && (line[input_line_len-1] != '\n')){ //Enter This condition only if we haven't read the entire line
+        read_fragmented_line_Dir(input_file, line, input_line_len, memory_pool, directory, num_of_sub_dirs, num_of_files);
+    }else { //The Line is not fragmented proceed as regular
+        //reading dir_sn
+        unsigned long sub_dir_sn = 0;
+        for (int i = 0; i < num_of_sub_dirs; i++) {
+            tok = strtok(NULL, sep);
+            sub_dir_sn = atol(tok);
+            //add sub_dir to directory
+            add_sub_dir_sn_to_dir(directory, sub_dir_sn, i);
+        }
 
-    //reading file_sn
-    unsigned long sub_file_sn = 0;
-    for(int i = 0 ; i < num_of_files  ; i++){
-        tok = strtok(NULL , sep);
-        sub_file_sn = atol(tok);
-        //add file to directory
-        add_file_sn_to_dir(directory, sub_file_sn, i);
+        //reading file_sn
+        unsigned long sub_file_sn = 0;
+        for (int i = 0; i < num_of_files; i++) {
+            tok = strtok(NULL, sep);
+            sub_file_sn = atol(tok);
+            //add file to directory
+            add_file_sn_to_dir(directory, sub_file_sn, i);
+        }
     }
-
     return directory;
 }
 
@@ -164,7 +170,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             // Weird BUG =[
             if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
                 (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
-                printf("(<3) -> CHANGED ... %lu(size) \n" , (base_object->output_files_ht)->size_table);
+                printf("(<3) -> CHANGED ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
             }
 
             (base_object->output_updated_idx)++;
@@ -475,5 +481,63 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
             (file_obj->base_object_arr_idx)++;
         }
     }
+    return;
+}
+
+void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
+                              Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files){
+    bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
+    char last_char = line[input_line_len - 1];
+    unsigned int counter_files = 0, counter_sub_dirs = 0;
+
+    if(last_char == ',') {
+        line_end_with_comma = true;
+    }
+
+    // Variable to get all base_objects (Blocks) : their sn and size
+    char* tok = NULL;
+    unsigned long sn = 0;
+
+    tok = strtok(NULL, ","); // Get the SN of the first Block
+    while(strcmp(tok, "\n") != 0) {
+        sn = atol(tok);
+        // Take string until the first comma
+        tok = strtok(NULL, ",");// Get Next Value
+
+        //If we Reached the end of the Line - treat it differently
+        if (!tok) {
+            // There is a line over flow, we need to fix last block size
+            bool last_line_ended_with_comma = line_end_with_comma;
+            fgets(line, MAX_LINE_LEN, input_file);
+            line_end_with_comma = false;
+            if (line[strlen(line) - 1] == ',') {
+                line_end_with_comma = true;
+            }
+
+            if (line[0] == ',') {
+                last_line_ended_with_comma = true;
+            }
+
+            tok = strtok(line, ",");
+
+            // Case the first char are a continued number from previous buffer
+            if(!last_line_ended_with_comma){
+                sn *= pow_aux(10, strlen(tok));
+                sn += atoi(tok);
+                tok = strtok(NULL, ",");
+            }
+        }
+        //Save sn of sub_dir or files od current directory
+        if (counter_sub_dirs == num_of_sub_dirs) { // Insert the dir files - in case all sub_dirs already inserted
+            dir_obj->files_array[counter_files] = sn;
+            counter_files++;
+        } else { // (counter_sub_dirs < num_of_sub_dirs)
+            assert(counter_files < num_of_files); // TODO - not essential, may be removed
+            dir_obj->dirs_array[counter_sub_dirs] = sn;
+            counter_sub_dirs++;
+        }
+
+    }
+
     return;
 }

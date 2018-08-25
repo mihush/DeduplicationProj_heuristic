@@ -39,7 +39,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
  *
  * @line - the line that represents a block object to be parsed
  */
-Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memory_pool, Base_Object* base_objects_arr);
+Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool, Base_Object* base_objects_arr);
 
 /*
  * readRootDirLine - Parses the input line into a directory object to be saved
@@ -48,7 +48,7 @@ Base_Object readBaseObjectLine(char *line, File *files_array, PMemory_pool memor
  * @line - the line that represents a directory object to be parsed
  * @tile_type - could be either D for regular directory or R for Root directory
  */
-Dir readDirLine(char* line , PMemory_pool memory_pool);
+Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool);
 
 /*
  *  add_base_object_to_merge_file - ...
@@ -149,6 +149,8 @@ unsigned int pow_aux(int x, int y);
 
 void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool,
                                Base_Object* base_objects_arr , File file_obj);
+void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
+                              Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files);
 //TODO - add same function for Dirs (not need sn & size cases - because it's only files sn's)
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

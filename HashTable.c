@@ -64,7 +64,7 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     long int hash_key = ht_hashF( ht , key );
     next = ht->table[hash_key];
 
-    /* Advance until get the end of the list OR first matching key*/
+    // Advance until get the end of the list OR first matching key
     while( next != NULL && next->key != NULL && strcmp( key, next->key ) != 0 ) {
         last = next;
         next = next->next;
