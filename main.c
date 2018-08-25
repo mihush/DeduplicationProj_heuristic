@@ -32,7 +32,8 @@ int main(int argc , char** argv){
     }
 
     goal_depth = atoi(argv[1]);
-    input_file_path = (char*)memory_pool_alloc(mem_pool , (strlen(argv[2]) + 1)*sizeof(char));
+    int input_file_path_len = (int)strlen(argv[2]) + 1;
+    input_file_path = (char*)memory_pool_alloc(mem_pool , (input_file_path_len * sizeof(char)));
     strcpy(input_file_path, argv[2]);
 
     //Open the Input File
@@ -58,19 +59,19 @@ int main(int argc , char** argv){
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(line , sep);
     tok = strtok(NULL , sep); //get the number with leading space
-    num_file_objects = atol(tok);
+    num_file_objects = (unsigned long)atol(tok);
 
     //Get the number of Directory objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(line , sep);
     tok = strtok(NULL , sep); //get the number with leading space
-    num_dir_objects = atol(tok);
+    num_dir_objects = (unsigned long)atol(tok);
 
     //Get the number of Blocks/Physical Files objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(line , sep);
     tok = strtok(NULL , sep);
-    num_base_objects = atol(tok);
+    num_base_objects = (unsigned long)atol(tok);
 
     //Allocate Arrays For Files, Base objects , Directories and Roots
     files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));
@@ -156,7 +157,7 @@ int main(int argc , char** argv){
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
     FILE *results_file = NULL;
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);
@@ -173,31 +174,24 @@ int main(int argc , char** argv){
     results_file = fopen(output_file_name , "w+");
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , output_files_idx ,
                             output_dirs_idx , num_base_objects);
-
-    //Print Files to Output CSV
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
-    for( int i = 0 ; i < output_files_idx ; i++){
-        print_file_to_csv(output_files_array[i] , temp_output_line);
-        fprintf(results_file , "%s" ,temp_output_line);
+    for( int i = 0 ; i < output_files_idx ; i++){ //Print Files to Output CSV
+        print_file_to_csv(output_files_array[i] , temp_output_line , results_file);
     }
 
-    //Print Base_object (physichal_file or block) output CSV
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
-    for(int i = 0 ; i < num_base_objects; i++){
+    for(int i = 0 ; i < num_base_objects; i++){ //Print Base_object (physichal_file or block) output CSV
         if(dedup_type[0] == 'B'){
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B');
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B' , results_file);
         } else{
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P');
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P' , results_file);
 
         }
-        fprintf(results_file , "%s" ,temp_output_line);
     }
 
-    //Print Directories to output CSV
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
-    for( int i = 0 ; i < output_dirs_idx ; i++){
-        print_dir_to_csv(output_dirs_array[i], temp_output_line);
-        fprintf(results_file , "%s" ,temp_output_line);
+    for( int i = 0 ; i < output_dirs_idx ; i++){ //Print Directories to output CSV
+        print_dir_to_csv(output_dirs_array[i], temp_output_line , results_file);
     }
 
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */

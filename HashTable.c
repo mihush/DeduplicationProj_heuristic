@@ -13,16 +13,18 @@ HashTableF ht_createF(unsigned short shared_by_num_files, PMemory_pool mem_pool)
     if(!ht){ //check allocation was successful
         return NULL;
     }
-    ht->size_table = shared_by_num_files;
 
     /* Allocate pointers to the head nodes */
-    ht -> table = (EntryF*)memory_pool_alloc(mem_pool , (sizeof(EntryF) * (ht->size_table)));
-    if(!ht -> table ){ //check array of pointers was allocated successfully
+    int size_of_table = sizeof(EntryF)*(shared_by_num_files +1);
+    ht->table = memory_pool_alloc(mem_pool , size_of_table);
+    if(!(ht -> table)){ //check array of pointers was allocated successfully
         return NULL; //All is allocated in POOL - Nothing to Free
     }
     for(int i = 0; i < (ht->size_table) ; i++ ){
-        ht->table[i] = NULL;
+        (ht->table)[i] = NULL;
     }
+
+    ht->size_table = shared_by_num_files +1;
     return ht;
 }
 
@@ -37,7 +39,7 @@ long int ht_hashF( HashTableF ht, char *key ) {
         i++;
     }
 
-    return hashval % (ht->size_table);
+    return (hashval % (ht->size_table));
 }
 
 EntryF ht_newpairF(char *key, PMemory_pool mem_pool){
@@ -61,8 +63,8 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     EntryF next = NULL;
     EntryF last = NULL;
 
-    long int hash_key = ht_hashF( ht , key );
-    next = ht->table[hash_key];
+    long int hash_key = ht_hashF(ht , key);
+    next = (ht->table)[hash_key];
 
     // Advance until get the end of the list OR first matching key
     while( next != NULL && next->key != NULL && strcmp( key, next->key ) != 0 ) {
@@ -71,7 +73,7 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     }
 
     /* There's already a pair. Let's replace that string. */
-    if( next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 ) {
+    if(next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 ) {
         //Return the pointer to the Block/File that already exists in the hash
         *object_exists = true;
         return next;
@@ -81,9 +83,9 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
             return NULL;
         }
         /* We're at the start of the linked list in this hash_key. */
-        if( next == ht->table[hash_key] ){ // If we in an empty list
+        if( next == (ht->table)[hash_key] ){ // If we in an empty list
             newpair->next = next;
-            ht->table[hash_key] = newpair;
+            (ht->table)[hash_key] = newpair;
 
             /* We're at the end of the linked list in this hash_key. */
         } else if ( next == NULL ) {
@@ -97,24 +99,6 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     }
 }
 
-//DataF ht_getF(HashTableF ht, char *key ) {
-//    long int hash_key = ht_hashF(ht, key);
-//    EntryF pair = ht->table[hash_key];
-//
-//    /* Step through the hash_key, looking for our value. */
-//    while( pair != NULL && pair->key != NULL && strcmp( key, pair->key ) != 0 ) {
-//        pair = pair->next;
-//    }
-//
-//    /* Did we actually find anything? */
-//    if( pair == NULL || pair->key == NULL || strcmp( key, pair->key ) != 0 ) {
-//        //didn't find anything
-//        return NULL;
-//
-//    }
-//    //found the key - return the data
-//    return pair->data;
-//}
 
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 

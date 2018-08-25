@@ -6,11 +6,11 @@
 #include "memory_pool.h"
 
 // Creates the struct of a Memory Pool that contains 4 values
-void* memory_pool_init(PMemory_pool pool) {
+void* memory_pool_init(PMemory_pool pool){
     return memset(pool, 0, sizeof(Memory_pool));
 }
 
-void* memory_pool_alloc(PMemory_pool pool, uint32_t size) {
+void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
     void* res;
     /* size is in bytes, but we will allocate memory in sizeof(uint32)
      * chunks so we will need to calculate how much to allocate */
@@ -34,7 +34,7 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size) {
     if (POOL_INITIAL_SIZE <= (pool->next_free_index + size_of_uint32_to_alloc)){
         pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool)); //Allocating new pool node
 
-        if (!pool_to_alloc_from->next_pool) {
+        if (!pool_to_alloc_from->next_pool){
             return NULL;
         }
         pool->next_free_index = 0;
@@ -56,8 +56,7 @@ void memory_pool_destroy(PMemory_pool pool)
     PMemory_pool pool_to_free = pool->next_pool;
 
     /* Iterate over all pool nodes and free them */
-    while (pool_to_free)
-    {
+    while (pool_to_free){
         next_pool = pool_to_free->next_pool;
         free(pool_to_free);
         pool_to_free = next_pool;

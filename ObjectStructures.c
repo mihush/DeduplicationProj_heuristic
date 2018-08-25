@@ -10,10 +10,13 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
-    base_object->output_files_ht = NULL;
+
     base_object->sn = base_object_sn;
-    base_object->shared_by_num_files = 0;
     base_object->size = base_object_size;
+
+    //This Params Will be Filled Later by base_object_update
+    base_object->output_files_ht = NULL;
+    base_object->shared_by_num_files = 0;
     base_object->output_updated_idx = 0;
     return base_object;
 }
@@ -24,21 +27,24 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
         return NULL;
     }
 
-    unsigned short ht_size = shared_by_num_files + 1;
-    base_object->output_files_ht = ht_createF(ht_size, memory_pool);
-    base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id) + 1)); //allocate string for base_object_id
-    if(base_object->id == NULL || base_object->output_files_ht == NULL){ //check successful allocation
+    base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id)+1)); //allocate string for base_object_id
+    if(base_object->id == NULL ){ //check successful allocation
         return NULL;
     }
     base_object->id = strcpy(base_object->id , base_object_id);
+
+    base_object->output_files_ht = ht_createF(shared_by_num_files, memory_pool);
+    if(base_object->output_files_ht == NULL){ //check successful allocation
+        return NULL;
+    }
+
     base_object->shared_by_num_files = shared_by_num_files;
-    base_object->files_array_updated = memory_pool_alloc(memory_pool, sizeof(unsigned long)*shared_by_num_files);
 
-
+    base_object->files_array_updated = memory_pool_alloc(memory_pool, (sizeof(unsigned long)*(shared_by_num_files)));
     return base_object;
 }
 
-void print_base_object_to_csv(Base_Object base_object, char* output_line, char object_type){
+void print_base_object_to_csv(Base_Object base_object, char* output_line, char object_type , FILE* csv_output_file){
     char temp[100];
     sprintf(output_line , "%c,%lu,%s,%lu,", object_type, base_object->sn, base_object->id , base_object->output_updated_idx);
 
@@ -48,6 +54,7 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
         strcat(output_line , temp);
     }
     strcat(output_line , "\n");
+    fprintf(csv_output_file , "%s" ,output_line);
 }
 
 /* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
@@ -56,18 +63,17 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
 /* ******************* START ******************* File STRUCT Functions ******************* START ******************** */
 
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
-                 unsigned int num_base_object, unsigned int size ,
-                 bool isMerged , PMemory_pool memory_pool){
+                 unsigned int num_base_object, unsigned int size , bool isMerged , PMemory_pool memory_pool){
     File file = memory_pool_alloc(memory_pool , (sizeof(*file)));
     if(file == NULL){
         return NULL;
     }
-    file->isMergedF = isMerged;
+
     int id_length = 0;
     if(isMerged){
         id_length = MERGED_FILE_ID;
     } else {
-        id_length = (strlen(id) + 1);
+        id_length = (int)(strlen(id) + 1);
     }
     file->id = memory_pool_alloc(memory_pool, (sizeof(char)*id_length));
     if(file->id == NULL){
@@ -95,17 +101,25 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     return file;
 }
 
-void print_file_to_csv(File file, char* output_line){
+void print_file_to_csv(File file, char* output_line , FILE* csv_output_file){
     assert(file);
     char temp[100];
+    int output_line_len = 0;
 
     sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
+    output_line_len = (int)strlen(output_line);
 
     for(int i = 0 ; i < file->base_object_arr_idx ; i++){
         sprintf(temp , "%lu,%u," , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
+        if((strlen(temp) + output_line_len + 1) > MAX_LINE_LEN){ //Check if line is too long for the buffer and print it to the file
+            fprintf(csv_output_file , "%s" ,output_line);//Print the Current line to file
+            memset(output_line,0,strlen(output_line)); //Clear Output Line Buffer
+        }
         strcat(output_line , temp);
+        output_line_len  = (int)strlen(output_line);
     }
     strcat(output_line , "\n");
+    fprintf(csv_output_file , "%s" ,output_line);
 }
 
 /* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
@@ -180,11 +194,11 @@ ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx){
     return SUCCESS;
 }
 
-void print_dir_to_csv(Dir dir, char *output_line){
+void print_dir_to_csv(Dir dir , char *output_line , FILE* csv_output_file){
     assert(dir);
     char temp[100];
     //Determine if root or not
-    char dir_type = 'Z';
+    char dir_type;
     if(dir->sn == dir->parent_dir_sn){ //It's root directory
         dir_type = 'R';
     } else { // It's a regular directory
@@ -202,6 +216,7 @@ void print_dir_to_csv(Dir dir, char *output_line){
         strcat(output_line , temp);
     }
     strcat(output_line , "\n");
+    fprintf(csv_output_file , "%s" ,output_line);
 }
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 

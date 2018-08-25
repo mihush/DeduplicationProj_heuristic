@@ -67,7 +67,6 @@ struct file_t{ // Only logical file
 
     unsigned int num_base_objects;
     unsigned int size;
-    bool isMergedF;
 
     Base_Object* base_objects_arr;
     unsigned long base_object_arr_idx;
@@ -96,14 +95,14 @@ struct dir_t{
     int depth;
 
     //Files in directory
-    unsigned short num_of_files;
+    unsigned long num_of_files;
     unsigned long* files_array; //array of serial numbers
     unsigned long* upd_files_array; //array of serial numbers
     unsigned short upd_files_array_idx;
 
 
     //Sub-Dirs
-    unsigned short num_of_subdirs;
+    unsigned long num_of_subdirs;
     unsigned long* dirs_array; // array of serial numbers
     unsigned long* upd_subdirs_array; // array of serial numbers
     unsigned short upd_subdirs_array_idx;
@@ -138,7 +137,7 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
  *  @block       - pointer to the block structure to be printed
  *  @output_line - ...
  */
-void print_base_object_to_csv(Base_Object base_object, char* output_line, char dedup_type);
+void print_base_object_to_csv(Base_Object base_object, char* output_line, char dedup_type , FILE* csv_output_file);
 
 /* ******************** END ******************** Block STRUCT Functions ******************** END ******************** */
 /* ****************************************************************************************************************** */
@@ -168,19 +167,12 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  bool isMerged , PMemory_pool memory_pool);
 
 /*
- *  print_file - ....
- *
- *  @file - Pointer to the file object structure to be printed
- */
-void print_file(File file);
-
-/*
  *  print_file_to_csv - ....
  *
  *  @file        - Pointer to the file object structure to be printed
  *  @output_line - ...
  */
-void print_file_to_csv(File file, char* output_line);
+void print_file_to_csv(File file, char* output_line , FILE* csv_output_file);
 
 /* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
 /* ****************************************************************************************************************** */
@@ -223,19 +215,12 @@ ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx);
 ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx);
 
 /*
- *  print_dir - ....
- *
- *  @dir - Pointer to the directory object structure to be printed
- */
-void print_dir(Dir dir);
-
-/*
  *  print_dir_to_csv - ....
  *
  *  @dir         -  Pointer to the directory object structure to be printed
  *  @output_line - ...
  */
-void print_dir_to_csv(Dir dir, char *output_line);
+void print_dir_to_csv(Dir dir, char *output_line , FILE* csv_output_file);
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */

@@ -84,18 +84,14 @@ Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool , Base_Objec
 
     tok = strtok(line , sep); //reading the flag ("B/P")
     tok = strtok(NULL , sep); //reading base_object_sn
-    base_object_sn = atol(tok);
+    base_object_sn = (unsigned long)atol(tok);
     base_object_id = strtok(NULL , sep); //reading Block_id
 
     tok = strtok(NULL , sep); //reading num_of_files
     shared_by_num_files = atoi(tok);
-
-    Base_Object base_object = base_object_update(base_objects_arr[base_object_sn], base_object_id,
-                                            shared_by_num_files, memory_pool);
-    if(base_object == NULL){
-        return NULL;
-    }
-    return base_object;
+    Base_Object base_object_to_update = base_objects_arr[base_object_sn];
+    base_object_update(base_object_to_update, base_object_id, shared_by_num_files, memory_pool);
+    return base_object_to_update;
 }
 
 Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
@@ -104,30 +100,25 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
     unsigned long parent_dir_sn = 0;
     unsigned long num_of_sub_dirs = 0;
     unsigned long num_of_files = 0;
-    int input_line_len = strlen(line);
+    int input_line_len = (int)strlen(line);
 
     char* tok = NULL;
     char sep[2] = ",";
 
     tok = strtok(line , sep); //reading the flag ("D/R")
-    //reading dir_sn
-    tok = strtok(NULL , sep);
-    dir_sn = atol(tok);
+    tok = strtok(NULL , sep); //reading dir_sn
+    dir_sn = (unsigned long)atol(tok);
 
-    //reading dir_id
-    dir_id = strtok(NULL , sep);
+    dir_id = strtok(NULL , sep); //reading dir_id
 
-    //reading parent_dir_sn
-    tok = strtok(NULL , sep);
-    parent_dir_sn = atol(tok);
+    tok = strtok(NULL , sep); //reading parent_dir_sn
+    parent_dir_sn = (unsigned long)atol(tok);
 
-    //reading num_of_sub_dirs
-    tok = strtok(NULL , sep);
-    num_of_sub_dirs = atol(tok);
+    tok = strtok(NULL , sep); //reading num_of_sub_dirs
+    num_of_sub_dirs = (unsigned long)atol(tok);
+    tok = strtok(NULL , sep); //reading num_of_files
+    num_of_files = (unsigned long)atol(tok);
 
-    //reading num_of_files
-    tok = strtok(NULL , sep);
-    num_of_files = atol(tok);
     Dir directory = dir_create(dir_id , dir_sn , parent_dir_sn , num_of_files , num_of_sub_dirs , memory_pool);
 
     // Need to get the directory using fragments
@@ -138,18 +129,16 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
         unsigned long sub_dir_sn = 0;
         for (int i = 0; i < num_of_sub_dirs; i++) {
             tok = strtok(NULL, sep);
-            sub_dir_sn = atol(tok);
-            //add sub_dir to directory
-            add_sub_dir_sn_to_dir(directory, sub_dir_sn, i);
+            sub_dir_sn = (unsigned long)atol(tok);
+            add_sub_dir_sn_to_dir(directory, sub_dir_sn, i); //add sub_dir to directory
         }
 
         //reading file_sn
         unsigned long sub_file_sn = 0;
         for (int i = 0; i < num_of_files; i++) {
             tok = strtok(NULL, sep);
-            sub_file_sn = atol(tok);
-            //add file to directory
-            add_file_sn_to_dir(directory, sub_file_sn, i);
+            sub_file_sn = (unsigned long)atol(tok);
+            add_file_sn_to_dir(directory, sub_file_sn, i); //add file to directory
         }
     }
     return directory;
@@ -157,30 +146,40 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
 
 void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool, Base_Object* base_object_array ){
     Base_Object base_object = NULL;
+    unsigned long merged_file_sn = merged_file->sn;
+
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
         bool object_exists = false, is_first_object = false;
-        base_object = (file_to_insert->base_objects_arr)[i];
-        if(merged_file->objects_bin_array[(base_object->sn)]){
+        unsigned long base_object_sn = (file_to_insert->base_objects_arr)[i]->sn;
+        base_object = base_object_array[base_object_sn];
+        if(merged_file->objects_bin_array[base_object_sn] == true){
             object_exists = true;
         }
+
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
-            (base_object->files_array_updated)[(base_object->output_updated_idx)] = merged_file->sn;
-
-            // Weird BUG =[
-            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
-                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
+            unsigned long curr_idx_update = base_object->output_updated_idx;
+            (base_object->files_array_updated)[curr_idx_update] = merged_file_sn;
+            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){ // Weird BUG =[
+                printf("(<3) -> OLDDDDD ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
+                unsigned short new_size = (unsigned short)(base_object->shared_by_num_files + 1);
+                (base_object->output_files_ht)->size_table = new_size;
                 printf("(<3) -> CHANGED ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
             }
-
             (base_object->output_updated_idx)++;
+            EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
+            if(result == NULL){ //Check for memory allocation
+                return;
+            }
 
             (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
             if(merged_file->base_object_arr_idx == 0){
                 is_first_object = true;
             }
-            merged_file->base_object_arr_idx = (merged_file->base_object_arr_idx) + 1;
-            merged_file->objects_bin_array[base_object->sn] = true;
+            (merged_file->base_object_arr_idx)++;
+            merged_file->objects_bin_array[base_object_sn] = true;
+
+
         }
         //Check if first physical file and changed id
         if(is_first_object){
@@ -189,12 +188,6 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             strcat(new_file_id , file_to_insert->id);
             strcpy(merged_file->id , new_file_id);
         }
-        if(object_exists == false){
-            EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
-            if(result == NULL){ //Check for memory allocation
-                return;
-            }
-        }
     }
 }
 
@@ -202,7 +195,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
                                 unsigned long* output_files_idx, PMemory_pool memory_pool){
     // add all of the files to output_files_array
     for(int f = 0 ; f < current_dir->num_of_files  ; f++){
-        //Update the sn of the inserted file .
+        //Update the sn of the inserted file
         File curr_file = files_array[(current_dir->files_array)[f]]; // Get file ptr from files array
         curr_file->dir_sn = current_dir->sn;
 
@@ -218,7 +211,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         // Update file_sn at each base_object containing this file
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
-            Base_Object curr_object = curr_file->base_objects_arr[j];
+            Base_Object curr_object = (curr_file->base_objects_arr)[j];
             ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
@@ -228,15 +221,13 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
     }
 }
 
-void update_dir_values(Dir current_dir , int goal_depth,
-                       Dir* dirs_array, unsigned long num_dirs,
+void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsigned long num_dirs,
                        File* files_array,  unsigned long num_files,
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
-                       Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       PMemory_pool memory_pool){
+                       Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth, PMemory_pool memory_pool){
     int current_depth = 0;
-    int new_sub_dir_sn = 0;
+    unsigned long new_sub_dir_sn = 0;
     if(current_dir == NULL){
         return;
     }
@@ -291,11 +282,9 @@ void update_dir_values(Dir current_dir , int goal_depth,
             (current_dir->upd_subdirs_array_idx)++;
 
             //For each directory - call update_dir_values
-            update_dir_values(output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth,
-                              dirs_array, num_dirs, files_array, num_files,
-                              base_object_array, num_base_object, output_files_array, output_files_idx,
-                              output_dirs_array, output_dirs_idx, current_depth, memory_pool);
-
+            update_dir_values(output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth, dirs_array, num_dirs,
+                              files_array, num_files, base_object_array, num_base_object,
+                              output_files_array, output_files_idx, output_dirs_array, output_dirs_idx, current_depth, memory_pool);
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
@@ -330,10 +319,8 @@ void update_dir_values(Dir current_dir , int goal_depth,
 
             //For each directory - call update_dir_values
             update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
-                              dirs_array, num_dirs, files_array, num_files,
-                              base_object_array, num_base_object, output_files_array,
-                              output_files_idx, output_dirs_array , output_dirs_idx, current_depth, memory_pool);
-
+                              dirs_array, num_dirs, files_array, num_files, base_object_array, num_base_object,
+                              output_files_array, output_files_idx, output_dirs_array , output_dirs_idx, current_depth, memory_pool);
         }
     }
 };
@@ -347,21 +334,20 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
-        roots_array[r]->depth = 0;
+        (roots_array[r])->depth = 0;
 
         // Add root to output_dirs_array - update the dir_sn from a global param
         output_dirs_array[*output_dirs_idx] = roots_array[r];
-        roots_array[r]->sn = *output_dirs_idx;
-        roots_array[r]->parent_dir_sn = *output_dirs_idx;
+        (roots_array[r])->sn = *output_dirs_idx;
+        (roots_array[r])->parent_dir_sn = *output_dirs_idx;
         (*output_dirs_idx)++;
 
         //add the root to be his own subdirectory
         (roots_array[r]->upd_subdirs_array)[roots_array[r]->upd_subdirs_array_idx] = roots_array[r]->sn;
         (roots_array[r]->upd_subdirs_array_idx)++;
 
-        update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs,
-                          files_array, num_files, base_object_array, num_base_object,
-                          output_files_array , output_files_idx,
+        update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs, files_array, num_files,
+                          base_object_array, num_base_object, output_files_array , output_files_idx,
                           output_dirs_array , output_dirs_idx, 0, memory_pool);
     }
 }
@@ -373,7 +359,7 @@ void print_output_csv_header(FILE *results_file, char dedup_type, char *input_fi
     } else if(dedup_type == 'F'){
         fprintf(results_file ,"# Output type: file-level\n");
     }
-    //TODO - check the requirements for the header titles
+
     fprintf(results_file ,"%s" , input_files_list);
     fprintf(results_file ,"# Target depth: %d\n" , goal_depth);
     fprintf(results_file ,"# Num files: %lu\n",num_files_output);
@@ -424,11 +410,11 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
     tok = strtok(NULL, ","); // Get the SN of the first Block
     while(strcmp(tok, "\n") != 0) {
         if (counter_of_size == counter_of_sn) {
-            base_object_sn = atol(tok);
+            base_object_sn = (unsigned long)atol(tok);
             counter_of_sn++;
 
         } else { // (counter_of_size < counter_of_sn){
-            base_object_size = atoi(tok);
+            base_object_size = (unsigned int)atoi(tok);
             counter_of_size++;
         }
 
@@ -499,16 +485,16 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     unsigned long sn = 0;
 
     tok = strtok(NULL, ","); // Get the SN of the first Block
-    while(strcmp(tok, "\n") != 0) {
-        sn = atol(tok);
-        // Take string until the first comma
-        tok = strtok(NULL, ",");// Get Next Value
+    while(strcmp(tok, "\n") != 0) { //Go On While We haven't finished reading the fragmented line
+        sn = (unsigned long)atol(tok); //Convert sn to Unsigned Longs
 
-        //If we Reached the end of the Line - treat it differently
-        if (!tok) {
+        tok = strtok(NULL, ",");// Get Next Value - Take string until the first comma
+
+        if (!tok) { //If we Reached the end of the Line - treat it differently
             // There is a line over flow, we need to fix last block size
             bool last_line_ended_with_comma = line_end_with_comma;
-            fgets(line, MAX_LINE_LEN, input_file);
+            fgets(line, MAX_LINE_LEN, input_file); //Get Another Line
+
             line_end_with_comma = false;
             if (line[strlen(line) - 1] == ',') {
                 line_end_with_comma = true;
@@ -518,7 +504,7 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
                 last_line_ended_with_comma = true;
             }
 
-            tok = strtok(line, ",");
+            tok = strtok(line, ","); // Read the rest of the line
 
             // Case the first char are a continued number from previous buffer
             if(!last_line_ended_with_comma){
@@ -527,17 +513,17 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
                 tok = strtok(NULL, ",");
             }
         }
+
         //Save sn of sub_dir or files od current directory
         if (counter_sub_dirs == num_of_sub_dirs) { // Insert the dir files - in case all sub_dirs already inserted
             dir_obj->files_array[counter_files] = sn;
             counter_files++;
         } else { // (counter_sub_dirs < num_of_sub_dirs)
-            assert(counter_files < num_of_files); // TODO - not essential, may be removed
+            assert(counter_files < num_of_files);
             dir_obj->dirs_array[counter_sub_dirs] = sn;
             counter_sub_dirs++;
         }
 
     }
-
     return;
 }

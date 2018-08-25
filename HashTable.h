@@ -66,14 +66,6 @@ EntryF ht_newpairF(char *key , PMemory_pool mem_pool);
  */
 EntryF ht_setF(HashTableF ht, char *key, bool* object_exists , PMemory_pool mem_pool);
 
-/*
- * ht_getF - Retrieve pointer for file element with corresponding key in hash table
- *
- * @ht  - the hashtable to which the object will be added
- * @key - the hashed id of the object
- */
-//DataF ht_getF(HashTableF ht, char *key );
-
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_HASHTABLE_H

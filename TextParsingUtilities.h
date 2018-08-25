@@ -151,6 +151,4 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
                                Base_Object* base_objects_arr , File file_obj);
 void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
                               Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files);
-//TODO - add same function for Dirs (not need sn & size cases - because it's only files sn's)
-
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
