@@ -72,7 +72,7 @@ EntryF ht_setF(HashTableF ht, char *key, bool* object_exists , PMemory_pool mem_
  * @ht  - the hashtable to which the object will be added
  * @key - the hashed id of the object
  */
-DataF ht_getF(HashTableF ht, char *key );
+//DataF ht_getF(HashTableF ht, char *key );
 
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 

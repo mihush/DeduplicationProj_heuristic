@@ -160,6 +160,13 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
             (base_object->files_array_updated)[(base_object->output_updated_idx)] = merged_file->sn;
+
+            // Weird BUG =[
+            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){
+                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
+                printf("(<3) -> CHANGED ... %lu(size) \n" , (base_object->output_files_ht)->size_table);
+            }
+
             (base_object->output_updated_idx)++;
 
             (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
@@ -390,7 +397,6 @@ unsigned int pow_aux(int x, int y){
 // For each line read the following conditions will be checked and treated accordingly:
 //          - Buffer Contains the Entire Line.
 //          - Line was cut in the middle : Either end with a comma or a sign or number or with a new line sign.
-//
 // fgets will read until the first new line, maximum bytes to read at once, or EOF, which ever is sent first
 void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool,
                                Base_Object* base_objects_arr , File file_obj){

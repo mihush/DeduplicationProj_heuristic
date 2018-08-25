@@ -97,24 +97,24 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
     }
 }
 
-DataF ht_getF(HashTableF ht, char *key ) {
-    long int hash_key = ht_hashF(ht, key);
-    EntryF pair = ht->table[hash_key];
-
-    /* Step through the hash_key, looking for our value. */
-    while( pair != NULL && pair->key != NULL && strcmp( key, pair->key ) != 0 ) {
-        pair = pair->next;
-    }
-
-    /* Did we actually find anything? */
-    if( pair == NULL || pair->key == NULL || strcmp( key, pair->key ) != 0 ) {
-        //didn't find anything
-        return NULL;
-
-    }
-    //found the key - return the data
-    return pair->data;
-}
+//DataF ht_getF(HashTableF ht, char *key ) {
+//    long int hash_key = ht_hashF(ht, key);
+//    EntryF pair = ht->table[hash_key];
+//
+//    /* Step through the hash_key, looking for our value. */
+//    while( pair != NULL && pair->key != NULL && strcmp( key, pair->key ) != 0 ) {
+//        pair = pair->next;
+//    }
+//
+//    /* Did we actually find anything? */
+//    if( pair == NULL || pair->key == NULL || strcmp( key, pair->key ) != 0 ) {
+//        //didn't find anything
+//        return NULL;
+//
+//    }
+//    //found the key - return the data
+//    return pair->data;
+//}
 
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 

@@ -156,7 +156,7 @@ int main(int argc , char** argv){
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
     FILE *results_file = NULL;
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);
