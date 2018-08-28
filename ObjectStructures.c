@@ -39,7 +39,6 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     }
 
     base_object->shared_by_num_files = shared_by_num_files;
-
     base_object->files_array_updated = memory_pool_alloc(memory_pool, (sizeof(unsigned long)*(shared_by_num_files)));
     return base_object;
 }

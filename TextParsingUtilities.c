@@ -150,7 +150,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
 
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
         bool object_exists = false, is_first_object = false;
-        unsigned long base_object_sn = (file_to_insert->base_objects_arr)[i]->sn;
+        unsigned long base_object_sn = ((file_to_insert->base_objects_arr))[i]->sn;
         base_object = base_object_array[base_object_sn];
         if(merged_file->objects_bin_array[base_object_sn] == true){
             object_exists = true;
@@ -158,18 +158,11 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
 
         if(object_exists == false){ //Check if block exists already - do not increase counter
             // Update correspondingly file_sn at each block contain this file.
-            unsigned long curr_idx_update = base_object->output_updated_idx;
-            (base_object->files_array_updated)[curr_idx_update] = merged_file_sn;
-            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){ // Weird BUG =[
-                printf("(<3) -> OLDDDDD ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
-                unsigned short new_size = (unsigned short)(base_object->shared_by_num_files + 1);
-                (base_object->output_files_ht)->size_table = new_size;
-                printf("(<3) -> CHANGED ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
-            }
-            (base_object->output_updated_idx)++;
-            EntryF result = ht_setF(base_object->output_files_ht, merged_file->id, &object_exists ,memory_pool);
-            if(result == NULL){ //Check for memory allocation
-                return;
+            bool file_exists = false;
+            ht_setF(base_object->output_files_ht, merged_file->id, &file_exists ,memory_pool);
+            if(file_exists == false){ //Check for memory allocation
+                (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
+                (base_object->output_updated_idx)++;
             }
 
             (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
@@ -178,8 +171,6 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             }
             (merged_file->base_object_arr_idx)++;
             merged_file->objects_bin_array[base_object_sn] = true;
-
-
         }
         //Check if first physical file and changed id
         if(is_first_object){
@@ -325,12 +316,11 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
     }
 };
 
-void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
-                                 Dir* dirs_array, unsigned long num_dirs,
-                                 File* files_array,  unsigned long num_files,
-                                 Base_Object * base_object_array, unsigned long num_base_object, int goal_depth,
-                                 File* output_files_array , unsigned long* output_files_idx ,
-                                 Dir* output_dirs_array , unsigned long* output_dirs_idx , PMemory_pool memory_pool){
+void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_array, unsigned long num_dirs,
+                                     File* files_array,  unsigned long num_files,
+                                     Base_Object * base_object_array, unsigned long num_base_object, int goal_depth,
+                                     File* output_files_array , unsigned long* output_files_idx ,
+                                     Dir* output_dirs_array , unsigned long* output_dirs_idx , PMemory_pool memory_pool){
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
@@ -412,7 +402,6 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
         if (counter_of_size == counter_of_sn) {
             base_object_sn = (unsigned long)atol(tok);
             counter_of_sn++;
-
         } else { // (counter_of_size < counter_of_sn){
             base_object_size = (unsigned int)atoi(tok);
             counter_of_size++;
@@ -515,7 +504,9 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
         }
 
         //Save sn of sub_dir or files od current directory
-        if (counter_sub_dirs == num_of_sub_dirs) { // Insert the dir files - in case all sub_dirs already inserted
+        //First appear directories , After Them there are files
+        if (counter_sub_dirs == num_of_sub_dirs) {
+            // Insert the dir files - in case all sub_dirs already inserted
             dir_obj->files_array[counter_files] = sn;
             counter_files++;
         } else { // (counter_sub_dirs < num_of_sub_dirs)
