@@ -43,7 +43,7 @@ struct base_object_t{
     unsigned int size;
 
     unsigned int shared_by_num_files;
-    HashTableF output_files_ht; // Hash Table for the output files contain this block
+    HashTable output_files_ht; // Hash Table for the output files contain this block
 
     unsigned long* files_array_updated;
     unsigned long output_updated_idx;
@@ -68,10 +68,12 @@ struct file_t{ // Only logical file
     unsigned int num_base_objects;
     unsigned int size;
 
+    //For Regular Files that go to the output as is
     Base_Object* base_objects_arr;
     unsigned long base_object_arr_idx;
 
     //For Merged File only (indicate if object already inserted)
+    HashTable base_objects_hash_merged;
     bool* objects_bin_array;
 };
 typedef struct file_t *File;

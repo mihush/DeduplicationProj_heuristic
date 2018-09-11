@@ -148,36 +148,47 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
     Base_Object base_object = NULL;
     unsigned long merged_file_sn = merged_file->sn;
 
-    for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){
+    for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){ //Go over all base objects that belong the file to be merged
         bool object_exists = false, is_first_object = false;
-        unsigned long base_object_sn = ((file_to_insert->base_objects_arr))[i]->sn;
-        base_object = base_object_array[base_object_sn];
-        if(merged_file->objects_bin_array[base_object_sn] == true){
-            object_exists = true;
-        }
+        unsigned long base_object_sn = ((file_to_insert->base_objects_arr))[i]->sn; //the sn of the base object to be added
+        char base_object_sn_str[FILE_ID_LEN]; // Get the sn of the base object in string format
+        sprintf(base_object_sn_str , "%lu" , base_object_sn);
+
+        base_object = base_object_array[base_object_sn]; //Get The pointer to the base object element from the general array
+        //Try adding the object to the merged file hashtable
+        ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size , memory_pool);
+        //If the block doesn't exist it is added to the hashtable ,  otherwise it is already there
+//        if(merged_file->objects_bin_array[base_object_sn] == true){ //Replace this to Hashtable
+//            object_exists = true;
+//        }
 
         if(object_exists == false){ //Check if block exists already - do not increase counter
-            // Update correspondingly file_sn at each block contain this file.
             bool file_exists = false;
-            ht_setF(base_object->output_files_ht, merged_file->id, &file_exists ,memory_pool);
-            if(file_exists == false){ //Check for memory allocation
-                (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
-                (base_object->output_updated_idx)++;
-            }
-
-            (merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
+            //(merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
             if(merged_file->base_object_arr_idx == 0){
                 is_first_object = true;
             }
             (merged_file->base_object_arr_idx)++;
-            merged_file->objects_bin_array[base_object_sn] = true;
-        }
-        //Check if first physical file and changed id
-        if(is_first_object){
-            char new_file_id[FILE_ID_LEN];
-            sprintf(new_file_id , "MF_");
-            strcat(new_file_id , file_to_insert->id);
-            strcpy(merged_file->id , new_file_id);
+            //merged_file->objects_bin_array[base_object_sn] = true; //Replace this to Hashtable
+            //Check if first physical file and changed id
+            if(is_first_object){
+                char new_file_id[FILE_ID_LEN];
+                sprintf(new_file_id , "MF_");
+                strcat(new_file_id , file_to_insert->id);
+                strcpy(merged_file->id , new_file_id);
+            }
+
+//            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){ // Weird BUG =[
+//                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
+//                printf("(1) -> CHANGED ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
+//            }
+
+            // Update the base object to contain the id of the merged file
+            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , -1 , memory_pool);
+            if(file_exists == false){ //Check for memory allocation
+                (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
+                (base_object->output_updated_idx)++;
+            }
         }
     }
 }
@@ -203,7 +214,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
-            ht_setF(curr_object->output_files_ht, curr_file->id, &file_exists, memory_pool);
+            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, -1 , memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
                 (curr_object->output_updated_idx)++;
@@ -280,13 +291,18 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
             //create new merged file and save it to output_files_array
-            current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678", current_dir->sn ,
+            current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
                                                     num_base_object , 0 , true , memory_pool);
+            if(current_dir->merged_file == NULL){
+                printf("Empty Merged.....\n");
+            }
+
             output_files_array[*output_files_idx] = current_dir->merged_file;
             (*output_files_idx)++;
 
+            unsigned long sn_to_save = (current_dir->merged_file)->sn;
             //update parent directory with new file sn
-            (current_dir->upd_files_array)[current_dir->upd_files_array_idx] = (current_dir->merged_file)->sn;
+            (current_dir->upd_files_array)[current_dir->upd_files_array_idx] = sn_to_save;
             (current_dir->upd_files_array_idx)++;
         }
 
@@ -406,13 +422,6 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
             base_object_size = (unsigned int)atoi(tok);
             counter_of_size++;
         }
-
-//        if(base_object_sn == 341997 || base_object_sn == 344541 || base_object_sn == 347147 || base_object_sn == 349679 ||
-//           base_object_sn == 352073 || base_object_sn == 354368 || base_object_sn == 356881 || base_object_sn == 359473 ||
-//           base_object_sn == 361767 || base_object_sn == 364202 || base_object_sn == 366852 || base_object_sn == 369349 ||
-//           base_object_sn == 371716 || base_object_sn == 374098){
-//            printf("Stop, wait a minute ... \n");
-//        }
 
         tok = strtok(NULL, ",");// Get Next Value
 

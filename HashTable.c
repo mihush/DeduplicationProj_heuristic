@@ -6,8 +6,8 @@
 /* **************************************************** INCLUDES **************************************************** */
 /* ******************** START ******************** HashTable Functions ******************** START ******************* */
 
-HashTableF ht_createF(unsigned short shared_by_num_files, PMemory_pool mem_pool) {
-    HashTableF ht = NULL;
+HashTable ht_create(unsigned short shared_by_num_files , PMemory_pool mem_pool) {
+    HashTable ht = NULL;
     /* Allocate the table itself */
     ht = memory_pool_alloc(mem_pool , sizeof(*ht));
     if(!ht){ //check allocation was successful
@@ -15,7 +15,7 @@ HashTableF ht_createF(unsigned short shared_by_num_files, PMemory_pool mem_pool)
     }
 
     /* Allocate pointers to the head nodes */
-    int size_of_table = sizeof(EntryF)*(shared_by_num_files +1);
+    int size_of_table = sizeof(Entry)*(shared_by_num_files +1);
     ht->table = memory_pool_alloc(mem_pool , size_of_table);
     if(!(ht -> table)){ //check array of pointers was allocated successfully
         return NULL; //All is allocated in POOL - Nothing to Free
@@ -28,7 +28,7 @@ HashTableF ht_createF(unsigned short shared_by_num_files, PMemory_pool mem_pool)
     return ht;
 }
 
-long int ht_hashF( HashTableF ht, char *key ) {
+long int ht_hash( HashTable ht, char *key ) {
     unsigned long int hashval = 0;
     int i = 0;
 
@@ -42,8 +42,8 @@ long int ht_hashF( HashTableF ht, char *key ) {
     return (hashval % (ht->size_table));
 }
 
-EntryF ht_newpairF(char *key, PMemory_pool mem_pool){
-    EntryF newpair  = memory_pool_alloc(mem_pool , sizeof(*newpair));
+Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
+    Entry newpair  = memory_pool_alloc(mem_pool , sizeof(*newpair));
     if(newpair == NULL){
         return NULL;
     }
@@ -53,17 +53,21 @@ EntryF ht_newpairF(char *key, PMemory_pool mem_pool){
         return NULL; //All is allocated in POOL - Nothing to Free
     }
     newpair->key = strcpy(newpair->key , key);
-    newpair->data = NULL;
+    if(data == -1){
+        newpair->data = 0;
+    }else{
+        newpair->data = data;
+    }
     newpair->next = NULL;
     return newpair;
 }
 
-EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_pool) {
-    EntryF newpair = NULL;
-    EntryF next = NULL;
-    EntryF last = NULL;
+Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , PMemory_pool mem_pool) {
+    Entry newpair = NULL;
+    Entry next = NULL;
+    Entry last = NULL;
 
-    long int hash_key = ht_hashF(ht , key);
+    long int hash_key = ht_hash(ht , key);
     next = (ht->table)[hash_key];
 
     // Advance until get the end of the list OR first matching key
@@ -78,7 +82,7 @@ EntryF ht_setF(HashTableF ht, char *key , bool* object_exists, PMemory_pool mem_
         *object_exists = true;
         return next;
     } else { /* Nope, couldn't find it.  Time to grow a pair. */
-        newpair = ht_newpairF(key , mem_pool); //allocate new pair
+        newpair = ht_newpair(key , data , mem_pool); //allocate new pair
         if(newpair == NULL){
             return NULL;
         }
