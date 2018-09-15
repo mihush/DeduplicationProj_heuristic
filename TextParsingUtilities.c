@@ -158,18 +158,13 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
         //Try adding the object to the merged file hashtable
         ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size , memory_pool);
         //If the block doesn't exist it is added to the hashtable ,  otherwise it is already there
-//        if(merged_file->objects_bin_array[base_object_sn] == true){ //Replace this to Hashtable
-//            object_exists = true;
-//        }
 
         if(object_exists == false){ //Check if block exists already - do not increase counter
             bool file_exists = false;
-            //(merged_file->base_objects_arr)[merged_file->base_object_arr_idx] = base_object;
             if(merged_file->base_object_arr_idx == 0){
                 is_first_object = true;
             }
             (merged_file->base_object_arr_idx)++;
-            //merged_file->objects_bin_array[base_object_sn] = true; //Replace this to Hashtable
             //Check if first physical file and changed id
             if(is_first_object){
                 char new_file_id[FILE_ID_LEN];
@@ -177,11 +172,6 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
                 strcat(new_file_id , file_to_insert->id);
                 strcpy(merged_file->id , new_file_id);
             }
-
-//            if((base_object->output_files_ht)->size_table != (base_object->shared_by_num_files + 1)){ // Weird BUG =[
-//                (base_object->output_files_ht)->size_table = base_object->shared_by_num_files + 1;
-//                printf("(1) -> CHANGED ... %hu(size) \n" , (base_object->output_files_ht)->size_table);
-//            }
 
             // Update the base object to contain the id of the merged file
             ht_set(base_object->output_files_ht, merged_file->id, &file_exists , -1 , memory_pool);
@@ -214,6 +204,13 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
+
+            //TODO RESET Hash Size HERE
+            if(curr_object->output_files_ht->size_table != (curr_object->shared_by_num_files + 1)){
+                printf("Weird Bug Strikes Again =[ \n");
+                curr_object->output_files_ht->size_table = curr_object->shared_by_num_files + 1;
+            }
+
             ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, -1 , memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;

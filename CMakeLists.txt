@@ -3,5 +3,5 @@ project(DeduplicationProj_heuristic)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c ObjectStructures.c TextParsingUtilities.c memory_pool.c memory_pool.h HashTable.h HashTable.c HashTableU.c HashTableU.h)
+set(SOURCE_FILES main.c ObjectStructures.c TextParsingUtilities.c memory_pool.c memory_pool.h HashTable.h HashTable.c)
 add_executable(DeduplicationProj_heuristic ${SOURCE_FILES} )

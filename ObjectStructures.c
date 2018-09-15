@@ -99,15 +99,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
         }
     }
 
-//    if(isMerged){
-//        file->objects_bin_array = memory_pool_alloc(memory_pool, sizeof(bool)*num_base_object);
-//        if(file->objects_bin_array == NULL){
-//            return NULL;
-//        }
-//        for(int i = 0 ; i < num_base_object ; i++){
-//            file->objects_bin_array[i] = false;
-//        }
-//    }
     return file;
 }
 
