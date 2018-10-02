@@ -28,7 +28,7 @@ struct entry_t {
 typedef struct entry_t *Entry;
 
 struct hashtable_t {
-    unsigned short size_table;
+    unsigned int size_table;
     Entry *table; // array of pointers to Entries
 };
 typedef struct hashtable_t *HashTable;
@@ -41,7 +41,7 @@ typedef struct hashtable_t *HashTable;
  *
  * @type - can be one of 3 : 'B' for blocks , 'F' for files and 'D' for directories
  */
-HashTable ht_create(unsigned short shared_by_num_files, PMemory_pool mem_pool);
+HashTable ht_create(unsigned int shared_by_num_files, PMemory_pool mem_pool);
 
 /*
  * ht_hashF - Given a key (string) Generates a Hash Value by which it will be stored in the table

@@ -42,7 +42,7 @@ struct base_object_t{
     char* id; // Hashed
     unsigned int size;
 
-    unsigned int shared_by_num_files;
+    unsigned int shared_by_num_files; //POLI -  Changed This to Int Because it got outside of range
     HashTable output_files_ht; // Hash Table for the output files contain this block
 
     unsigned long* files_array_updated;
@@ -131,7 +131,7 @@ typedef struct dir_t *Dir;
 Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_object_size, PMemory_pool memory_pool);
 
 Base_Object base_object_update(Base_Object base_object, char *base_object_id,
-                               unsigned short shared_by_num_files, PMemory_pool memory_pool);
+                               unsigned int shared_by_num_files, PMemory_pool memory_pool);
 
 /*
  *  print_block_to_csv - ....

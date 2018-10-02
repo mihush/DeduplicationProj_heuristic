@@ -22,13 +22,13 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
 }
 
 Base_Object base_object_update(Base_Object base_object, char *base_object_id,
-                               unsigned short shared_by_num_files, PMemory_pool memory_pool){
+                               unsigned int shared_by_num_files, PMemory_pool memory_pool){
     if(base_object == NULL){ //Check memory allocation was successful
         return NULL;
     }
 
     base_object->shared_by_num_files = shared_by_num_files;
-    base_object->files_array_updated = memory_pool_alloc(memory_pool, (sizeof(unsigned long)*(shared_by_num_files + 1)));
+    base_object->files_array_updated = memory_pool_alloc(memory_pool, (sizeof(unsigned long)*(shared_by_num_files)));
 
     base_object->id = memory_pool_alloc(memory_pool, sizeof(char)*(strlen(base_object_id)+1)); //allocate string for base_object_id
     if(base_object->id == NULL ){ //check successful allocation
@@ -36,7 +36,7 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     }
     base_object->id = strcpy(base_object->id , base_object_id);
 
-    base_object->output_files_ht = ht_create(shared_by_num_files, memory_pool);
+    base_object->output_files_ht = ht_create(base_object->shared_by_num_files, memory_pool);
     if(base_object->output_files_ht == NULL){ //check successful allocation
         return NULL;
     }
@@ -87,7 +87,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
 
     if(isMerged){ //Allocate Hash Table For Merged Files
-        unsigned long ht_size = num_base_object/3;
+        unsigned long ht_size = num_base_object/5;
         file->base_objects_hash_merged = ht_create(ht_size , memory_pool);
         if(file->base_objects_hash_merged == NULL){
             return NULL;

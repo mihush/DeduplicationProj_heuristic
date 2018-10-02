@@ -6,7 +6,7 @@
 /* **************************************************** INCLUDES **************************************************** */
 /* ******************** START ******************** HashTable Functions ******************** START ******************* */
 
-HashTable ht_create(unsigned short shared_by_num_files , PMemory_pool mem_pool) {
+HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
     HashTable ht = NULL;
     /* Allocate the table itself */
     ht = memory_pool_alloc(mem_pool , sizeof(*ht));
@@ -15,16 +15,17 @@ HashTable ht_create(unsigned short shared_by_num_files , PMemory_pool mem_pool) 
     }
 
     /* Allocate pointers to the head nodes */
-    int size_of_table = sizeof(Entry)*(shared_by_num_files +1);
+    unsigned int size_of_table = sizeof(Entry)*(shared_by_num_files);
     ht->table = memory_pool_alloc(mem_pool , size_of_table);
     if(!(ht -> table)){ //check array of pointers was allocated successfully
         return NULL; //All is allocated in POOL - Nothing to Free
     }
+
+    ht->size_table = shared_by_num_files;
     for(int i = 0; i < (ht->size_table) ; i++ ){
         (ht->table)[i] = NULL;
     }
 
-    ht->size_table = shared_by_num_files +1;
     return ht;
 }
 

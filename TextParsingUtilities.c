@@ -78,7 +78,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
 Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool , Base_Object* base_objects_arr){
     char* base_object_id = NULL;
     unsigned long base_object_sn = 0;
-    unsigned short shared_by_num_files = 0;
+    unsigned int shared_by_num_files = 0;
     char* tok = NULL;
     char sep[2] = ",";
 
@@ -206,9 +206,9 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
 
             //TODO RESET Hash Size HERE
-            if(curr_object->output_files_ht->size_table != (curr_object->shared_by_num_files + 1)){
+            if(curr_object->output_files_ht->size_table != (curr_object->shared_by_num_files)){
                 printf("Weird Bug Strikes Again =[ \n");
-                curr_object->output_files_ht->size_table = curr_object->shared_by_num_files + 1;
+                curr_object->output_files_ht->size_table = curr_object->shared_by_num_files;
             }
 
             ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, -1 , memory_pool);
