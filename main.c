@@ -93,7 +93,7 @@ int main(int argc , char** argv){
     //Determine Merged File HashTable Size
     merged_file_ht_size = determine_Merged_File_Base_Object_HT_Size(num_base_objects , dedup_type[0] , goal_depth);
     printf("---> Merged File Hashtable size is: %d \n" , merged_file_ht_size);
-    printf("---> Number of Base Objects  is: %d \n" , num_base_objects);
+    printf("---> Number of Base Objects  is: %lu \n" , num_base_objects);
     /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
