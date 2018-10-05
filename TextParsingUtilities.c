@@ -122,6 +122,10 @@ unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_ob
         }
     }
 
+    if(ht_size < 100){ // Just in case
+        ht_size = 1700;
+    }
+
     return ht_size;
 }
 
