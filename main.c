@@ -22,6 +22,8 @@ int main(int argc , char** argv){
     char input_files_list[MAX_LINE_LEN];
     char* tok = NULL;
     char sep[2] = ":";
+    //We Will Determine the hastable size of the merged file blocks based on the total amount of blocks in the system
+    int merged_file_ht_size = 0;
 
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -88,6 +90,10 @@ int main(int argc , char** argv){
         base_objects_arr[i] = NULL;
     }
 
+    //Determine Merged File HashTable Size
+    merged_file_ht_size = determine_Merged_File_Base_Object_HT_Size(num_base_objects , dedup_type[0] , goal_depth);
+    printf("---> Merged File Hashtable size is: %d \n" , merged_file_ht_size);
+    printf("---> Number of Base Objects  is: %d \n" , num_base_objects);
     /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -99,7 +105,7 @@ int main(int argc , char** argv){
     while(!feof(input_file)) {
         switch(line[0]){
             case 'F': //This Lines can be too long for the buffer
-                file = readFileLine(input_file, line, mem_pool, base_objects_arr);
+                file = readFileLine(input_file, line, mem_pool, base_objects_arr , merged_file_ht_size);
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
@@ -150,7 +156,7 @@ int main(int argc , char** argv){
     //Build the tree hierarchy of the file systems
     calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
                                     base_objects_arr, num_base_objects, goal_depth, output_files_array,
-                                    &output_files_idx, output_dirs_array, &output_dirs_idx , mem_pool);
+                                    &output_files_idx, output_dirs_array, &output_dirs_idx , merged_file_ht_size , mem_pool);
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -158,6 +164,7 @@ int main(int argc , char** argv){
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    // char* input_file_name = (strrchr(input_file_path , '/') + 1);
     FILE *results_file = NULL;
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);

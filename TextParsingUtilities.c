@@ -22,7 +22,110 @@ int countRootsInInput(char* line){
     return roots;
 }
 
-File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_Object* base_objects_arr){
+unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type , int goal_depth){
+    unsigned int ht_size;
+    if(dedup_type == 'B'){ //Block Level Deduplication
+        if(num_base_objects <= 1000000){ //Less than 1,000,000
+            ht_size = num_base_objects/(goal_depth * 5);
+        } else if (1000000 < num_base_objects  && num_base_objects <= 2000000){ // 1,000,000 < x <= 2,000,000
+            ht_size = num_base_objects/(goal_depth * 5.5);
+        } else if (2000000 < num_base_objects  && num_base_objects <= 3000000){ // 2,000,000 < x <= 3,000,000
+            ht_size = num_base_objects/(goal_depth * 6);
+        } else if (3000000 < num_base_objects  && num_base_objects <= 4000000){ // 3,000,000 < x <= 4,000,000
+            ht_size = num_base_objects/(goal_depth * 6.5);
+        } else if (4000000 < num_base_objects  && num_base_objects <= 5000000){ // 4,000,000 < x <= 5,000,000
+            ht_size = num_base_objects/(goal_depth * 7);
+        } else if (5000000 < num_base_objects  && num_base_objects <= 6000000){ // 5,000,000 < x <= 6,000,000
+            ht_size = num_base_objects/(goal_depth * 7.5);
+        } else if (6000000 < num_base_objects  && num_base_objects <= 7000000){ // 6,000,000 < x <= 7,000,000
+            ht_size = num_base_objects/(goal_depth * 8);
+        } else if (7000000 < num_base_objects  && num_base_objects <= 8000000){ // 7,000,000 < x <= 8,000,000
+            ht_size = num_base_objects/(goal_depth * 8.5);
+        } else if (8000000 < num_base_objects  && num_base_objects <= 9000000){ // 8,000,000 < x <= 9,000,000
+            ht_size = num_base_objects/(goal_depth * 9);
+        } else if (9000000 < num_base_objects  && num_base_objects <= 10000000){ // 9,000,000 < x <= 10,000,000
+            ht_size = num_base_objects/(goal_depth * 9.5);
+        } else if (10000000 < num_base_objects  && num_base_objects <= 12000000){ // 10,000,000 < x <= 12,000,000
+            ht_size = num_base_objects/(goal_depth * 10);
+        } else if (12000000 < num_base_objects  && num_base_objects <= 14000000){ // 12,000,000 < x <= 14,000,000
+            ht_size = num_base_objects/(goal_depth * 10.5); //Based on 13,000,000 - Division by 100 way fine
+        } else if (14000000 < num_base_objects  && num_base_objects <= 16000000){ // 14,000,000 < x <= 16,000,000
+            ht_size = num_base_objects/(goal_depth * 11);
+        } else if (16000000 < num_base_objects  && num_base_objects <= 18000000){ // 16,000,000 < x <= 18,000,000
+            ht_size = num_base_objects/(goal_depth * 11.5);
+        } else if (18000000 < num_base_objects  && num_base_objects <= 20000000){ // 18,000,000 < x <= 20,000,000
+            ht_size = num_base_objects/(goal_depth * 13);
+        } else if (20000000 < num_base_objects  && num_base_objects <= 22000000){ // 20,000,000 < x <= 22,000,000
+            ht_size = num_base_objects/(goal_depth * 15);
+        } else if (22000000 < num_base_objects  && num_base_objects <= 24000000){ // 22,000,000 < x <= 24,000,000
+            ht_size = num_base_objects/(goal_depth * 17);
+        } else if (24000000 < num_base_objects  && num_base_objects <= 26000000){ // 22,000,000 < x <= 24,000,000
+            ht_size = num_base_objects/(goal_depth * 19);
+        } else if (26000000 < num_base_objects  && num_base_objects <= 28000000){ // 26,000,000 < x <= 28,000,000
+            ht_size = num_base_objects/(goal_depth * 25);
+        } else if (28000000 < num_base_objects  && num_base_objects <= 30000000){ // 28,000,000 < x <= 30,000,000
+            ht_size = num_base_objects/(goal_depth * 30);
+        } else if (30000000 < num_base_objects  && num_base_objects <= 35000000){ // 30,000,000 < x <= 35,000,000
+            ht_size = num_base_objects/(goal_depth * 40);
+        } else if (35000000 < num_base_objects  && num_base_objects <= 40000000){ // 35,000,000 < x <= 40,000,000
+            ht_size = num_base_objects/(goal_depth * 50);
+        } else {
+            ht_size = num_base_objects/(goal_depth * 100);
+        }
+    } else { //File Level Deduplication
+        if(num_base_objects <= 100000){ //Less than 100,000
+            ht_size = num_base_objects/(goal_depth * 5);
+        } else if (100000 < num_base_objects  && num_base_objects <= 200000){ // 100,000 < x <= 200,000
+            ht_size = num_base_objects/(goal_depth * 5.5);
+        } else if (200000 < num_base_objects  && num_base_objects <= 300000){ // 200,000 < x <= 300,000
+            ht_size = num_base_objects/(goal_depth * 6);
+        } else if (300000 < num_base_objects  && num_base_objects <= 400000){ // 300,000 < x <= 400,000
+            ht_size = num_base_objects/(goal_depth * 6.5);
+        } else if (400000 < num_base_objects  && num_base_objects <= 500000){ // 400,000 < x <= 500,000
+            ht_size = num_base_objects/(goal_depth * 7);
+        } else if (500000 < num_base_objects  && num_base_objects <= 600000){ // 500,000 < x <= 600,000
+            ht_size = num_base_objects/(goal_depth * 7.5);
+        } else if (600000 < num_base_objects  && num_base_objects <= 700000){ // 600,000 < x <= 700,000
+            ht_size = num_base_objects/(goal_depth * 8);
+        } else if (700000 < num_base_objects  && num_base_objects <= 800000){ // 700,000 < x <= 800,000
+            ht_size = num_base_objects/(goal_depth * 8.5);
+        } else if (800000 < num_base_objects  && num_base_objects <= 900000){ // 800,000 < x <= 900,000
+            ht_size = num_base_objects/(goal_depth * 9);
+        } else if (900000 < num_base_objects  && num_base_objects <= 1000000){ // 900,000 < x <= 1,000,000
+            ht_size = num_base_objects/(goal_depth * 9.5);
+        } else if (1000000 < num_base_objects  && num_base_objects <= 1200000){ // 1,000,000 < x <= 1,200,000
+            ht_size = num_base_objects/(goal_depth * 10);
+        } else if (1200000 < num_base_objects  && num_base_objects <= 1400000){ // 1,200,000 < x <= 1,400,000
+            ht_size = num_base_objects/(goal_depth * 10.5);
+        } else if (1400000 < num_base_objects  && num_base_objects <= 1600000){ // 1,400,000 < x <= 1,600,000
+            ht_size = num_base_objects/(goal_depth * 11);
+        } else if (1600000 < num_base_objects  && num_base_objects <= 1800000){ // 1,600,000 < x <= 1,800,000
+            ht_size = num_base_objects/(goal_depth * 11.5);
+        } else if (1800000 < num_base_objects  && num_base_objects <= 2000000){ // 1,800,000 < x <= 2,000,000
+            ht_size = num_base_objects/(goal_depth * 13);
+        } else if (2000000 < num_base_objects  && num_base_objects <= 2200000){ // 2,000,000 < x <= 2,200,000
+            ht_size = num_base_objects/(goal_depth * 15);
+        } else if (2200000 < num_base_objects  && num_base_objects <= 2400000){ // 2,200,000 < x <= 2,400,000
+            ht_size = num_base_objects/(goal_depth * 17);
+        } else if (2400000 < num_base_objects  && num_base_objects <= 2600000){ // 2,400,000 < x <= 2,600,000
+            ht_size = num_base_objects/(goal_depth * 19);
+        } else if (2600000 < num_base_objects  && num_base_objects <= 2800000){ // 2,600,000 < x <= 2,800,000
+            ht_size = num_base_objects/(goal_depth * 25);
+        } else if (2800000 < num_base_objects  && num_base_objects <= 3000000){ // 2,800,000 < x <= 3,000,000
+            ht_size = num_base_objects/(goal_depth * 30);
+        } else if (3000000 < num_base_objects  && num_base_objects <= 3500000){ // 3,000,000 < x <= 3,500,000
+            ht_size = num_base_objects/(goal_depth * 40);
+        } else if (3500000 < num_base_objects  && num_base_objects <= 4000000){ // 3,500,000 < x <= 4,000,000
+            ht_size = num_base_objects/(goal_depth * 50);
+        } else {
+            ht_size = num_base_objects/(goal_depth * 100);
+        }
+    }
+
+    return ht_size;
+}
+File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
+                  Base_Object* base_objects_arr , unsigned int ht_size){
     File file = NULL;
     char* file_id;
     unsigned long file_sn = 0;
@@ -48,7 +151,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     tok = strtok(NULL , sep);
     num_base_objects = atol(tok);
 
-    file = file_create(file_sn, file_id, parent_dir_sn, num_base_objects, 0, false, memory_pool);
+    file = file_create(file_sn, file_id, parent_dir_sn, num_base_objects, 0, false, ht_size , memory_pool);
 
     // Check if we have an extremely big line which need to be parse fragmented
     // TODO - check this function - CAREFULLY !!!!!
@@ -224,7 +327,8 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
                        File* files_array,  unsigned long num_files,
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
-                       Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth, PMemory_pool memory_pool){
+                       Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
+                       unsigned int merged_file_ht_size , PMemory_pool memory_pool){
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
     if(current_dir == NULL){
@@ -283,13 +387,14 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
             //For each directory - call update_dir_values
             update_dir_values(output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth, dirs_array, num_dirs,
                               files_array, num_files, base_object_array, num_base_object,
-                              output_files_array, output_files_idx, output_dirs_array, output_dirs_idx, current_depth, memory_pool);
+                              output_files_array, output_files_idx, output_dirs_array, output_dirs_idx,
+                              current_depth, merged_file_ht_size , memory_pool);
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
             //create new merged file and save it to output_files_array
             current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
-                                                    num_base_object , 0 , true , memory_pool);
+                                                    num_base_object , 0 , true , merged_file_ht_size , memory_pool);
             if(current_dir->merged_file == NULL){
                 printf("Empty Merged.....\n");
             }
@@ -324,7 +429,8 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
             //For each directory - call update_dir_values
             update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files, base_object_array, num_base_object,
-                              output_files_array, output_files_idx, output_dirs_array , output_dirs_idx, current_depth, memory_pool);
+                              output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
+                              current_depth, merged_file_ht_size , memory_pool);
         }
     }
 };
@@ -333,7 +439,8 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_
                                      File* files_array,  unsigned long num_files,
                                      Base_Object * base_object_array, unsigned long num_base_object, int goal_depth,
                                      File* output_files_array , unsigned long* output_files_idx ,
-                                     Dir* output_dirs_array , unsigned long* output_dirs_idx , PMemory_pool memory_pool){
+                                     Dir* output_dirs_array , unsigned long* output_dirs_idx ,
+                                     unsigned int merged_file_ht_size , PMemory_pool memory_pool){
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
@@ -351,7 +458,7 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_
 
         update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs, files_array, num_files,
                           base_object_array, num_base_object, output_files_array , output_files_idx,
-                          output_dirs_array , output_dirs_idx, 0, memory_pool);
+                          output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , memory_pool);
     }
 }
 

@@ -166,7 +166,7 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char d
  */
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size ,
-                 bool isMerged , PMemory_pool memory_pool);
+                 bool isMerged ,unsigned int ht_size, PMemory_pool memory_pool);
 
 /*
  *  print_file_to_csv - ....

@@ -24,6 +24,15 @@
 int countRootsInInput(char* line);
 
 /*
+ * determine_Merged_File_Base_Object_HT_Size - Determine The Base Object Hash Table Size
+ *                                             based on the amount of the base objects in the input file.
+ *
+ * @num_base_objects - The amount of the base objects in the current input file based on
+ *                     which the hashtable size will be determined
+ */
+unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type , int goal_depth);
+
+/*
  * readFileLine - Parses the input line into a file object to be saved
  *                 Returns a pointer to the file object
  *
@@ -31,7 +40,7 @@ int countRootsInInput(char* line);
  * @file_type - could be either B for block_level or F for file_level
  */
 File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
-                  Base_Object* base_objects_arr);
+                  Base_Object* base_objects_arr , unsigned int ht_size);
 
 /*
  * readBaseObjectLine - Parses the input line into a block object to be saved
@@ -95,7 +104,7 @@ void update_dir_values(Dir current_dir , int goal_depth,
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       PMemory_pool memory_pool);
+                       unsigned int merged_file_ht_size , PMemory_pool memory_pool);
 
 /*
  *  calculate_depth_and_merge_files - ...
@@ -122,7 +131,8 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots,
                                  File* files_array,  unsigned long num_files,
                                  Base_Object* base_object_array, unsigned long num_base_object,
                                  int goal_depth, File* output_files_array , unsigned long* output_files_idx ,
-                                 Dir* output_dirs_array , unsigned long* output_dirs_idx , PMemory_pool memory_pool);
+                                 Dir* output_dirs_array , unsigned long* output_dirs_idx ,unsigned int merged_file_ht_size ,
+                                     PMemory_pool memory_pool);
 
 
 /*

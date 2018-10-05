@@ -62,7 +62,8 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
 /* ******************* START ******************* File STRUCT Functions ******************* START ******************** */
 
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
-                 unsigned int num_base_object, unsigned int size , bool isMerged , PMemory_pool memory_pool){
+                 unsigned int num_base_object, unsigned int size , bool isMerged ,
+                 unsigned int ht_size , PMemory_pool memory_pool){
     File file = memory_pool_alloc(memory_pool , (sizeof(*file)));
     if(file == NULL){
         return NULL;
@@ -87,7 +88,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
 
     if(isMerged){ //Allocate Hash Table For Merged Files
-        unsigned long ht_size = num_base_object/5;
+        //unsigned long ht_size = num_base_object/5;
         file->base_objects_hash_merged = ht_create(ht_size , memory_pool);
         if(file->base_objects_hash_merged == NULL){
             return NULL;
