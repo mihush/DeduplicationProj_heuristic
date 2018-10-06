@@ -22,9 +22,11 @@ int main(int argc , char** argv){
     char input_files_list[MAX_LINE_LEN];
     char* tok = NULL;
     char sep[2] = ":";
+
     //We Will Determine the hastable size of the merged file blocks based on the total amount of blocks in the system
     int merged_file_ht_size = 0;
 
+    bool is_input_file_heuristic = false;
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
@@ -59,6 +61,15 @@ int main(int argc , char** argv){
 
     //Get the number of File objects in the input file
     fgets(line , MAX_LINE_LEN , input_file);
+    // Check if  this is a heuristic Output File:
+    //                - It its heuristic it will be :      # Target depth: 5
+    //                - Otherwise it will be :             # Num files: 36
+    if(line[2] == 'T'){
+        is_input_file_heuristic = true;
+        printf("---> For your INFORMATION : You are executing the heuristic code with heuristic input .....  \n" );
+        fgets(line , MAX_LINE_LEN , input_file); //read next relevant line
+    }
+
     tok = strtok(line , sep);
     tok = strtok(NULL , sep); //get the number with leading space
     num_file_objects = (unsigned long)atol(tok);
@@ -165,14 +176,19 @@ int main(int argc , char** argv){
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     char* input_file_name = (strrchr(input_file_path , '\\') + 1);
     // char* input_file_name = (strrchr(input_file_path , '/') + 1);
+
     FILE *results_file = NULL;
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);
-    input_file_name += 7;
     strcat(output_file_name , "heuristic");
     strcat(output_file_name , depth_to_output);
+    if(is_input_file_heuristic == true){ //The input was heuristic output
+        input_file_name += 18;
+    } else { //The input was not heuristic output
+        input_file_name += 7;
+    }
     strcpy(output_file_name + 11 + (strlen(depth_to_output)) , input_file_name);
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */

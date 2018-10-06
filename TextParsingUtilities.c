@@ -277,7 +277,12 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             //Check if first physical file and changed id
             if(is_first_object){
                 char new_file_id[FILE_ID_LEN];
-                sprintf(new_file_id , "MF_");
+                if(!((file_to_insert->id)[0] == 'M' && (file_to_insert->id)[1] == 'F')){
+                    sprintf(new_file_id , "MF_");
+                } else {
+                    sprintf(new_file_id , "");
+                }
+                //sprintf(new_file_id , "MF_");
                 strcat(new_file_id , file_to_insert->id);
                 strcpy(merged_file->id , new_file_id);
             }
@@ -313,12 +318,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
-
-            //TODO RESET Hash Size HERE
-            if(curr_object->output_files_ht->size_table != (curr_object->shared_by_num_files)){
-                printf("Weird Bug Strikes Again =[ \n");
-                curr_object->output_files_ht->size_table = curr_object->shared_by_num_files;
-            }
 
             ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, -1 , memory_pool);
             if(file_exists == false){
