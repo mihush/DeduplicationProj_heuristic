@@ -24,6 +24,7 @@ int countRootsInInput(char* line){
 
 unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type , int goal_depth){
     unsigned int ht_size;
+
     //unsigned int magic_number = 1;
 
     /*
