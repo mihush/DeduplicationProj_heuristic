@@ -24,110 +24,136 @@ int countRootsInInput(char* line){
 
 unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type , int goal_depth){
     unsigned int ht_size;
+    //unsigned int magic_number = 1;
+
+    /*
+    if((goal_depth > 4) && (goal_depth < 8)){
+        magic_number = 2.5;
+    }
     if(dedup_type == 'B'){ //Block Level Deduplication
         if(num_base_objects <= 1000000){ //Less than 1,000,000
-            ht_size = num_base_objects/(goal_depth * 2);
+            ht_size = num_base_objects/(goal_depth * 2 * magic_number);
         } else if (1000000 < num_base_objects  && num_base_objects <= 2000000){ // 1,000,000 < x <= 2,000,000
-            ht_size = num_base_objects/(goal_depth * 2.5);
+            ht_size = num_base_objects/(goal_depth * 2.5 * magic_number);
         } else if (2000000 < num_base_objects  && num_base_objects <= 3000000){ // 2,000,000 < x <= 3,000,000
-            ht_size = num_base_objects/(goal_depth * 3);
+            ht_size = num_base_objects/(goal_depth * 3 * magic_number);
         } else if (3000000 < num_base_objects  && num_base_objects <= 4000000){ // 3,000,000 < x <= 4,000,000
-            ht_size = num_base_objects/(goal_depth * 3.5);
+            ht_size = num_base_objects/(goal_depth * 3.5 * magic_number);
         } else if (4000000 < num_base_objects  && num_base_objects <= 5000000){ // 4,000,000 < x <= 5,000,000
-            ht_size = num_base_objects/(goal_depth * 4);
+            ht_size = num_base_objects/(goal_depth * 4 * magic_number);
         } else if (5000000 < num_base_objects  && num_base_objects <= 6000000){ // 5,000,000 < x <= 6,000,000
-            ht_size = num_base_objects/(goal_depth * 4.5);
+            ht_size = num_base_objects/(goal_depth * 4.5 * magic_number);
         } else if (6000000 < num_base_objects  && num_base_objects <= 7000000){ // 6,000,000 < x <= 7,000,000
-            ht_size = num_base_objects/(goal_depth * 5);
+            ht_size = num_base_objects/(goal_depth * 5 * magic_number);
         } else if (7000000 < num_base_objects  && num_base_objects <= 8000000){ // 7,000,000 < x <= 8,000,000
-            ht_size = num_base_objects/(goal_depth * 5.5);
+            ht_size = num_base_objects/(goal_depth * 5.5 * magic_number);
         } else if (8000000 < num_base_objects  && num_base_objects <= 9000000){ // 8,000,000 < x <= 9,000,000
-            ht_size = num_base_objects/(goal_depth * 6);
+            ht_size = num_base_objects/(goal_depth * 6 * magic_number);
         } else if (9000000 < num_base_objects  && num_base_objects <= 10000000){ // 9,000,000 < x <= 10,000,000
-            ht_size = num_base_objects/(goal_depth * 6.5);
+            ht_size = num_base_objects/(goal_depth * 6.5 * magic_number);
         } else if (10000000 < num_base_objects  && num_base_objects <= 12000000){ // 10,000,000 < x <= 12,000,000
-            ht_size = num_base_objects/(goal_depth * 7);
+            ht_size = num_base_objects/(goal_depth * 7 * magic_number);
         } else if (12000000 < num_base_objects  && num_base_objects <= 14000000){ // 12,000,000 < x <= 14,000,000
-            ht_size = num_base_objects/(goal_depth * 7.5); //Based on 13,000,000 - Division by 100 way fine
+            ht_size = num_base_objects/(goal_depth * 7.5 * magic_number); //Based on 13,000,000 - Division by 100 way fine
         } else if (14000000 < num_base_objects  && num_base_objects <= 16000000){ // 14,000,000 < x <= 16,000,000
-            ht_size = num_base_objects/(goal_depth * 8);
+            ht_size = num_base_objects/(goal_depth * 8 * magic_number);
         } else if (16000000 < num_base_objects  && num_base_objects <= 18000000){ // 16,000,000 < x <= 18,000,000
-            ht_size = num_base_objects/(goal_depth * 8.5);
+            ht_size = num_base_objects/(goal_depth * 10 * magic_number);
         } else if (18000000 < num_base_objects  && num_base_objects <= 20000000){ // 18,000,000 < x <= 20,000,000
-            ht_size = num_base_objects/(goal_depth * 9);
+            ht_size = num_base_objects/(goal_depth * 11 * magic_number);
         } else if (20000000 < num_base_objects  && num_base_objects <= 22000000){ // 20,000,000 < x <= 22,000,000
-            ht_size = num_base_objects/(goal_depth * 11);
+            ht_size = num_base_objects/(goal_depth * 13 * magic_number);
         } else if (22000000 < num_base_objects  && num_base_objects <= 24000000){ // 22,000,000 < x <= 24,000,000
-            ht_size = num_base_objects/(goal_depth * 13);
+            ht_size = num_base_objects/(goal_depth * 15 * magic_number);
         } else if (24000000 < num_base_objects  && num_base_objects <= 26000000){ // 22,000,000 < x <= 24,000,000
-            ht_size = num_base_objects/(goal_depth * 15);
+            ht_size = num_base_objects/(goal_depth * 17);
         } else if (26000000 < num_base_objects  && num_base_objects <= 28000000){ // 26,000,000 < x <= 28,000,000
-            ht_size = num_base_objects/(goal_depth * 21);
+            ht_size = num_base_objects/(goal_depth * 25 * magic_number);
         } else if (28000000 < num_base_objects  && num_base_objects <= 30000000){ // 28,000,000 < x <= 30,000,000
-            ht_size = num_base_objects/(goal_depth * 25);
+            ht_size = num_base_objects/(goal_depth * 35 * magic_number);
         } else if (30000000 < num_base_objects  && num_base_objects <= 35000000){ // 30,000,000 < x <= 35,000,000
-            ht_size = num_base_objects/(goal_depth * 30);
+            ht_size = num_base_objects/(goal_depth * 45 * magic_number);
         } else if (35000000 < num_base_objects  && num_base_objects <= 40000000){ // 35,000,000 < x <= 40,000,000
-            ht_size = num_base_objects/(goal_depth * 40);
+            ht_size = num_base_objects/(goal_depth * 55 * magic_number);
         } else {
-            ht_size = num_base_objects/(goal_depth * 70);
+            ht_size = num_base_objects/(goal_depth * 85 * magic_number);
         }
     } else { //File Level Deduplication
         if(num_base_objects <= 100000){ //Less than 100,000
-            ht_size = num_base_objects/(goal_depth * 2);
+            ht_size = num_base_objects/(goal_depth * 2 * magic_number);
         } else if (100000 < num_base_objects  && num_base_objects <= 200000){ // 100,000 < x <= 200,000
-            ht_size = num_base_objects/(goal_depth * 2.5);
+            ht_size = num_base_objects/(goal_depth * 2.5 * magic_number);
         } else if (200000 < num_base_objects  && num_base_objects <= 300000){ // 200,000 < x <= 300,000
-            ht_size = num_base_objects/(goal_depth * 3);
+            ht_size = num_base_objects/(goal_depth * 3 * magic_number);
         } else if (300000 < num_base_objects  && num_base_objects <= 400000){ // 300,000 < x <= 400,000
-            ht_size = num_base_objects/(goal_depth * 3.5);
+            ht_size = num_base_objects/(goal_depth * 3.5 * magic_number);
         } else if (400000 < num_base_objects  && num_base_objects <= 500000){ // 400,000 < x <= 500,000
-            ht_size = num_base_objects/(goal_depth * 4);
+            ht_size = num_base_objects/(goal_depth * 4 * magic_number);
         } else if (500000 < num_base_objects  && num_base_objects <= 600000){ // 500,000 < x <= 600,000
-            ht_size = num_base_objects/(goal_depth * 4.5);
+            ht_size = num_base_objects/(goal_depth * 4.5 * magic_number);
         } else if (600000 < num_base_objects  && num_base_objects <= 700000){ // 600,000 < x <= 700,000
-            ht_size = num_base_objects/(goal_depth * 5);
+            ht_size = num_base_objects/(goal_depth * 5 * magic_number);
         } else if (700000 < num_base_objects  && num_base_objects <= 800000){ // 700,000 < x <= 800,000
-            ht_size = num_base_objects/(goal_depth * 5.5);
+            ht_size = num_base_objects/(goal_depth * 5.5 * magic_number);
         } else if (800000 < num_base_objects  && num_base_objects <= 900000){ // 800,000 < x <= 900,000
-            ht_size = num_base_objects/(goal_depth * 6);
+            ht_size = num_base_objects/(goal_depth * 6 * magic_number);
         } else if (900000 < num_base_objects  && num_base_objects <= 1000000){ // 900,000 < x <= 1,000,000
-            ht_size = num_base_objects/(goal_depth * 6.5);
+            ht_size = num_base_objects/(goal_depth * 6.5 * magic_number);
         } else if (1000000 < num_base_objects  && num_base_objects <= 1200000){ // 1,000,000 < x <= 1,200,000
-            ht_size = num_base_objects/(goal_depth * 7);
+            ht_size = num_base_objects/(goal_depth * 7 * magic_number);
         } else if (1200000 < num_base_objects  && num_base_objects <= 1400000){ // 1,200,000 < x <= 1,400,000
-            ht_size = num_base_objects/(goal_depth * 7.5);
+            ht_size = num_base_objects/(goal_depth * 7.5 * magic_number);
         } else if (1400000 < num_base_objects  && num_base_objects <= 1600000){ // 1,400,000 < x <= 1,600,000
-            ht_size = num_base_objects/(goal_depth * 8);
+            ht_size = num_base_objects/(goal_depth * 8 * magic_number);
         } else if (1600000 < num_base_objects  && num_base_objects <= 1800000){ // 1,600,000 < x <= 1,800,000
-            ht_size = num_base_objects/(goal_depth * 8.5);
+            ht_size = num_base_objects/(goal_depth * 8.5 * magic_number);
         } else if (1800000 < num_base_objects  && num_base_objects <= 2000000){ // 1,800,000 < x <= 2,000,000
-            ht_size = num_base_objects/(goal_depth * 9);
+            ht_size = num_base_objects/(goal_depth * 9 * magic_number);
         } else if (2000000 < num_base_objects  && num_base_objects <= 2200000){ // 2,000,000 < x <= 2,200,000
-            ht_size = num_base_objects/(goal_depth * 11);
+            ht_size = num_base_objects/(goal_depth * 11 * magic_number);
         } else if (2200000 < num_base_objects  && num_base_objects <= 2400000){ // 2,200,000 < x <= 2,400,000
-            ht_size = num_base_objects/(goal_depth * 13);
+            ht_size = num_base_objects/(goal_depth * 13 * magic_number);
         } else if (2400000 < num_base_objects  && num_base_objects <= 2600000){ // 2,400,000 < x <= 2,600,000
-            ht_size = num_base_objects/(goal_depth * 15);
+            ht_size = num_base_objects/(goal_depth * 15 * magic_number);
         } else if (2600000 < num_base_objects  && num_base_objects <= 2800000){ // 2,600,000 < x <= 2,800,000
-            ht_size = num_base_objects/(goal_depth * 21);
+            ht_size = num_base_objects/(goal_depth * 21 * magic_number);
         } else if (2800000 < num_base_objects  && num_base_objects <= 3000000){ // 2,800,000 < x <= 3,000,000
-            ht_size = num_base_objects/(goal_depth * 25);
+            ht_size = num_base_objects/(goal_depth * 25 * magic_number);
         } else if (3000000 < num_base_objects  && num_base_objects <= 3500000){ // 3,000,000 < x <= 3,500,000
-            ht_size = num_base_objects/(goal_depth * 30);
+            ht_size = num_base_objects/(goal_depth * 30 * magic_number);
         } else if (3500000 < num_base_objects  && num_base_objects <= 4000000){ // 3,500,000 < x <= 4,000,000
-            ht_size = num_base_objects/(goal_depth * 40);
+            ht_size = num_base_objects/(goal_depth * 40 * magic_number);
         } else {
-            ht_size = num_base_objects/(goal_depth * 70);
+            ht_size = num_base_objects/(goal_depth * 70 * magic_number);
         }
     }
 
-    if(ht_size < 100){ // Just in case
-        ht_size = 1700;
+    if(ht_size < 5){ // Just in case
+        if(num_base_objects > 100){
+            ht_size = 100;
+        } else {
+            ht_size = num_base_objects;
+        }
+
+    }*/
+
+    if(dedup_type == 'B'){
+        if(num_base_objects < 100000){ //Block Level
+            ht_size = num_base_objects;
+        } else {
+            ht_size = 100000;
+        }
+    } else{ //File Level
+        if(num_base_objects < 10000){
+            ht_size = num_base_objects;
+        } else {
+            ht_size = 10000;
+        }
     }
 
     return ht_size;
 }
+
 
 
 File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
@@ -280,15 +306,21 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
                 if(!((file_to_insert->id)[0] == 'M' && (file_to_insert->id)[1] == 'F')){
                     sprintf(new_file_id , "MF_");
                 } else {
-                    sprintf(new_file_id , "");
+                    new_file_id[0] = '\0';
                 }
-                //sprintf(new_file_id , "MF_");
                 strcat(new_file_id , file_to_insert->id);
                 strcpy(merged_file->id , new_file_id);
             }
 
+
+            //TODO RESET Hash Size HERE
+            if(base_object->output_files_ht->size_table != (base_object->shared_by_num_files)){
+                printf("Weird Bug Strikes Again =[ \n");
+                base_object->output_files_ht->size_table = base_object->shared_by_num_files;
+            }
+
             // Update the base object to contain the id of the merged file
-            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , -1 , memory_pool);
+            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn , memory_pool);
             if(file_exists == false){ //Check for memory allocation
                 (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
                 (base_object->output_updated_idx)++;
@@ -319,7 +351,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
 
-            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, -1 , memory_pool);
+            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn , memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
                 (curr_object->output_updated_idx)++;

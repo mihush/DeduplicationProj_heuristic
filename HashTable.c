@@ -29,12 +29,12 @@ HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
     return ht;
 }
 
-long int ht_hash( HashTable ht, char *key ) {
-    unsigned long int hashval = 0;
+unsigned int ht_hash( HashTable ht, char *key ) {
+    unsigned int hashval = 0;
     int i = 0;
 
     /* Convert our string to an integer */
-    while((hashval < ULONG_MAX) && (i < strlen(key))){
+    while((hashval < UINT_MAX) && (i < strlen(key))){
         hashval = hashval << 8;
         hashval += key[i];
         i++;
@@ -54,11 +54,12 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
         return NULL; //All is allocated in POOL - Nothing to Free
     }
     newpair->key = strcpy(newpair->key , key);
-    if(data == -1){
-        newpair->data = 0;
-    }else{
-        newpair->data = data;
-    }
+//    if(data == -1){
+//        newpair->data = 0;
+//    }else{
+//        newpair->data = data;
+//    }
+    newpair->data = data;
     newpair->next = NULL;
     return newpair;
 }
@@ -68,7 +69,8 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , 
     Entry next = NULL;
     Entry last = NULL;
 
-    long int hash_key = ht_hash(ht , key);
+    //Changed From long int to unsigned int - 16.10
+    unsigned int hash_key = ht_hash(ht , key);
     next = (ht->table)[hash_key];
 
     // Advance until get the end of the list OR first matching key
@@ -78,7 +80,7 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , 
     }
 
     /* There's already a pair. Let's replace that string. */
-    if(next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 ) {
+    if(next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 && (next->data == data)) {
         //Return the pointer to the Block/File that already exists in the hash
         *object_exists = true;
         return next;

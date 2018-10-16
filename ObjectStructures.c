@@ -88,7 +88,6 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
 
     if(isMerged){ //Allocate Hash Table For Merged Files
-        //unsigned long ht_size = num_base_object/5;
         file->base_objects_hash_merged = ht_create(ht_size , memory_pool);
         if(file->base_objects_hash_merged == NULL){
             return NULL;

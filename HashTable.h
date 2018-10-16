@@ -49,7 +49,7 @@ HashTable ht_create(unsigned int shared_by_num_files, PMemory_pool mem_pool);
  * @ht  - the hashtable in which the key will be saved
  * @key - the key for which we want to get the hashed value in the hashtable
  */
-long int ht_hash( HashTable ht, char *key );
+unsigned int ht_hash( HashTable ht, char *key );
 
 /*
  * ht_newpair - Creates a key-value pair

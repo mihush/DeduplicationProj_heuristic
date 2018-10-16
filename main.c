@@ -178,18 +178,28 @@ int main(int argc , char** argv){
     // char* input_file_name = (strrchr(input_file_path , '/') + 1);
 
     FILE *results_file = NULL;
+    char sep_file_name[2] = "_";
+
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);
     char* output_file_name = calloc(777 , sizeof(char));
     strncpy(output_file_name , input_file_name , 2);
     strcat(output_file_name , "heuristic");
     strcat(output_file_name , depth_to_output);
+
+    tok = strtok(input_file_name , sep_file_name); // Read B/F
+    tok = strtok(NULL , sep_file_name); // Read heuristic/dedup
     if(is_input_file_heuristic == true){ //The input was heuristic output
-        input_file_name += 18;
-    } else { //The input was not heuristic output
-        input_file_name += 7;
+        tok = strtok(NULL , sep_file_name); // Read depth
     }
-    strcpy(output_file_name + 11 + (strlen(depth_to_output)) , input_file_name);
+    tok = strtok(NULL , sep_file_name); // Read first srv index
+    strcat(output_file_name , sep_file_name);
+    strcat(output_file_name , tok);
+    tok = strtok(NULL , sep_file_name); // Read second srv index
+    strcat(output_file_name , sep_file_name);
+    strcat(output_file_name , tok);
+    printf ("%s \n" , output_file_name);
+
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
