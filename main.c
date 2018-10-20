@@ -1,6 +1,9 @@
 #include "TextParsingUtilities.h"
 #define  OUTPUT_TYPE_CHAR_LOC 15
 
+//3 boys /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/NB_inputs/P_dedup_002_002_4194304_D0_P0.csv 1
+//3 girls /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/inputs/P_dedup_002_002.csv
+
 int main(int argc , char** argv){
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
@@ -27,6 +30,7 @@ int main(int argc , char** argv){
     Base_Object* base_objects_arr = NULL;
     char input_files_list[MAX_LINE_LEN];
     char* tok = NULL;
+    char* input_type;
     char sep[2] = ":";
 
     //We Will Determine the hastable size of the merged file blocks based on the total amount of blocks in the system
@@ -40,11 +44,18 @@ int main(int argc , char** argv){
         printf("No Extra Command Line Argument Passed Other Than Program Name\n");
         return 0;
     }
-
+    // Getting params from command line
     goal_depth = atoi(argv[1]);
-    int input_file_path_len = (int)strlen(argv[2]) + 1;
+
+    // Run over ours files (girls) or nadav_benny files (boys)
+    int input_type_len = (int)strlen(argv[2]) + 1;
+    input_type = (char*)memory_pool_alloc(mem_pool , (input_type_len * sizeof(char)));
+    strcpy(input_type, argv[2]);
+
+    // Get input file path
+    int input_file_path_len = (int)strlen(argv[3]) + 1;
     input_file_path = (char*)memory_pool_alloc(mem_pool , (input_file_path_len * sizeof(char)));
-    strcpy(input_file_path, argv[2]);
+    strcpy(input_file_path, argv[3]);
 
     //Open the Input File
     FILE* input_file = fopen(input_file_path , "r");
@@ -53,46 +64,89 @@ int main(int argc , char** argv){
         return 0;
     }
 
-    //Read the Output type
-    fgets(line , MAX_LINE_LEN , input_file);
-    if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
-        dedup_type[0] = 'B';
-    } else if (line[OUTPUT_TYPE_CHAR_LOC] == 'f'){
-        dedup_type[0] = 'F';
+    // Case input file is from Nadav & Benny
+    if(strcmp(input_type, "boys") == 0){
+        //Get the number of files that were read - use the input file names line
+        int k = 4;
+        //Read three first rows uneeded from header
+        while (k){
+            fgets(line , MAX_LINE_LEN , input_file);
+            k--;
+        }
+        // Getting number of roots from the command line
+        num_roots = atoi(argv[4]);
+
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep); //get the number with leading space
+        num_file_objects = (unsigned long)atol(tok);
+
+        //Get the number of Directory objects in the input file
+        fgets(line , MAX_LINE_LEN , input_file);
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep); //get the number with leading space
+        num_dir_objects = (unsigned long)atol(tok);
+
+        //Get the number of Blocks/Physical Files objects in the input file
+        fgets(line , MAX_LINE_LEN , input_file); // TODO - ask Gala about "Num of containers" as blocks
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep);
+        num_base_objects = (unsigned long)atol(tok);
+
+        // Need to pass three more line from header
+        k = 3;
+        while (k){
+            fgets(line , MAX_LINE_LEN , input_file);
+            k--;
+        }
+
+    } else if(strcmp(input_type, "girls") == 0){ // Case input file of our
+
+        //Read the Output type
+        fgets(line , MAX_LINE_LEN , input_file);
+        if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
+            dedup_type[0] = 'B';
+        } else if (line[OUTPUT_TYPE_CHAR_LOC] == 'f'){
+            dedup_type[0] = 'F';
+        }
+
+        //Get the number of files that were read - use the input file names line
+        fgets(input_files_list , MAX_LINE_LEN , input_file);
+        num_roots = countRootsInInput(input_files_list);
+
+        //Get the number of File objects in the input file
+        fgets(line , MAX_LINE_LEN , input_file);
+        // Check if  this is a heuristic Output File:
+        //                - It its heuristic it will be :      # Target depth: 5
+        //                - Otherwise it will be :             # Num files: 36
+        if(line[2] == 'T'){
+            is_input_file_heuristic = true;
+            printf("---> For your INFORMATION : You are executing the heuristic code with heuristic input .....  \n" );
+            fgets(line , MAX_LINE_LEN , input_file); //read next relevant line
+        }
+
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep); //get the number with leading space
+        num_file_objects = (unsigned long)atol(tok);
+
+        //Get the number of Directory objects in the input file
+        fgets(line , MAX_LINE_LEN , input_file);
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep); //get the number with leading space
+        num_dir_objects = (unsigned long)atol(tok);
+
+        //Get the number of Blocks/Physical Files objects in the input file
+        fgets(line , MAX_LINE_LEN , input_file);
+        tok = strtok(line , sep);
+        tok = strtok(NULL , sep);
+        num_base_objects = (unsigned long)atol(tok);
+
+    } else {
+        //Should not get here !
+        printf("There is no input type given =[\n");
     }
 
-    //Get the number of files that were read - use the input file names line
-    fgets(input_files_list , MAX_LINE_LEN , input_file);
-    num_roots = countRootsInInput(input_files_list);
-
-    //Get the number of File objects in the input file
-    fgets(line , MAX_LINE_LEN , input_file);
-    // Check if  this is a heuristic Output File:
-    //                - It its heuristic it will be :      # Target depth: 5
-    //                - Otherwise it will be :             # Num files: 36
-    if(line[2] == 'T'){
-        is_input_file_heuristic = true;
-        printf("---> For your INFORMATION : You are executing the heuristic code with heuristic input .....  \n" );
-        fgets(line , MAX_LINE_LEN , input_file); //read next relevant line
-    }
-
-    tok = strtok(line , sep);
-    tok = strtok(NULL , sep); //get the number with leading space
-    num_file_objects = (unsigned long)atol(tok);
-
-    //Get the number of Directory objects in the input file
-    fgets(line , MAX_LINE_LEN , input_file);
-    tok = strtok(line , sep);
-    tok = strtok(NULL , sep); //get the number with leading space
-    num_dir_objects = (unsigned long)atol(tok);
-
-    //Get the number of Blocks/Physical Files objects in the input file
-    fgets(line , MAX_LINE_LEN , input_file);
-    tok = strtok(line , sep);
-    tok = strtok(NULL , sep);
-    num_base_objects = (unsigned long)atol(tok);
-
-    //Allocate Arrays For Files, Base objects , Directories and Roots
+    //Allocate ArrRoots
+    //    files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));ays For Files, Base objects , Directories and Roots
     files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));
     dirs_array = memory_pool_alloc(mem_pool , (num_dir_objects * sizeof(*dirs_array)));
     roots_array = memory_pool_alloc(mem_pool , (num_roots * sizeof(*roots_array)));
@@ -183,8 +237,8 @@ int main(int argc , char** argv){
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    // char* input_file_name = (strrchr(input_file_path , '/') + 1);
+///  char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
 
     FILE *results_file = NULL;
     char sep_file_name[2] = "_";
@@ -197,10 +251,18 @@ int main(int argc , char** argv){
     strcat(output_file_name , depth_to_output);
 
     tok = strtok(input_file_name , sep_file_name); // Read B/F
+    // Case of input from Nadav&Benny neet to relate as "file-level"
+    if(strcmp(tok, "P") == 0 && strcmp(input_type, "boys") == 0) {
+        dedup_type[0] = 'F';
+    }
+
+    //Read the Output type
+    fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(NULL , sep_file_name); // Read heuristic/dedup
     if(is_input_file_heuristic == true){ //The input was heuristic output
         tok = strtok(NULL , sep_file_name); // Read depth
     }
+
     tok = strtok(NULL , sep_file_name); // Read first srv index
     strcat(output_file_name , sep_file_name);
     strcat(output_file_name , tok);
@@ -208,8 +270,22 @@ int main(int argc , char** argv){
     strcat(output_file_name , sep_file_name);
     strcat(output_file_name , tok);
     printf ("%s \n" , output_file_name);
+    if(strcmp(input_type, "boys") == 0) {
+        tok = strtok(NULL , sep_file_name); // Read file size
+        strcat(output_file_name , sep_file_name);
+        strcat(output_file_name , tok);
+        printf ("%s \n" , output_file_name);
+        tok = strtok(NULL , sep_file_name); // Read "D0"
+        strcat(output_file_name , sep_file_name);
+        strcat(output_file_name , tok);
+        printf ("%s \n" , output_file_name);
+        tok = strtok(NULL , sep_file_name); // Read "P0"
+        strcat(output_file_name , sep_file_name);
+        strcat(output_file_name , tok);
+        printf ("%s \n" , output_file_name);
+    }
 
-    /* --------------------------------------- Create Output File Name String --------------------------------------- */
+        /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     // Open the output file

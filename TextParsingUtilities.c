@@ -412,7 +412,7 @@ void check_dir_has_child_files(Dir current_dir , Dir* dirs_array , bool* merged_
 }
 
 
-void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
+void  print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
                              unsigned long num_files_output, unsigned long num_dirs_output, unsigned long num_base_object){
     if(dedup_type == 'B'){
         fprintf(results_file ,"# Output type: block-level\n");

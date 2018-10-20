@@ -5,9 +5,9 @@
 #ifndef DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 #define DEDUPLICATIONPROJ_HEURISTIC_OBJECTSTRUCTURES_H
 /* **************************************************** INCLUDES **************************************************** */
+#include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include "HashTable.h"
 #include "memory_pool.h"
