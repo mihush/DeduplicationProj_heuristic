@@ -267,7 +267,7 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
         current_depth = current_dir->depth;
     }
 
-    files_at_depth[current_depth] += current_dir->num_of_files; //TODO Here for debugging - remove later
+    //files_at_depth[current_depth] += current_dir->num_of_files; //TODO Here for debugging - remove later
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
     if(current_dir->num_of_subdirs == 0){
