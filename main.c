@@ -15,6 +15,12 @@ int main(int argc , char** argv){
     int num_roots = 0;
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_base_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, base_objects_cnt = 0;
+
+    /*unsigned long *files_at_depth = malloc(sizeof(unsigned long)*(goal_depth +1));
+    for (int i = 0; i < goal_depth + 1; i++) {
+        files_at_depth[i] = 0;
+    }*/
+
     File* files_array = NULL;
     Dir* dirs_array = NULL;
     Dir* roots_array = NULL;
@@ -120,6 +126,7 @@ int main(int argc , char** argv){
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
+            case 'C':
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
                 base_object = readBaseObjectLine(line, mem_pool, base_objects_arr);
@@ -138,6 +145,7 @@ int main(int argc , char** argv){
                 dirs_array[dir->sn] = dir;
                 dir_objects_cnt++;
                 break;
+            case 'M':
             default:
                 break;
         }
@@ -167,7 +175,8 @@ int main(int argc , char** argv){
     //Build the tree hierarchy of the file systems
     calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
                                     base_objects_arr, num_base_objects, goal_depth, output_files_array,
-                                    &output_files_idx, output_dirs_array, &output_dirs_idx , merged_file_ht_size , mem_pool);
+                                    &output_files_idx, output_dirs_array, &output_dirs_idx , merged_file_ht_size ,
+                                    NULL , mem_pool);
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -226,6 +235,16 @@ int main(int argc , char** argv){
     for( int i = 0 ; i < output_dirs_idx ; i++){ //Print Directories to output CSV
         print_dir_to_csv(output_dirs_array[i], temp_output_line , results_file);
     }
+
+    /*
+    printf(" #-#-# Print Files At Depth #-#-# \n");//TODO - Remove this later
+    FILE *files_at_depth_file = fopen("files_at_depth.csv" , "w+");
+    fprintf(files_at_depth_file ,"%s," , output_file_name);
+    for( int i = 0 ; i < goal_depth + 1 ; i++){
+        fprintf(files_at_depth_file ,"%lu," , files_at_depth[i]);
+    }
+    fprintf(files_at_depth_file ,"\n");
+    fclose(files_at_depth_file);*/
 
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
