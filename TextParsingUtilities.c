@@ -96,12 +96,14 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
     return file;
 }
 
-Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool , Base_Object* base_objects_arr){
+Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool , Base_Object* base_objects_arr){
     char* base_object_id = NULL;
     unsigned long base_object_sn = 0;
     unsigned int shared_by_num_files = 0;
     char* tok = NULL;
     char sep[2] = ",";
+    int input_line_len = (int)strlen(line);
+
 
     tok = strtok(line , sep); //reading the flag ("B/P")
     tok = strtok(NULL , sep); //reading base_object_sn
@@ -112,6 +114,15 @@ Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool , Base_Objec
     shared_by_num_files = atoi(tok);
     Base_Object base_object_to_update = base_objects_arr[base_object_sn];
     base_object_update(base_object_to_update, base_object_id, shared_by_num_files, memory_pool);
+
+    // Need to get the directory using fragments
+    if(((input_line_len + 1) == MAX_LINE_LEN) && (line[input_line_len-1] != '\n')) { //Enter This condition only if we haven't read the entire line
+        while(line[input_line_len - 1] != '\n'){
+            fgets(line, MAX_LINE_LEN, input_file);
+            input_line_len = (int)strlen(line);
+        }
+    }
+
     return base_object_to_update;
 }
 
@@ -581,3 +592,50 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     }
     return;
 }
+//
+//void read_fragmented_line_Base_Object(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
+//                              Base_Object base_obj, unsigned int shared_by_num_files){
+//    bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
+//    char last_char = line[input_line_len - 1];
+//    unsigned int counter_files = 0;
+//
+//    if(last_char == ',') {
+//        line_end_with_comma = true;
+//    }
+//
+//    // Variable to get all base_objects (Blocks) : their sn and size
+//    char* tok = NULL;
+//    unsigned long sn = 0;
+//
+//    tok = strtok(NULL, ","); // Get the SN of the first Block
+//    while(strcmp(tok, "\n") != 0) { //Go On While We haven't finished reading the fragmented line
+//        sn = (unsigned long)atol(tok); //Convert sn to Unsigned Longs
+//
+//        tok = strtok(NULL, ",");// Get Next Value - Take string until the first comma
+//
+//        if (!tok) { //If we Reached the end of the Line - treat it differently
+//            // There is a line over flow, we need to fix last block size
+//            bool last_line_ended_with_comma = line_end_with_comma;
+//            fgets(line, MAX_LINE_LEN, input_file); //Get Another Line
+//
+//            line_end_with_comma = false;
+//            if (line[strlen(line) - 1] == ',') {
+//                line_end_with_comma = true;
+//            }
+//
+//            if (line[0] == ',') {
+//                last_line_ended_with_comma = true;
+//            }
+//
+//            tok = strtok(line, ","); // Read the rest of the line
+//
+//            // Case the first char are a continued number from previous buffer
+//            if(!last_line_ended_with_comma){
+//                sn *= pow_aux(10, strlen(tok));
+//                sn += atoi(tok);
+//                tok = strtok(NULL, ",");
+//            }
+//        }
+//    }
+//    return;
+//}

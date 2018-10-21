@@ -174,6 +174,10 @@ int main(int argc , char** argv){
     Base_Object base_object = NULL;
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
+        printf("Line[0] are: --->   %c\n", line[0]);
+        if( line[0] == 'C'){
+            printf("C case\n");
+        }
         switch(line[0]){
             case 'F': //This Lines can be too long for the buffer
                 file = readFileLine(input_file, line, mem_pool, base_objects_arr , merged_file_ht_size);
@@ -183,7 +187,7 @@ int main(int argc , char** argv){
             case 'C':
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
-                base_object = readBaseObjectLine(line, mem_pool, base_objects_arr);
+                base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
                 base_objects_arr[base_object->sn] = base_object;
                 base_objects_cnt++;
                 break;

@@ -48,7 +48,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
  *
  * @line - the line that represents a block object to be parsed
  */
-Base_Object readBaseObjectLine(char *line, PMemory_pool memory_pool, Base_Object* base_objects_arr);
+Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool, Base_Object* base_objects_arr);
 
 /*
  * readRootDirLine - Parses the input line into a directory object to be saved
@@ -164,4 +164,7 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
                                Base_Object* base_objects_arr , File file_obj);
 void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
                               Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files);
+void read_fragmented_line_Base_Object(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
+                                      Base_Object base_obj, unsigned int shared_by_num_files);
+
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
