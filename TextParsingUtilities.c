@@ -227,7 +227,6 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         //Update the sn of the inserted file
         File curr_file = files_array[(current_dir->files_array)[f]]; // Get file ptr from files array
         curr_file->dir_sn = current_dir->sn;
-        //printf("%s\n" , curr_file->id);
 
         // Update file sn with the global output index
         curr_file->sn = *output_files_idx;
@@ -262,7 +261,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
     PMemory_pool merged_file_mem_pool = NULL;
-
+    bool merged_file_needed;
     if(current_dir == NULL){
         return;
     }
@@ -339,8 +338,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
-            //TODO - Add Here Check that file has subfiles somewhere down the tree
-            bool merged_file_needed = false;
+            //Check that file has subfiles somewhere down the tree
+            merged_file_needed = false;
             check_dir_has_child_files(current_dir , dirs_array , &merged_file_needed);
 
             if(merged_file_needed == true){ //Create Merged File - because directory has file somewhere down the tree
@@ -387,14 +386,15 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
                               output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
                               current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
         }
-        //DELETE Merged File and Print it to Output
-        char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
-        unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
-        print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);
-        memory_pool_destroy(merged_file_mem_pool);
-        free(merged_file_mem_pool);
-        output_files_array[mf_to_remove_SN] = NULL;
-        free(temp_output_line);
+        if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){ //DELETE Merged File and Print it to Output
+            char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
+            unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
+            print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);
+            memory_pool_destroy(merged_file_mem_pool);
+            free(merged_file_mem_pool);
+            output_files_array[mf_to_remove_SN] = NULL;
+            free(temp_output_line);
+        }
     }
 };
 
