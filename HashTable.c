@@ -33,6 +33,7 @@ unsigned int ht_hash( HashTable ht, char *key ) {
     unsigned int hashval = 0;
     int i = 0;
 
+    //printf("%s\n" , key);
     /* Convert our string to an integer */
     while((hashval < UINT_MAX) && (i < strlen(key))){
         hashval = hashval << 8;

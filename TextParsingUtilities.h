@@ -102,7 +102,8 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
                        File* files_array,  unsigned long num_files, Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       unsigned int merged_file_ht_size , unsigned long *files_at_depth ,PMemory_pool memory_pool);
+                       unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
+                       int* original_depth , PMemory_pool memory_pool);
 
 /*
  *  calculate_depth_and_merge_files - ...
@@ -130,7 +131,7 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_
                                      int goal_depth, File* output_files_array , unsigned long* output_files_idx ,
                                      Dir* output_dirs_array , unsigned long* output_dirs_idx ,
                                      unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
-                                     PMemory_pool memory_pool);
+                                     int* original_depth , PMemory_pool memory_pool);
 /*
  *
  *
@@ -153,7 +154,9 @@ void check_dir_has_child_files(Dir current_dir , Dir* dirs_array , bool* merged_
  *
  */
 void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
-                             unsigned long num_files_output, unsigned long num_dirs_output, unsigned long num_base_object);
+                             unsigned long num_files_output,
+                             unsigned long num_dirs_output,
+                             unsigned long num_base_object , char* input_type);
 
 
 // Function calculate a power x^y

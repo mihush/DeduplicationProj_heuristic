@@ -12,14 +12,13 @@
 #include "HashTable.h"
 #include "memory_pool.h"
 
-
 typedef enum{
     SUCCESS,
     INVALID_INPUT
 } ErrorCode;
 
 /* Magic Numbers */
-#define FILE_ID_LEN 30
+#define FILE_ID_LEN 35
 #define MAX_LINE_LEN (1024*32)
 #define MERGED_FILE_ID 120
 

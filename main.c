@@ -1,4 +1,7 @@
 #include "TextParsingUtilities.h"
+#include <time.h>
+
+
 #define  OUTPUT_TYPE_CHAR_LOC 15
 
 //3 boys /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/NB_inputs/P_dedup_002_002_4194304_D0_P0.csv 1
@@ -12,6 +15,7 @@ int main(int argc , char** argv){
     char dedup_type[2];
     dedup_type[1] = '\0';
     int goal_depth = 0;
+    int original_depth = 0;
 
     char* input_file_path;
     char* line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
@@ -19,10 +23,10 @@ int main(int argc , char** argv){
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_base_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, base_objects_cnt = 0;
 
-    /*unsigned long *files_at_depth = malloc(sizeof(unsigned long)*(goal_depth +1));
-    for (int i = 0; i < goal_depth + 1; i++) {
+    unsigned long *files_at_depth = malloc(sizeof(unsigned long)*(goal_depth +1));
+    for (int i = 0; i < (goal_depth + 1); i++) {
         files_at_depth[i] = 0;
-    }*/
+    }
 
     File* files_array = NULL;
     Dir* dirs_array = NULL;
@@ -35,8 +39,10 @@ int main(int argc , char** argv){
 
     //We Will Determine the hastable size of the merged file blocks based on the total amount of blocks in the system
     int merged_file_ht_size = 0;
-
     bool is_input_file_heuristic = false;
+
+    //Variables in order to calculate time execution
+    time_t load_time_start , load_time_end , process_time_start , process_time_end;
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
@@ -58,6 +64,7 @@ int main(int argc , char** argv){
     strcpy(input_file_path, argv[3]);
 
     //Open the Input File
+    time(&load_time_start);
     FILE* input_file = fopen(input_file_path , "r");
     if(input_file == NULL){
         printf("-----> Can't open input file/s =[ \n");
@@ -100,7 +107,6 @@ int main(int argc , char** argv){
         }
 
     } else if(strcmp(input_type, "girls") == 0){ // Case input file of our
-
         //Read the Output type
         fgets(line , MAX_LINE_LEN , input_file);
         if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
@@ -146,7 +152,6 @@ int main(int argc , char** argv){
     }
 
     //Allocate ArrRoots
-    //    files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));ays For Files, Base objects , Directories and Roots
     files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));
     dirs_array = memory_pool_alloc(mem_pool , (num_dir_objects * sizeof(*dirs_array)));
     roots_array = memory_pool_alloc(mem_pool , (num_roots * sizeof(*roots_array)));
@@ -174,17 +179,17 @@ int main(int argc , char** argv){
     Base_Object base_object = NULL;
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
-        printf("Line[0] are: --->   %c\n", line[0]);
-        if( line[0] == 'C'){
-            printf("C case\n");
-        }
         switch(line[0]){
+            case 'C':
+                base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
+                base_objects_arr[base_object->sn] = base_object;
+                base_objects_cnt++;
+                break;
             case 'F': //This Lines can be too long for the buffer
                 file = readFileLine(input_file, line, mem_pool, base_objects_arr , merged_file_ht_size);
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
-            case 'C':
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
                 base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
@@ -204,12 +209,13 @@ int main(int argc , char** argv){
                 dir_objects_cnt++;
                 break;
             case 'M':
+                break;
             default:
                 break;
         }
         fgets(line , MAX_LINE_LEN , input_file);
     }
-
+    time(&load_time_end);
     /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
@@ -231,18 +237,26 @@ int main(int argc , char** argv){
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
 
     //Build the tree hierarchy of the file systems
+    time(&process_time_start);
     calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
                                     base_objects_arr, num_base_objects, goal_depth, output_files_array,
                                     &output_files_idx, output_dirs_array, &output_dirs_idx , merged_file_ht_size ,
-                                    NULL , mem_pool);
+                                    files_at_depth , &original_depth , mem_pool);
+    time(&process_time_end);
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    double diff_load = difftime(load_time_end , load_time_start);
+    double diff_process = difftime(process_time_end , process_time_start);
+    printf("File Loading time : %f\n" , diff_load);
+    printf("Heuristic Execution time : %f\n" , diff_process);
+
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
     char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
-///  char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
 
     FILE *results_file = NULL;
     char sep_file_name[2] = "_";
@@ -255,7 +269,7 @@ int main(int argc , char** argv){
     strcat(output_file_name , depth_to_output);
 
     tok = strtok(input_file_name , sep_file_name); // Read B/F
-    // Case of input from Nadav&Benny neet to relate as "file-level"
+    // Case of input from Nadav&Benny need to relate as "file-level"
     if(strcmp(tok, "P") == 0 && strcmp(input_type, "boys") == 0) {
         dedup_type[0] = 'F';
     }
@@ -273,34 +287,51 @@ int main(int argc , char** argv){
     tok = strtok(NULL , sep_file_name); // Read second srv index
     strcat(output_file_name , sep_file_name);
     strcat(output_file_name , tok);
-    printf ("%s \n" , output_file_name);
     if(strcmp(input_type, "boys") == 0) {
         tok = strtok(NULL , sep_file_name); // Read file size
         strcat(output_file_name , sep_file_name);
         strcat(output_file_name , tok);
-        printf ("%s \n" , output_file_name);
         tok = strtok(NULL , sep_file_name); // Read "D0"
         strcat(output_file_name , sep_file_name);
         strcat(output_file_name , tok);
-        printf ("%s \n" , output_file_name);
         tok = strtok(NULL , sep_file_name); // Read "P0"
         strcat(output_file_name , sep_file_name);
         strcat(output_file_name , tok);
-        printf ("%s \n" , output_file_name);
     }
 
-        /* --------------------------------------- Create Output File Name String --------------------------------------- */
+    if(strcmp(input_type, "boys") == 0){
+        //Determine the Output type
+        if(output_file_name[0] == 'B'){
+            dedup_type[0] = 'B';
+        } else if (output_file_name[0] == 'P'){
+            dedup_type[0] = 'F';
+        }
+    }
+
+    FILE* debugging_params_file = fopen("debugging_params.csv" , "w+");
+    fprintf(debugging_params_file ,"# InputDepth :%d\n",original_depth);
+    fprintf(debugging_params_file ,"# InputLogicalFiles :%lu\n",num_file_objects);
+    fprintf(debugging_params_file ,"# InputDirectories :%lu\n",num_dir_objects);
+    fprintf(debugging_params_file ,"# FilesBelowTargetDepth :%lu\n",(num_file_objects - output_files_idx));
+    fprintf(debugging_params_file ,"# TimeToLoad :%f\n",diff_load);
+    fprintf(debugging_params_file ,"# TimeToProcess :%f\n",diff_process);
+    fprintf(debugging_params_file ,"# FilesAtDepth : ");
+    for (int i = 0; i < goal_depth + 1; i++) {
+        fprintf(debugging_params_file ,"%lu," , files_at_depth[i]);
+    }
+    fprintf(debugging_params_file ,"\n");
+    fclose(debugging_params_file);
+    /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     // Open the output file
     results_file = fopen(output_file_name , "w+");
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , output_files_idx ,
-                            output_dirs_idx , num_base_objects);
+                            output_dirs_idx , num_base_objects , input_type);
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){ //Print Files to Output CSV
         print_file_to_csv(output_files_array[i] , temp_output_line , results_file);
     }
-
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){ //Print Base_object (physichal_file or block) output CSV
         if(dedup_type[0] == 'B'){
@@ -310,28 +341,17 @@ int main(int argc , char** argv){
 
         }
     }
-
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){ //Print Directories to output CSV
         print_dir_to_csv(output_dirs_array[i], temp_output_line , results_file);
     }
-
-    /*
-    printf(" #-#-# Print Files At Depth #-#-# \n");//TODO - Remove this later
-    FILE *files_at_depth_file = fopen("files_at_depth.csv" , "w+");
-    fprintf(files_at_depth_file ,"%s," , output_file_name);
-    for( int i = 0 ; i < goal_depth + 1 ; i++){
-        fprintf(files_at_depth_file ,"%lu," , files_at_depth[i]);
-    }
-    fprintf(files_at_depth_file ,"\n");
-    fclose(files_at_depth_file);*/
-
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     fclose(input_file);
     fclose(results_file);
     free(output_file_name);
+    free(files_at_depth);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);

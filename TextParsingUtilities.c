@@ -116,6 +116,7 @@ Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory
     base_object_update(base_object_to_update, base_object_id, shared_by_num_files, memory_pool);
 
     // Need to get the directory using fragments
+    input_line_len = (int)strlen(line);
     if(((input_line_len + 1) == MAX_LINE_LEN) && (line[input_line_len-1] != '\n')) { //Enter This condition only if we haven't read the entire line
         while(line[input_line_len - 1] != '\n'){
             fgets(line, MAX_LINE_LEN, input_file);
@@ -209,13 +210,6 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
                 strcpy(merged_file->id , new_file_id);
             }
 
-
-            //TODO RESET Hash Size HERE
-            if(base_object->output_files_ht->size_table != (base_object->shared_by_num_files)){
-                printf("Weird Bug Strikes Again =[ \n");
-                base_object->output_files_ht->size_table = base_object->shared_by_num_files;
-            }
-
             // Update the base object to contain the id of the merged file
             ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn , memory_pool);
             if(file_exists == false){ //Check for memory allocation
@@ -233,7 +227,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         //Update the sn of the inserted file
         File curr_file = files_array[(current_dir->files_array)[f]]; // Get file ptr from files array
         curr_file->dir_sn = current_dir->sn;
-
+        //printf("%s\n" , curr_file->id);
 
         // Update file sn with the global output index
         curr_file->sn = *output_files_idx;
@@ -263,8 +257,8 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       unsigned int merged_file_ht_size ,
-                       unsigned long *files_at_depth ,PMemory_pool memory_pool){
+                       unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
+                       int* original_depth , PMemory_pool memory_pool){
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
     if(current_dir == NULL){
@@ -278,7 +272,20 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
         current_depth = current_dir->depth;
     }
 
-    //files_at_depth[current_depth] += current_dir->num_of_files; //TODO Here for debugging - remove later
+    //Calculate Original Dircetory Hierarchy Depth
+    //TODO Here for debugging - remove later
+    if(current_depth > *original_depth){
+        *original_depth = current_depth;
+    }
+
+    //Calculate how many file at each depth until goal depth
+    //TODO Here for debugging - remove later
+    if(current_depth <= goal_depth){
+        printf("--> %lu\n" , current_dir->num_of_files);
+        files_at_depth[current_depth] = files_at_depth[current_depth] + (current_dir->num_of_files);
+    } else {
+        files_at_depth[goal_depth] = files_at_depth[goal_depth] + (current_dir->num_of_files);
+    }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
     if(current_dir->num_of_subdirs == 0){
@@ -326,7 +333,7 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
             update_dir_values(output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth, dirs_array, num_dirs,
                               files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array, output_dirs_idx,
-                              current_depth, merged_file_ht_size , files_at_depth , memory_pool);
+                              current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
@@ -374,7 +381,7 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
             update_dir_values(dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
-                              current_depth, merged_file_ht_size , files_at_depth , memory_pool);
+                              current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
         }
     }
 };
@@ -384,7 +391,8 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_
                                      Base_Object * base_object_array, unsigned long num_base_object, int goal_depth,
                                      File* output_files_array , unsigned long* output_files_idx ,
                                      Dir* output_dirs_array , unsigned long* output_dirs_idx ,
-                                     unsigned int merged_file_ht_size , unsigned long *files_at_depth ,PMemory_pool memory_pool){
+                                     unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
+                                     int* original_depth , PMemory_pool memory_pool){
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
@@ -400,9 +408,15 @@ void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_
         (roots_array[r]->upd_subdirs_array)[roots_array[r]->upd_subdirs_array_idx] = roots_array[r]->sn;
         (roots_array[r]->upd_subdirs_array_idx)++;
 
+        //Calculate how many file at each depth until goal depth
+        //TODO Here for debugging - remove later
+        files_at_depth[0] += (roots_array[r]->num_of_files);
+
+
         update_dir_values(roots_array[r] , goal_depth, dirs_array, num_dirs, files_array, num_files,
                           base_object_array, num_base_object, output_files_array , output_files_idx,
-                          output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , files_at_depth, memory_pool);
+                          output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , files_at_depth,
+                          original_depth , memory_pool);
     }
 }
 
@@ -423,15 +437,21 @@ void check_dir_has_child_files(Dir current_dir , Dir* dirs_array , bool* merged_
 }
 
 
-void  print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
-                             unsigned long num_files_output, unsigned long num_dirs_output, unsigned long num_base_object){
+void print_output_csv_header(FILE *results_file, char dedup_type, char *input_files_list, int goal_depth,
+                             unsigned long num_files_output, unsigned long num_dirs_output,
+                             unsigned long num_base_object , char* input_type){
     if(dedup_type == 'B'){
         fprintf(results_file ,"# Output type: block-level\n");
     } else if(dedup_type == 'F'){
         fprintf(results_file ,"# Output type: file-level\n");
     }
 
-    fprintf(results_file ,"%s" , input_files_list);
+    if(strcmp(input_type, "boys") == 0){
+        fprintf(results_file ,"# Input files: \n");
+    } else {
+        fprintf(results_file ,"%s" , input_files_list);
+    }
+
     fprintf(results_file ,"# Target depth: %d\n" , goal_depth);
     fprintf(results_file ,"# Num files: %lu\n",num_files_output);
     fprintf(results_file ,"# Num directories: %lu\n",num_dirs_output);
@@ -592,50 +612,3 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     }
     return;
 }
-//
-//void read_fragmented_line_Base_Object(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
-//                              Base_Object base_obj, unsigned int shared_by_num_files){
-//    bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
-//    char last_char = line[input_line_len - 1];
-//    unsigned int counter_files = 0;
-//
-//    if(last_char == ',') {
-//        line_end_with_comma = true;
-//    }
-//
-//    // Variable to get all base_objects (Blocks) : their sn and size
-//    char* tok = NULL;
-//    unsigned long sn = 0;
-//
-//    tok = strtok(NULL, ","); // Get the SN of the first Block
-//    while(strcmp(tok, "\n") != 0) { //Go On While We haven't finished reading the fragmented line
-//        sn = (unsigned long)atol(tok); //Convert sn to Unsigned Longs
-//
-//        tok = strtok(NULL, ",");// Get Next Value - Take string until the first comma
-//
-//        if (!tok) { //If we Reached the end of the Line - treat it differently
-//            // There is a line over flow, we need to fix last block size
-//            bool last_line_ended_with_comma = line_end_with_comma;
-//            fgets(line, MAX_LINE_LEN, input_file); //Get Another Line
-//
-//            line_end_with_comma = false;
-//            if (line[strlen(line) - 1] == ',') {
-//                line_end_with_comma = true;
-//            }
-//
-//            if (line[0] == ',') {
-//                last_line_ended_with_comma = true;
-//            }
-//
-//            tok = strtok(line, ","); // Read the rest of the line
-//
-//            // Case the first char are a continued number from previous buffer
-//            if(!last_line_ended_with_comma){
-//                sn *= pow_aux(10, strlen(tok));
-//                sn += atoi(tok);
-//                tok = strtok(NULL, ",");
-//            }
-//        }
-//    }
-//    return;
-//}
