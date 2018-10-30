@@ -98,7 +98,7 @@ void update_outputArray_and_sn(Dir current_dir , File* files_array , File* outpu
  * @output_dirs_idx      - ...
  * @dedup_type           - ...
  */
-void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsigned long num_dirs,
+void update_dir_values(FILE *files_output_result, Dir current_dir , int goal_depth, Dir* dirs_array, unsigned long num_dirs,
                        File* files_array,  unsigned long num_files, Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
@@ -125,7 +125,7 @@ void update_dir_values(Dir current_dir , int goal_depth, Dir* dirs_array, unsign
  * @dedup_type           - ...
  * @goal_depth           - ...
  */
-void calculate_depth_and_merge_files(Dir* roots_array, int num_roots, Dir* dirs_array, unsigned long num_dirs,
+void calculate_depth_and_merge_files(FILE* files_output_result, Dir* roots_array, int num_roots, Dir* dirs_array, unsigned long num_dirs,
                                      File* files_array,  unsigned long num_files,
                                      Base_Object* base_object_array, unsigned long num_base_object,
                                      int goal_depth, File* output_files_array , unsigned long* output_files_idx ,

@@ -64,7 +64,8 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size , bool isMerged ,
                  unsigned int ht_size , PMemory_pool memory_pool){
-    File file = memory_pool_alloc(memory_pool , (sizeof(*file)));
+    File file = NULL;
+    file = memory_pool_alloc(memory_pool , (sizeof(*file)));
     if(file == NULL){
         return NULL;
     }

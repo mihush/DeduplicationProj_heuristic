@@ -180,16 +180,12 @@ int main(int argc , char** argv){
     fgets(line , MAX_LINE_LEN , input_file);
     while(!feof(input_file)) {
         switch(line[0]){
-            case 'C':
-                base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
-                base_objects_arr[base_object->sn] = base_object;
-                base_objects_cnt++;
-                break;
             case 'F': //This Lines can be too long for the buffer
                 file = readFileLine(input_file, line, mem_pool, base_objects_arr , merged_file_ht_size);
                 files_array[file->sn] = file;
                 file_objects_cnt++;
                 break;
+            case 'C':
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
                 base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
@@ -235,22 +231,22 @@ int main(int argc , char** argv){
     /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+    // Create empty file to print temporally the output files into a csv file
+    FILE *files_output_result = NULL;
+    char* files_output_result_name = calloc(20 , sizeof(char));
+    strcat(files_output_result_name , "files_output_result.csv");
+    files_output_result = fopen(files_output_result_name , "w+");
 
     //Build the tree hierarchy of the file systems
     time(&process_time_start);
-    calculate_depth_and_merge_files(roots_array, num_roots, dirs_array, num_dir_objects, files_array,  num_file_objects,
-                                    base_objects_arr, num_base_objects, goal_depth, output_files_array,
-                                    &output_files_idx, output_dirs_array, &output_dirs_idx , merged_file_ht_size ,
-                                    files_at_depth , &original_depth , mem_pool);
+    calculate_depth_and_merge_files(files_output_result , roots_array, num_roots, dirs_array, num_dir_objects,
+                                    files_array, num_file_objects, base_objects_arr, num_base_objects, goal_depth,
+                                    output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx ,
+                                    merged_file_ht_size , files_at_depth , &original_depth , mem_pool);
     time(&process_time_end);
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
-    double diff_load = difftime(load_time_end , load_time_start);
-    double diff_process = difftime(process_time_end , process_time_start);
-    printf("File Loading time : %f\n" , diff_load);
-    printf("Heuristic Execution time : %f\n" , diff_process);
-
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
@@ -308,19 +304,6 @@ int main(int argc , char** argv){
         }
     }
 
-    FILE* debugging_params_file = fopen("debugging_params.csv" , "w+");
-    fprintf(debugging_params_file ,"# InputDepth :%d\n",original_depth);
-    fprintf(debugging_params_file ,"# InputLogicalFiles :%lu\n",num_file_objects);
-    fprintf(debugging_params_file ,"# InputDirectories :%lu\n",num_dir_objects);
-    fprintf(debugging_params_file ,"# FilesBelowTargetDepth :%lu\n",(num_file_objects - output_files_idx));
-    fprintf(debugging_params_file ,"# TimeToLoad :%f\n",diff_load);
-    fprintf(debugging_params_file ,"# TimeToProcess :%f\n",diff_process);
-    fprintf(debugging_params_file ,"# FilesAtDepth : ");
-    for (int i = 0; i < goal_depth + 1; i++) {
-        fprintf(debugging_params_file ,"%lu," , files_at_depth[i]);
-    }
-    fprintf(debugging_params_file ,"\n");
-    fclose(debugging_params_file);
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
@@ -330,6 +313,9 @@ int main(int argc , char** argv){
                             output_dirs_idx , num_base_objects , input_type);
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){ //Print Files to Output CSV
+        if(output_files_array[i] == NULL){ //Skip over empty cells of Merged File
+            continue;
+        }
         print_file_to_csv(output_files_array[i] , temp_output_line , results_file);
     }
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
@@ -347,16 +333,36 @@ int main(int argc , char** argv){
     }
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
+    double diff_load = difftime(load_time_end , load_time_start);
+    double diff_process = difftime(process_time_end , process_time_start);
+
+    FILE* debugging_params_file = fopen("debugging_params.csv" , "w+");
+    fprintf(debugging_params_file ,"# InputDepth :%d\n",original_depth);
+    fprintf(debugging_params_file ,"# InputLogicalFiles :%lu\n",num_file_objects);
+    fprintf(debugging_params_file ,"# InputDirectories :%lu\n",num_dir_objects);
+    fprintf(debugging_params_file ,"# FilesBelowTargetDepth :%lu\n",(num_file_objects - output_files_idx));
+    fprintf(debugging_params_file ,"# TimeToLoad :%f\n",diff_load);
+    fprintf(debugging_params_file ,"# TimeToProcess :%f\n",diff_process);
+    fprintf(debugging_params_file ,"# FilesAtDepth : ");
+    for (int i = 0; i < goal_depth + 1; i++) {
+        fprintf(debugging_params_file ,"%lu," , files_at_depth[i]);
+    }
+    fprintf(debugging_params_file ,"\n");
+    fclose(debugging_params_file);
+
+
+    /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     fclose(input_file);
     fclose(results_file);
     free(output_file_name);
     free(files_at_depth);
+    fclose(files_output_result);
+    free(files_output_result_name);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);
     free(mem_pool);
-
     /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     return 0;
 }

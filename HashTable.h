@@ -30,6 +30,7 @@ typedef struct entry_t *Entry;
 struct hashtable_t {
     unsigned int size_table;
     Entry *table; // array of pointers to Entries
+    PMemory_pool mem_pool;
 };
 typedef struct hashtable_t *HashTable;
 /* ********************* END ******************** HashTable Definition********************* END ********************* */
@@ -63,7 +64,7 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool);
  * @ht  - the hashtable to which the object will be added
  * @key - the hashed id of the file
  */
-Entry ht_set(HashTable ht, char *key, bool* object_exists , unsigned int data , PMemory_pool mem_pool);
+Entry ht_set(HashTable ht, char *key, bool* object_exists , unsigned int data);
 
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 

@@ -25,7 +25,7 @@ HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
     for(int i = 0; i < (ht->size_table) ; i++ ){
         (ht->table)[i] = NULL;
     }
-
+    ht->mem_pool = mem_pool;
     return ht;
 }
 
@@ -33,7 +33,6 @@ unsigned int ht_hash( HashTable ht, char *key ) {
     unsigned int hashval = 0;
     int i = 0;
 
-    //printf("%s\n" , key);
     /* Convert our string to an integer */
     while((hashval < UINT_MAX) && (i < strlen(key))){
         hashval = hashval << 8;
@@ -55,17 +54,12 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
         return NULL; //All is allocated in POOL - Nothing to Free
     }
     newpair->key = strcpy(newpair->key , key);
-//    if(data == -1){
-//        newpair->data = 0;
-//    }else{
-//        newpair->data = data;
-//    }
     newpair->data = data;
     newpair->next = NULL;
     return newpair;
 }
 
-Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , PMemory_pool mem_pool) {
+Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data) {
     Entry newpair = NULL;
     Entry next = NULL;
     Entry last = NULL;
@@ -86,7 +80,7 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , 
         *object_exists = true;
         return next;
     } else { /* Nope, couldn't find it.  Time to grow a pair. */
-        newpair = ht_newpair(key , data , mem_pool); //allocate new pair
+        newpair = ht_newpair(key , data , ht->mem_pool); //allocate new pair
         if(newpair == NULL){
             return NULL;
         }
