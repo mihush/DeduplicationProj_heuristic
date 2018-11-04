@@ -386,7 +386,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
                               output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
                               current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
         }
-        if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){ //DELETE Merged File and Print it to Output
+        //DELETE Merged File and Print it to Output
+        if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){
             char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
             unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
             print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);

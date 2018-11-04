@@ -70,9 +70,10 @@ int main(int argc , char** argv){
         printf("-----> Can't open input file/s =[ \n");
         return 0;
     }
-
-    // Case input file is from Nadav & Benny
-    if(strcmp(input_type, "boys") == 0){
+    /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* -------------------------------- Read Parameter Values from Input file header -------------------------------- */
+    if(strcmp(input_type, "boys") == 0){ // Case of Boys input file (Nadav & Benny)
         //Get the number of files that were read - use the input file names line
         int k = 4;
         //Read three first rows uneeded from header
@@ -94,7 +95,7 @@ int main(int argc , char** argv){
         num_dir_objects = (unsigned long)atol(tok);
 
         //Get the number of Blocks/Physical Files objects in the input file
-        fgets(line , MAX_LINE_LEN , input_file); // TODO - ask Gala about "Num of containers" as blocks
+        fgets(line , MAX_LINE_LEN , input_file);
         tok = strtok(line , sep);
         tok = strtok(NULL , sep);
         num_base_objects = (unsigned long)atol(tok);
@@ -106,7 +107,7 @@ int main(int argc , char** argv){
             k--;
         }
 
-    } else if(strcmp(input_type, "girls") == 0){ // Case input file of our
+    } else if(strcmp(input_type, "girls") == 0){ // Case of OUR input file (Michal & Polina)
         //Read the Output type
         fgets(line , MAX_LINE_LEN , input_file);
         if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
@@ -151,7 +152,7 @@ int main(int argc , char** argv){
         printf("There is no input type given =[\n");
     }
 
-    //Allocate ArrRoots
+    //Allocate Object Arrays
     files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*files_array)));
     dirs_array = memory_pool_alloc(mem_pool , (num_dir_objects * sizeof(*dirs_array)));
     roots_array = memory_pool_alloc(mem_pool , (num_roots * sizeof(*roots_array)));
@@ -170,8 +171,7 @@ int main(int argc , char** argv){
     merged_file_ht_size = determine_Merged_File_Base_Object_HT_Size(num_base_objects , dedup_type[0] , goal_depth);
     printf("---> Merged File Hashtable size is: %d \n" , merged_file_ht_size);
     printf("---> Number of Base Objects  is: %lu \n" , num_base_objects);
-    /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
-    /* -------------------------------------------------------------------------------------------------------------- */
+    /* -------------------------------- Read Parameter Values from Input file header -------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     Dir dir = NULL;
@@ -214,52 +214,15 @@ int main(int argc , char** argv){
     time(&load_time_end);
     /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
-    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
-
-    File* output_files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*output_files_array)));
-    if(output_files_array == NULL){
-        return 0;
-    }
-    Dir* output_dirs_array = memory_pool_alloc(mem_pool , (num_dir_objects * sizeof(*output_dirs_array)));
-    if(output_dirs_array == NULL){
-        free(output_files_array);
-        return 0;
-    }
-
-    unsigned long output_files_idx = 0 , output_dirs_idx = 0;
-
-    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
-    /* -------------------------------------------------------------------------------------------------------------- */
-    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
-    // Create empty file to print temporally the output files into a csv file
-    FILE *files_output_result = NULL;
-    char* files_output_result_name = calloc(20 , sizeof(char));
-    strcat(files_output_result_name , "files_output_result.csv");
-    files_output_result = fopen(files_output_result_name , "w+");
-
-    //Build the tree hierarchy of the file systems
-    time(&process_time_start);
-    calculate_depth_and_merge_files(files_output_result , roots_array, num_roots, dirs_array, num_dir_objects,
-                                    files_array, num_file_objects, base_objects_arr, num_base_objects, goal_depth,
-                                    output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx ,
-                                    merged_file_ht_size , files_at_depth , &original_depth , mem_pool);
-    time(&process_time_end);
-
-    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
-    /* -------------------------------------------------------------------------------------------------------------- */
-    /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-    char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     char* input_file_name = (strrchr(input_file_path , '\\') + 1);
     //char* input_file_name = (strrchr(input_file_path , '/') + 1);
-
-    FILE *results_file = NULL;
     char sep_file_name[2] = "_";
-
+    char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[8];
     sprintf(depth_to_output, "_depth%d", goal_depth);
-    char* output_file_name = calloc(777 , sizeof(char));
+
     strncpy(output_file_name , input_file_name , 2);
     strcat(output_file_name , "heuristic");
     strcat(output_file_name , depth_to_output);
@@ -304,11 +267,93 @@ int main(int argc , char** argv){
         }
     }
 
+    //At this point output_file_name containc the output file that will initially contain the header only
+    //Directories Output File Name
+    char* output_dirs_file_name = calloc(275 , sizeof(char));
+    strcpy(output_dirs_file_name , output_file_name);
+    output_dirs_file_name[strlen(output_dirs_file_name) - 4] = '\0';
+    strcat(output_dirs_file_name , "_DIR.csv");
+    printf("-->%s\n" , output_dirs_file_name);
+
+    //Base Objects Output File Name
+    char* output_base_objects_file_name = calloc(275 , sizeof(char));
+    strcpy(output_base_objects_file_name , output_file_name);
+    output_base_objects_file_name[strlen(output_base_objects_file_name) - 4] = '\0';
+    strcat(output_base_objects_file_name , "_BO.csv");
+    printf("-->%s\n" , output_base_objects_file_name);
+
+    //Logical Files Output File Name
+    char* output_logical_files_file_name = calloc(275 , sizeof(char));
+    strcpy(output_logical_files_file_name , output_file_name);
+    output_logical_files_file_name[strlen(output_logical_files_file_name) - 4] = '\0';
+    strcat(output_logical_files_file_name , "_LF.csv");
+    printf("-->%s\n" , output_logical_files_file_name);
+
+    //Merged  Files Output File Name
+    char* output_merged_files_file_name = calloc(275 , sizeof(char));
+    strcpy(output_merged_files_file_name , output_file_name);
+    output_merged_files_file_name[strlen(output_merged_files_file_name) - 4] = '\0';
+    strcat(output_merged_files_file_name , "_MF.csv");
+    printf("-->%s\n" , output_merged_files_file_name);
+
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
+    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
+
+    File* output_files_array = memory_pool_alloc(mem_pool , (num_file_objects * sizeof(*output_files_array)));
+    if(output_files_array == NULL){
+        return 0;
+    }
+    Dir* output_dirs_array = memory_pool_alloc(mem_pool , (num_dir_objects * sizeof(*output_dirs_array)));
+    if(output_dirs_array == NULL){
+        free(output_files_array);
+        return 0;
+    }
+
+    unsigned long output_files_idx = 0 , output_dirs_idx = 0;
+
+    /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+    // Create empty file to print temporally the output files into a csv file
+    FILE* output_merged_files_file = fopen(output_merged_files_file_name , "w+");
+    if(output_merged_files_file == NULL){
+        printf("-----> Can't open MERGED FILES output file =[ \n");
+        return 0;
+    }
+
+    //Build the tree hierarchy of the file systems
+    time(&process_time_start);
+    calculate_depth_and_merge_files(output_merged_files_file , roots_array, num_roots, dirs_array, num_dir_objects,
+                                    files_array, num_file_objects, base_objects_arr, num_base_objects, goal_depth,
+                                    output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx ,
+                                    merged_file_ht_size , files_at_depth , &original_depth , mem_pool);
+    time(&process_time_end);
+
+    /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
+    /* -------------------------------------------------------------------------------------------------------------- */
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
+    char* temp_output_line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     // Open the output file
+    FILE* results_file = NULL; //Will Contain initially the header - later the other outputs will be merged into it by a bash script
     results_file = fopen(output_file_name , "w+");
+    FILE* output_dirs_file = fopen(output_dirs_file_name , "w+");
+    if(output_dirs_file == NULL){
+        printf("-----> Can't open DIRECTORIES output file =[ \n");
+        return 0;
+    }
+    FILE* output_base_objects_file = fopen(output_base_objects_file_name , "w+");
+    if(output_base_objects_file == NULL){
+        printf("-----> Can't open BASE OBJECTS output file =[ \n");
+        return 0;
+    }
+    FILE* output_logical_files_file = fopen(output_logical_files_file_name , "w+");
+    if(output_logical_files_file == NULL){
+        printf("-----> Can't open LOGICAL FILES output file =[ \n");
+        return 0;
+    }
+
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , output_files_idx ,
                             output_dirs_idx , num_base_objects , input_type);
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
@@ -316,20 +361,20 @@ int main(int argc , char** argv){
         if(output_files_array[i] == NULL){ //Skip over empty cells of Merged File
             continue;
         }
-        print_file_to_csv(output_files_array[i] , temp_output_line , results_file);
+        print_file_to_csv(output_files_array[i] , temp_output_line , output_logical_files_file);
     }
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++){ //Print Base_object (physichal_file or block) output CSV
         if(dedup_type[0] == 'B'){
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B' , results_file);
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B' , output_base_objects_file);
         } else{
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P' , results_file);
+            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P' , output_base_objects_file);
 
         }
     }
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");
     for( int i = 0 ; i < output_dirs_idx ; i++){ //Print Directories to output CSV
-        print_dir_to_csv(output_dirs_array[i], temp_output_line , results_file);
+        print_dir_to_csv(output_dirs_array[i], temp_output_line , output_dirs_file);
     }
     /* ---------------------------------------- Print Objects to Output File ---------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -355,10 +400,18 @@ int main(int argc , char** argv){
     /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     fclose(input_file);
     fclose(results_file);
-    free(output_file_name);
+    fclose(output_dirs_file);
+    fclose(output_base_objects_file);
+    fclose(output_logical_files_file);
+    fclose(output_merged_files_file);
+
     free(files_at_depth);
-    fclose(files_output_result);
-    free(files_output_result_name);
+    //free output file names strings
+    free(output_file_name);
+    free(output_dirs_file_name);
+    free(output_base_objects_file_name);
+    free(output_logical_files_file_name);
+    free(output_merged_files_file_name);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);
