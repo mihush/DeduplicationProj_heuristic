@@ -26,7 +26,7 @@ HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
     for(int i = 0; i < (ht->size_table) ; i++ ){
         (ht->table)[i] = NULL;
     }
-    ht->mem_pool = mem_pool;
+
     return ht;
 }
 
@@ -60,7 +60,7 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
     return newpair;
 }
 
-Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data) {
+Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , PMemory_pool mem_pool) {
     Entry newpair = NULL;
     Entry next = NULL;
     Entry last = NULL;
@@ -81,7 +81,7 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data) {
         *object_exists = true;
         return next;
     } else { /* Nope, couldn't find it.  Time to grow a pair. */
-        newpair = ht_newpair(key , data , ht->mem_pool); //allocate new pair
+        newpair = ht_newpair(key , data , mem_pool); //allocate new pair
         if(newpair == NULL){
             return NULL;
         }

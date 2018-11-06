@@ -189,7 +189,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
 
         base_object = base_object_array[base_object_sn]; //Get The pointer to the base object element from the general array
         //Try adding the object to the merged file hashtable
-        ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size);
+        ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size , merged_file->mem_pool);
         //If the block doesn't exist it is added to the hashtable ,  otherwise it is already there
 
         if(object_exists == false){ //Check if block exists already - do not increase counter
@@ -211,7 +211,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             }
 
             // Update the base object to contain the id of the merged file
-            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn);
+            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn , memory_pool);
             if(file_exists == false){ //Check for memory allocation
                 (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
                 (base_object->output_updated_idx)++;
@@ -242,7 +242,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
 
-            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn);
+            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn , memory_pool);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
                 (curr_object->output_updated_idx)++;
@@ -281,11 +281,10 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
 
     //Calculate how many file at each depth until goal depth
     //TODO Here for debugging - remove later
-    if(current_depth <= goal_depth){
-        //printf("--> %lu\n" , current_dir->num_of_files);
-        files_at_depth[current_depth] = files_at_depth[current_depth] + (current_dir->num_of_files);
+    if(current_depth < goal_depth){
+        files_at_depth[current_depth] += (current_dir->num_of_files);
     } else {
-        files_at_depth[goal_depth] = files_at_depth[goal_depth] + (current_dir->num_of_files);
+        files_at_depth[goal_depth] += (current_dir->num_of_files);
     }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files

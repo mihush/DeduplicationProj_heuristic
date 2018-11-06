@@ -321,7 +321,7 @@ int main(int argc , char** argv){
         printf("-----> Can't open MERGED FILES output file =[ \n");
         return 0;
     }
-
+    free(output_merged_files_file_name);
     //Build the tree hierarchy of the file systems
     time(&process_time_start);
     calculate_depth_and_merge_files(output_merged_files_file , roots_array, num_roots, dirs_array, num_dir_objects,
@@ -411,7 +411,6 @@ int main(int argc , char** argv){
     free(output_dirs_file_name);
     free(output_base_objects_file_name);
     free(output_logical_files_file_name);
-    free(output_merged_files_file_name);
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);

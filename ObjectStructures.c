@@ -72,6 +72,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
     int id_length = 0;
     if(isMerged){
+        file->mem_pool = memory_pool;
         id_length = MERGED_FILE_ID;
     } else {
         id_length = (int)(strlen(id) + 1);
