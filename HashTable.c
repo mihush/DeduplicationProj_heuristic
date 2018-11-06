@@ -6,6 +6,7 @@
 /* **************************************************** INCLUDES **************************************************** */
 /* ******************** START ******************** HashTable Functions ******************** START ******************* */
 
+
 HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
     HashTable ht = NULL;
     /* Allocate the table itself */
