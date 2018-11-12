@@ -7,19 +7,35 @@
 /* ******************** START ******************** HashTable Functions ******************** START ******************* */
 
 
-HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool) {
+HashTable ht_create(unsigned int shared_by_num_files , PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged) {
     HashTable ht = NULL;
-    /* Allocate the table itself */
-    ht = memory_pool_alloc(mem_pool , sizeof(*ht));
-    if(!ht){ //check allocation was successful
-        return NULL;
-    }
+    if(isMerged) {
+        /* Allocate the table itself */
+        ht = memory_pool_mf_alloc(mem_pool_mf, sizeof(*ht));
+        if (!ht) { //check allocation was successful
+            return NULL;
+        }
 
-    /* Allocate pointers to the head nodes */
-    unsigned int size_of_table = sizeof(Entry)*(shared_by_num_files);
-    ht->table = memory_pool_alloc(mem_pool , size_of_table);
-    if(!(ht -> table)){ //check array of pointers was allocated successfully
-        return NULL; //All is allocated in POOL - Nothing to Free
+        /* Allocate pointers to the head nodes */
+        unsigned int size_of_table = sizeof(Entry) * (shared_by_num_files);
+        ht->table = memory_pool_mf_alloc(mem_pool_mf, size_of_table);
+        if (!(ht->table)) { //check array of pointers was allocated successfully
+            return NULL; //All is allocated in POOL - Nothing to Free
+        }
+    } else {
+        /* Allocate the table itself */
+        ht = memory_pool_alloc(mem_pool , sizeof(*ht));
+        if(!ht){ //check allocation was successful
+            return NULL;
+        }
+
+        /* Allocate pointers to the head nodes */
+        unsigned int size_of_table = sizeof(Entry)*(shared_by_num_files);
+        ht->table = memory_pool_alloc(mem_pool , size_of_table);
+        if(!(ht -> table)){ //check array of pointers was allocated successfully
+            return NULL; //All is allocated in POOL - Nothing to Free
+        }
+
     }
 
     ht->size_table = shared_by_num_files;
@@ -44,15 +60,28 @@ unsigned int ht_hash( HashTable ht, char *key ) {
     return (hashval % (ht->size_table));
 }
 
-Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
-    Entry newpair  = memory_pool_alloc(mem_pool , sizeof(*newpair));
-    if(newpair == NULL){
-        return NULL;
-    }
+Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged){
+    Entry newpair  = NULL;
 
-    newpair->key = memory_pool_alloc(mem_pool , sizeof(char)*(strlen(key)+1));
-    if(newpair->key == NULL){
-        return NULL; //All is allocated in POOL - Nothing to Free
+    if(isMerged) {
+        newpair  = memory_pool_mf_alloc(mem_pool_mf , sizeof(*newpair));
+        if(newpair == NULL){
+            return NULL;
+        }
+        newpair->key = memory_pool_mf_alloc(mem_pool_mf, sizeof(char) * (strlen(key) + 1));
+        if (newpair->key == NULL) {
+            return NULL; //All is allocated in POOL - Nothing to Free
+        }
+    } else {
+        newpair  = memory_pool_alloc(mem_pool , sizeof(*newpair));
+        if(newpair == NULL){
+            return NULL;
+        }
+        newpair->key = memory_pool_alloc(mem_pool, sizeof(char) * (strlen(key) + 1));
+        if (newpair->key == NULL) {
+            return NULL; //All is allocated in POOL - Nothing to Free
+        }
+
     }
     newpair->key = strcpy(newpair->key , key);
     newpair->data = data;
@@ -60,7 +89,8 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool){
     return newpair;
 }
 
-Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , PMemory_pool mem_pool) {
+Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data,
+        PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged) {
     Entry newpair = NULL;
     Entry next = NULL;
     Entry last = NULL;
@@ -81,7 +111,7 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data , 
         *object_exists = true;
         return next;
     } else { /* Nope, couldn't find it.  Time to grow a pair. */
-        newpair = ht_newpair(key , data , mem_pool); //allocate new pair
+        newpair = ht_newpair(key, data, mem_pool, mem_pool_mf, isMerged); //allocate new pair
         if(newpair == NULL){
             return NULL;
         }

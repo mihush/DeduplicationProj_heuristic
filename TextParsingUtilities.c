@@ -69,7 +69,7 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
     tok = strtok(NULL , sep);
     num_base_objects = atol(tok);
 
-    file = file_create(file_sn, file_id, parent_dir_sn, num_base_objects, 0, false, ht_size , memory_pool);
+    file = file_create(file_sn, file_id, parent_dir_sn, num_base_objects, 0, false, ht_size , memory_pool, NULL);
 
     // Check if we have an extremely big line which need to be parse fragmented
     // TODO - check this function - CAREFULLY !!!!!
@@ -189,7 +189,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
 
         base_object = base_object_array[base_object_sn]; //Get The pointer to the base object element from the general array
         //Try adding the object to the merged file hashtable
-        ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size , merged_file->mem_pool);
+        ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size, NULL, merged_file->mem_pool_mf, true);
         //If the block doesn't exist it is added to the hashtable ,  otherwise it is already there
 
         if(object_exists == false){ //Check if block exists already - do not increase counter
@@ -211,7 +211,7 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
             }
 
             // Update the base object to contain the id of the merged file
-            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn , memory_pool);
+            ht_set(base_object->output_files_ht, merged_file->id, &file_exists , merged_file->sn , memory_pool, NULL, false);
             if(file_exists == false){ //Check for memory allocation
                 (base_object->files_array_updated)[base_object->output_updated_idx] = merged_file_sn;
                 (base_object->output_updated_idx)++;
@@ -242,7 +242,7 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
 
-            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn , memory_pool);
+            ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn , memory_pool, NULL, false);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
                 (curr_object->output_updated_idx)++;
@@ -260,7 +260,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
                        int* original_depth , PMemory_pool memory_pool){
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
-    PMemory_pool merged_file_mem_pool = NULL;
+    PMemory_pool_mf merged_file_mem_pool = NULL;
     bool merged_file_needed;
     if(current_dir == NULL){
         return;
@@ -343,10 +343,10 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
 
             if(merged_file_needed == true){ //Create Merged File - because directory has file somewhere down the tree
                 //create new merged file and save it to output_files_array
-                merged_file_mem_pool = calloc(1 , sizeof(Memory_pool));
-                memory_pool_init(merged_file_mem_pool, true);
+                merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
+                memory_pool_mf_init(merged_file_mem_pool);
                 current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
-                                                       num_base_object , 0 , true , merged_file_ht_size , merged_file_mem_pool);
+                                                       num_base_object , 0 , true , merged_file_ht_size , NULL, merged_file_mem_pool);
                 if(current_dir->merged_file == NULL){
                     printf("Empty Merged.....\n");
                 }
@@ -390,7 +390,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
             unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
             print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);
-            memory_pool_destroy(merged_file_mem_pool);
+            memory_pool_mf_destroy(merged_file_mem_pool);
             free(merged_file_mem_pool);
             output_files_array[mf_to_remove_SN] = NULL;
             free(temp_output_line);

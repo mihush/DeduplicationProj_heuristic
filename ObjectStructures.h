@@ -74,7 +74,7 @@ struct file_t{ // Only logical file
     //For Merged File only (indicate if object already inserted)
     HashTable base_objects_hash_merged;
     bool* objects_bin_array;
-    PMemory_pool mem_pool;
+    PMemory_pool_mf mem_pool_mf;
 };
 typedef struct file_t *File;
 
@@ -166,7 +166,8 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char d
  */
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size ,
-                 bool isMerged ,unsigned int ht_size, PMemory_pool memory_pool);
+                 bool isMerged ,unsigned int ht_size, PMemory_pool memory_pool,
+                 PMemory_pool_mf memory_pool_mf);
 
 /*
  *  print_file_to_csv - ....

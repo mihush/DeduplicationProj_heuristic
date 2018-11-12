@@ -41,7 +41,7 @@ typedef struct hashtable_t *HashTable;
  *
  * @type - can be one of 3 : 'B' for blocks , 'F' for files and 'D' for directories
  */
-HashTable ht_create(unsigned int shared_by_num_files, PMemory_pool mem_pool);
+HashTable ht_create(unsigned int shared_by_num_files, PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged);
 
 /*
  * ht_hashF - Given a key (string) Generates a Hash Value by which it will be stored in the table
@@ -55,7 +55,7 @@ unsigned int ht_hash( HashTable ht, char *key );
  * ht_newpair - Creates a key-value pair
  *              the key is the file id and the value is NULL
  */
-Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool);
+Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged);
 
 /*
  *  ht_setF - Insert a key-value pair into a hash table (General function thus
@@ -63,7 +63,8 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool);
  * @ht  - the hashtable to which the object will be added
  * @key - the hashed id of the file
  */
-Entry ht_set(HashTable ht, char *key, bool* object_exists , unsigned int data , PMemory_pool mem_pool);
+Entry ht_set(HashTable ht, char *key, bool* object_exists , unsigned int data ,
+        PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged);
 
 /* ********************* END ********************* HashTable Functions ********************* END ******************** */
 

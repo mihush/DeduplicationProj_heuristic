@@ -10,7 +10,7 @@
 int main(int argc , char** argv){
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
-    memory_pool_init(mem_pool, false);
+    memory_pool_init(mem_pool);
 
     char dedup_type[2];
     dedup_type[1] = '\0';
@@ -216,8 +216,8 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
+//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[8];
@@ -227,7 +227,7 @@ int main(int argc , char** argv){
     strcat(output_file_name , "heuristic");
     strcat(output_file_name , depth_to_output);
 
-    tok = strtok(input_file_name , sep_file_name); // Read B/F
+    tok = strtok(input_file_name , sep_file_name); // Read B/P
     // Case of input from Nadav&Benny need to relate as "file-level"
     if(strcmp(tok, "P") == 0 && strcmp(input_type, "boys") == 0) {
         dedup_type[0] = 'F';

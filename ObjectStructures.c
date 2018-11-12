@@ -36,7 +36,7 @@ Base_Object base_object_update(Base_Object base_object, char *base_object_id,
     }
     base_object->id = strcpy(base_object->id , base_object_id);
 
-    base_object->output_files_ht = ht_create(base_object->shared_by_num_files, memory_pool);
+    base_object->output_files_ht = ht_create(base_object->shared_by_num_files, memory_pool, NULL, false);
     if(base_object->output_files_ht == NULL){ //check successful allocation
         return NULL;
     }
@@ -63,24 +63,33 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
 
 File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size , bool isMerged ,
-                 unsigned int ht_size , PMemory_pool memory_pool){
+                 unsigned int ht_size , PMemory_pool memory_pool, PMemory_pool_mf memory_pool_mf){
     File file = NULL;
-    file = memory_pool_alloc(memory_pool , (sizeof(*file)));
-    if(file == NULL){
-        return NULL;
-    }
 
     int id_length = 0;
     if(isMerged){
-        file->mem_pool = memory_pool;
+        file = memory_pool_mf_alloc(memory_pool_mf, (sizeof(*file)));
+        if(file == NULL){
+            return NULL;
+        }
+        file->mem_pool_mf = memory_pool_mf;
         id_length = MERGED_FILE_ID;
+        file->id = memory_pool_mf_alloc(memory_pool_mf, (sizeof(char)*id_length));
+        if(file->id == NULL){
+            return NULL;
+        }
     } else {
+        file = memory_pool_alloc(memory_pool , (sizeof(*file)));
+        if(file == NULL){
+            return NULL;
+        }
         id_length = (int)(strlen(id) + 1);
+        file->id = memory_pool_alloc(memory_pool, (sizeof(char)*id_length));
+        if(file->id == NULL){
+            return NULL;
+        }
     }
-    file->id = memory_pool_alloc(memory_pool, (sizeof(char)*id_length));
-    if(file->id == NULL){
-        return NULL;
-    }
+
     file->id = strcpy(file->id, id);
     file->sn = sn;
     file->dir_sn = parent_dir_sn;
@@ -90,7 +99,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
 
 
     if(isMerged){ //Allocate Hash Table For Merged Files
-        file->base_objects_hash_merged = ht_create(ht_size , memory_pool);
+        file->base_objects_hash_merged = ht_create(ht_size , NULL, memory_pool_mf, true);
         if(file->base_objects_hash_merged == NULL){
             return NULL;
         }
