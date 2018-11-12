@@ -4,11 +4,24 @@
 
 
 #include "memory_pool.h"
+// Creates the struct of a Memory Pool that contains 4 values
+void* memory_pool_init(PMemory_pool pool, bool isMerged){
+    pool = memset(pool, 0, sizeof(Memory_pool));
+    int arr_size = 0;
+    if(isMerged) {
+        arr_size = POOL_INITIAL_SIZE_MF;
+    } else {
+        arr_size = POOL_INITIAL_SIZE;
+    }
+    pool->arr_size = arr_size;
+    pool->arr = calloc(1 , arr_size*sizeof(uint32_t)); //Allocating new pool node
+    return pool;
+}
 
 // Creates the struct of a Memory Pool that contains 4 values
-void* memory_pool_init(PMemory_pool pool){
-    return memset(pool, 0, sizeof(Memory_pool));
-}
+//void* memory_pool_init(PMemory_pool pool){
+//    return memset(pool, 0, sizeof(Memory_pool));
+//}
 
 void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
     void* res;
@@ -33,6 +46,7 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
      * allocate a new pool node */
     if (POOL_INITIAL_SIZE <= (pool->next_free_index + size_of_uint32_to_alloc)){
         pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool)); //Allocating new pool node
+        pool_to_alloc_from->arr = calloc(1 , (pool_to_alloc_from->arr_size)*sizeof(uint32_t)); //Allocating new pool node
 
         if (!pool_to_alloc_from->next_pool){
             return NULL;
@@ -58,6 +72,7 @@ void memory_pool_destroy(PMemory_pool pool)
     /* Iterate over all pool nodes and free them */
     while (pool_to_free){
         next_pool = pool_to_free->next_pool;
+        free(pool_to_free->arr);
         free(pool_to_free);
         pool_to_free = next_pool;
     }

@@ -10,7 +10,7 @@
 int main(int argc , char** argv){
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
-    memory_pool_init(mem_pool);
+    memory_pool_init(mem_pool, false);
 
     char dedup_type[2];
     dedup_type[1] = '\0';

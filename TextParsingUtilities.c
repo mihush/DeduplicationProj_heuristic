@@ -344,7 +344,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             if(merged_file_needed == true){ //Create Merged File - because directory has file somewhere down the tree
                 //create new merged file and save it to output_files_array
                 merged_file_mem_pool = calloc(1 , sizeof(Memory_pool));
-                memory_pool_init(merged_file_mem_pool);
+                memory_pool_init(merged_file_mem_pool, true);
                 current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
                                                        num_base_object , 0 , true , merged_file_ht_size , merged_file_mem_pool);
                 if(current_dir->merged_file == NULL){

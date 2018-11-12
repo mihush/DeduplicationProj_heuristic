@@ -10,24 +10,36 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define POOL_INITIAL_SIZE 8192*8192
+#define POOL_INITIAL_SIZE_MF 1024*1024
 
 typedef struct memory_pool_t
 {
     uint32_t next_free_index; //index inside the current pool
     uint32_t next_free_pool_index; //index inside next pool that is free
-    uint32_t arr[POOL_INITIAL_SIZE]; // array
+    uint32_t *arr; // array
+    int arr_size; // array of size - configured depends on MF or not
     struct memory_pool_t* next_pool; //pointer to the next allocated pool
     struct memory_pool_t* next_free_pool_ptr; //pointer to the next allocated pool
 }Memory_pool, *PMemory_pool;
+
+//typedef struct memory_pool_t
+//{
+//    uint32_t next_free_index; //index inside the current pool
+//    uint32_t next_free_pool_index; //index inside next pool that is free
+//    uint32_t arr[POOL_INITIAL_SIZE]; // array
+//    struct memory_pool_t* next_pool; //pointer to the next allocated pool
+//    struct memory_pool_t* next_free_pool_ptr; //pointer to the next allocated pool
+//}Memory_pool, *PMemory_pool;
 
 /*
 	@Function:	memory_pool_init
 	@Params:	pool -	Pointer to the pool struct to initialize.
 	@Desc:		Pool struct will be initialized, allocated and the memory would be set to 0.
 */
-void* memory_pool_init(PMemory_pool pool);
+void* memory_pool_init(PMemory_pool pool, bool isMerged);
 
 
 /*
