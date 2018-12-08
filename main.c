@@ -23,7 +23,7 @@ int main(int argc , char** argv){
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_base_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, base_objects_cnt = 0;
 
-    unsigned long *files_at_depth = malloc(sizeof(unsigned long)*(goal_depth +1));
+    unsigned long *files_at_depth = memory_pool_alloc(mem_pool , (sizeof(unsigned long)*(goal_depth +1)));
     for (int i = 0; i < (goal_depth + 1); i++) {
         files_at_depth[i] = 0;
     }
@@ -216,8 +216,8 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[8];
@@ -405,12 +405,14 @@ int main(int argc , char** argv){
     fclose(output_logical_files_file);
     fclose(output_merged_files_file);
 
-    free(files_at_depth);
+
     //free output file names strings
     free(output_file_name);
     free(output_dirs_file_name);
     free(output_base_objects_file_name);
     free(output_logical_files_file_name);
+    //free(files_at_depth);
+
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);

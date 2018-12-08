@@ -42,8 +42,7 @@ unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_ob
     return ht_size;
 }
 
-File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool,
-                  Base_Object* base_objects_arr , unsigned int ht_size){
+File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_Object* base_objects_arr , unsigned int ht_size){
     File file = NULL;
     char* file_id;
     unsigned long file_sn = 0;

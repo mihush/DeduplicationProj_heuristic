@@ -89,8 +89,7 @@ Entry ht_newpair(char *key , unsigned int data , PMemory_pool mem_pool, PMemory_
     return newpair;
 }
 
-Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data,
-        PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged) {
+Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data, PMemory_pool mem_pool, PMemory_pool_mf mem_pool_mf, bool isMerged) {
     Entry newpair = NULL;
     Entry next = NULL;
     Entry last = NULL;

@@ -65,8 +65,8 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
                  unsigned int num_base_object, unsigned int size , bool isMerged ,
                  unsigned int ht_size , PMemory_pool memory_pool, PMemory_pool_mf memory_pool_mf){
     File file = NULL;
-
     int id_length = 0;
+
     if(isMerged){
         file = memory_pool_mf_alloc(memory_pool_mf, (sizeof(*file)));
         if(file == NULL){
@@ -118,6 +118,14 @@ void print_file_to_csv(File file, char* output_line , FILE* csv_output_file){
     char temp[100];
     int output_line_len = 0;
     Entry pair = NULL;
+    if(file->sn == 69761 || file->sn == 86007){
+        printf("--------------------------------\n");
+        printf("%lu\n" , file->sn);
+        printf("%s\n" , file->id);
+        printf("%lu\n" , file->dir_sn);
+        printf("%lu\n" , file->base_object_arr_idx);
+        printf("--------------------------------\n");
+    }
 
     sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
     output_line_len = (int)strlen(output_line);
