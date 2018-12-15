@@ -255,10 +255,11 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       unsigned int merged_file_ht_size , int* original_depth , int* max_mf_mempool_cnt,PMemory_pool memory_pool){
+                       unsigned int merged_file_ht_size , int* original_depth , int* max_mf_mempool_cnt ,
+                       PMemory_pool_mf merged_file_mem_pool ,PMemory_pool memory_pool){
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
-    PMemory_pool_mf merged_file_mem_pool = NULL;
+    //PMemory_pool_mf merged_file_mem_pool = NULL;
     bool merged_file_needed;
     if(current_dir == NULL){
         return;
@@ -322,7 +323,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             update_dir_values(files_output_result , output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth, dirs_array, num_dirs,
                               files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array, output_dirs_idx,
-                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt , memory_pool);
+                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt ,
+                              merged_file_mem_pool ,memory_pool);
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
@@ -332,8 +334,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
 
             if(merged_file_needed == true){ //Create Merged File - because directory has file somewhere down the tree
                 //create new merged file and save it to output_files_array
-                merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
-                memory_pool_mf_init(merged_file_mem_pool);
+                //merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
+                //memory_pool_mf_init(merged_file_mem_pool);
                 current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
                                                        num_base_object , 0 , true , merged_file_ht_size , NULL, merged_file_mem_pool);
                 if(current_dir->merged_file == NULL){
@@ -372,7 +374,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             update_dir_values(files_output_result , dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
-                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt , memory_pool);
+                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt ,
+                              merged_file_mem_pool ,memory_pool);
         }
         //DELETE Merged File and Print it to Output
         if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){
@@ -396,6 +399,11 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
                                      Dir* output_dirs_array , unsigned long* output_dirs_idx ,
                                      unsigned int merged_file_ht_size , int* original_depth ,int* max_mf_mempool_cnt, PMemory_pool memory_pool){
 
+    //Allocate Memory Pool for Merged Files
+    PMemory_pool_mf merged_file_mem_pool = NULL;
+    merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
+    memory_pool_mf_init(merged_file_mem_pool);
+
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
         (roots_array[r])->depth = 0;
@@ -413,8 +421,11 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
         update_dir_values(files_output_result, roots_array[r] , goal_depth, dirs_array, num_dirs, files_array, num_files,
                           base_object_array, num_base_object, output_files_array , output_files_idx,
                           output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , original_depth ,
-                          max_mf_mempool_cnt , memory_pool);
+                          max_mf_mempool_cnt , merged_file_mem_pool , memory_pool);
     }
+
+    memory_pool_mf_destroy(merged_file_mem_pool);
+    free(merged_file_mem_pool);
 }
 
 void check_dir_has_child_files(Dir current_dir , Dir* dirs_array , bool* merged_file_needed){
