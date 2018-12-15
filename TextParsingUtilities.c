@@ -334,8 +334,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
 
             if(merged_file_needed == true){ //Create Merged File - because directory has file somewhere down the tree
                 //create new merged file and save it to output_files_array
-                //merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
-                //memory_pool_mf_init(merged_file_mem_pool);
+//                merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
+//                memory_pool_mf_init(merged_file_mem_pool);
                 current_dir->merged_file = file_create(*output_files_idx , "Sarit_Hadad_12345678912345678123456789", current_dir->sn ,
                                                        num_base_object , 0 , true , merged_file_ht_size , NULL, merged_file_mem_pool);
                 if(current_dir->merged_file == NULL){
@@ -408,7 +408,7 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
         //Set each roots depth to be 0
         (roots_array[r])->depth = 0;
 
-        // Add root to output_dirs_array - update the dir_sn from a global param
+        // Add root to output_dirs_array - update the dir_sn from a global paramvm
         output_dirs_array[*output_dirs_idx] = roots_array[r];
         (roots_array[r])->sn = *output_dirs_idx;
         (roots_array[r])->parent_dir_sn = *output_dirs_idx;

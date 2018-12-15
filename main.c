@@ -215,11 +215,11 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
+//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
-    char depth_to_output[8];
+    char depth_to_output[10];
     sprintf(depth_to_output, "_depth%d", goal_depth);
 
     strncpy(output_file_name , input_file_name , 2);
@@ -232,7 +232,7 @@ int main(int argc , char** argv){
         dedup_type[0] = 'F';
     }
 
-    //Read the Output type
+    //Read the Output type0
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(NULL , sep_file_name); // Read heuristic/dedup
     if(is_input_file_heuristic == true){ //The input was heuristic output
@@ -266,7 +266,7 @@ int main(int argc , char** argv){
         }
     }
 
-    //At this point output_file_name containc the output file that will initially contain the header only
+    //At this point output_file_name contains the output file that will initially contain the header only
     //Directories Output File Name
     char* output_dirs_file_name = calloc(275 , sizeof(char));
     strcpy(output_dirs_file_name , output_file_name);

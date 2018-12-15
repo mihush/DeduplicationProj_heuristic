@@ -118,14 +118,6 @@ void print_file_to_csv(File file, char* output_line , FILE* csv_output_file){
     char temp[100];
     int output_line_len = 0;
     Entry pair = NULL;
-//    if(file->sn == 69761 || file->sn == 86007){
-//        printf("--------------------------------\n");
-//        printf("%lu\n" , file->sn);
-//        printf("%s\n" , file->id);
-//        printf("%lu\n" , file->dir_sn);
-//        printf("%lu\n" , file->base_object_arr_idx);
-//        printf("--------------------------------\n");
-//    }
 
     sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
     output_line_len = (int)strlen(output_line);
