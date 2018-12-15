@@ -102,8 +102,7 @@ void update_dir_values(FILE *files_output_result, Dir current_dir , int goal_dep
                        File* files_array,  unsigned long num_files, Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
-                       int* original_depth , PMemory_pool memory_pool);
+                       unsigned int merged_file_ht_size , int* original_depth , int* max_mf_mempool_cnt,PMemory_pool memory_pool);
 
 /*
  *  calculate_depth_and_merge_files - ...
@@ -130,8 +129,7 @@ void calculate_depth_and_merge_files(FILE* files_output_result, Dir* roots_array
                                      Base_Object* base_object_array, unsigned long num_base_object,
                                      int goal_depth, File* output_files_array , unsigned long* output_files_idx ,
                                      Dir* output_dirs_array , unsigned long* output_dirs_idx ,
-                                     unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
-                                     int* original_depth , PMemory_pool memory_pool);
+                                     unsigned int merged_file_ht_size , int* original_depth ,int* max_mf_mempool_cnt, PMemory_pool memory_pool);
 /*
  *
  *

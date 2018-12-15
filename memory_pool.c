@@ -1,25 +1,12 @@
 //
 // Created by Michal Amsterdam on 01/07/2018.
 //
-
-
 #include "memory_pool.h"
-// Creates the struct of a Memory Pool that contains 4 values
-//void* memory_pool_init(PMemory_pool pool){
-//    pool = memset(pool, 0, sizeof(Memory_pool));
-//    int arr_size = 0;
-//    if(isMerged) {
-//        arr_size = POOL_INITIAL_SIZE_MF;
-//    } else {
-//        arr_size = POOL_INITIAL_SIZE;
-//    }
-//    pool->arr_size = arr_size;
-//    pool->arr = calloc(1 , (arr_size)*sizeof(uint32_t)); //memset(pool->arr, 0, (sizeof(uint32_t))*arr_size);
-//    return pool;
-//}
 
 //Creates the struct of a Memory Pool that contains 4 values
 void* memory_pool_init(PMemory_pool pool){
+    pool->mempool_cnt = 1;
+    printf(" -->  REGULAR Memory Pool Allocated NO.%d \n" , pool->mempool_cnt);
     return memset(pool, 0, sizeof(Memory_pool));
 }
 
@@ -46,8 +33,10 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
      * allocate a new pool node */
     if (POOL_INITIAL_SIZE <= (pool->next_free_index + size_of_uint32_to_alloc)){
         pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool)); //Allocating new pool node
-
+        (pool->mempool_cnt)++;
+        printf(" -->  REGULAR Memory Pool Allocated NO.%d \n" , pool->mempool_cnt);
         if (!pool_to_alloc_from->next_pool){
+            printf("--> Error Allocating REGULAR Memory Pool\n");
             return NULL;
         }
         pool->next_free_index = 0;
@@ -63,8 +52,7 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
     return res;
 }
 
-void memory_pool_destroy(PMemory_pool pool)
-{
+void memory_pool_destroy(PMemory_pool pool) {
     PMemory_pool next_pool = NULL;
     PMemory_pool pool_to_free = pool->next_pool;
 
@@ -78,11 +66,10 @@ void memory_pool_destroy(PMemory_pool pool)
     return ;
 }
 
-
-
 //----------- Memory Pool For Merged File GODDD -----------//
 //Creates the struct of a Memory Pool that contains 4 values
 void* memory_pool_mf_init(PMemory_pool_mf pool){
+    pool->mempool_cnt = 1;
     return memset(pool, 0, sizeof(Memory_pool_mf));
 }
 
@@ -109,8 +96,10 @@ void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size){
      * allocate a new pool node */
     if (POOL_INITIAL_SIZE_MF <= (pool->next_free_index + size_of_uint32_to_alloc)){
         pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool_mf)); //Allocating new pool node
-
+        (pool->mempool_cnt)++;
+        printf(" -->  MF Memory Pool Allocated NO.%d \n" , pool->mempool_cnt);
         if (!pool_to_alloc_from->next_pool){
+            printf("--> Error Allocating MF Memory Pool\n");
             return NULL;
         }
         pool->next_free_index = 0;
@@ -126,8 +115,7 @@ void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size){
     return res;
 }
 
-void memory_pool_mf_destroy(PMemory_pool_mf pool)
-{
+void memory_pool_mf_destroy(PMemory_pool_mf pool) {
     PMemory_pool_mf next_pool = NULL;
     PMemory_pool_mf pool_to_free = pool->next_pool;
 
@@ -137,6 +125,24 @@ void memory_pool_mf_destroy(PMemory_pool_mf pool)
         free(pool_to_free);
         pool_to_free = next_pool;
     }
+
+    return ;
+}
+
+void memory_pool_mf_reset(PMemory_pool_mf pool) {
+    PMemory_pool_mf next_pool = NULL;
+    PMemory_pool_mf pool_to_free = pool->next_pool;
+
+    for(int i = 0 ; i < pool->mempool_cnt ; i++){
+        if(i == 0){
+            memset(pool, 0, sizeof(Memory_pool_mf));
+        } else {
+            next_pool = pool_to_free->next_pool;
+            free(pool_to_free);
+            pool_to_free = next_pool;
+        }
+    }
+    pool->mempool_cnt = 1;
 
     return ;
 }

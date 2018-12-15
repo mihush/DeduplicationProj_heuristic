@@ -255,8 +255,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
                        Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
-                       unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
-                       int* original_depth , PMemory_pool memory_pool){
+                       unsigned int merged_file_ht_size , int* original_depth , int* max_mf_mempool_cnt,PMemory_pool memory_pool){
     int current_depth = 0;
     unsigned long new_sub_dir_sn = 0;
     PMemory_pool_mf merged_file_mem_pool = NULL;
@@ -272,18 +271,10 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
         current_depth = current_dir->depth;
     }
 
-    //Calculate Original Dircetory Hierarchy Depth
+    //Calculate Original Directory Hierarchy Depth
     //TODO Here for debugging - remove later
     if(current_depth > *original_depth){
         *original_depth = current_depth;
-    }
-
-    //Calculate how many file at each depth until goal depth
-    //TODO Here for debugging - remove later
-    if(current_depth < goal_depth){
-        files_at_depth[current_depth] += (current_dir->num_of_files);
-    } else {
-        files_at_depth[goal_depth] += (current_dir->num_of_files);
     }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
@@ -296,7 +287,6 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             }
             else { // current_depth > (goal_depth -1)
                 // Add all the file blocks to the merged file - meaning current_dir->mergedFile
-                //assert(current_dir->merged_file);
                 for(int f = 0 ; f < current_dir->num_of_files  ; f++) {
                     //merge all blocks of files_array[(current_dir->files_array)[f]] to current_dir->merged_file
                     add_base_object_to_merge_file(current_dir->merged_file, files_array[(current_dir->files_array)[f]], memory_pool , base_object_array);
@@ -332,7 +322,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             update_dir_values(files_output_result , output_dirs_array[(current_dir->dirs_array)[d]] ,goal_depth, dirs_array, num_dirs,
                               files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array, output_dirs_idx,
-                              current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
+                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt , memory_pool);
         }
     } else {//current_depth >= (goal_depth - 1) : we have Reached the desired depth
         if (current_depth == (goal_depth - 1)){
@@ -382,15 +372,17 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
             update_dir_values(files_output_result , dirs_array[(current_dir->dirs_array)[j]] ,goal_depth,
                               dirs_array, num_dirs, files_array, num_files, base_object_array, num_base_object,
                               output_files_array, output_files_idx, output_dirs_array , output_dirs_idx,
-                              current_depth, merged_file_ht_size , files_at_depth , original_depth , memory_pool);
+                              current_depth, merged_file_ht_size , original_depth , max_mf_mempool_cnt , memory_pool);
         }
         //DELETE Merged File and Print it to Output
         if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){
             char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
             unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
             print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);
-            memory_pool_mf_destroy(merged_file_mem_pool);
-            free(merged_file_mem_pool);
+            if(merged_file_mem_pool->mempool_cnt > (*max_mf_mempool_cnt)){
+                (*max_mf_mempool_cnt) = merged_file_mem_pool->mempool_cnt;
+            }
+            memory_pool_mf_reset(merged_file_mem_pool);
             output_files_array[mf_to_remove_SN] = NULL;
             free(temp_output_line);
         }
@@ -402,8 +394,7 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
                                      Base_Object * base_object_array, unsigned long num_base_object, int goal_depth,
                                      File* output_files_array , unsigned long* output_files_idx ,
                                      Dir* output_dirs_array , unsigned long* output_dirs_idx ,
-                                     unsigned int merged_file_ht_size , unsigned long *files_at_depth ,
-                                     int* original_depth , PMemory_pool memory_pool){
+                                     unsigned int merged_file_ht_size , int* original_depth ,int* max_mf_mempool_cnt, PMemory_pool memory_pool){
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
@@ -419,14 +410,10 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
         (roots_array[r]->upd_subdirs_array)[roots_array[r]->upd_subdirs_array_idx] = roots_array[r]->sn;
         (roots_array[r]->upd_subdirs_array_idx)++;
 
-        //Calculate how many file at each depth until goal depth
-        //TODO Here for debugging - remove later
-        files_at_depth[0] += (roots_array[r]->num_of_files);
-
         update_dir_values(files_output_result, roots_array[r] , goal_depth, dirs_array, num_dirs, files_array, num_files,
                           base_object_array, num_base_object, output_files_array , output_files_idx,
-                          output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , files_at_depth,
-                          original_depth , memory_pool);
+                          output_dirs_array , output_dirs_idx, 0, merged_file_ht_size , original_depth ,
+                          max_mf_mempool_cnt , memory_pool);
     }
 }
 

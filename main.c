@@ -15,18 +15,17 @@ int main(int argc , char** argv){
     char dedup_type[2];
     dedup_type[1] = '\0';
     int goal_depth = 0;
+
+    //Debugging parameters
     int original_depth = 0;
+    int max_mf_mempool_cnt = 0;
+
 
     char* input_file_path;
     char* line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
     int num_roots = 0;
     unsigned long num_file_objects = 0 , num_dir_objects = 0 , num_base_objects = 0;
     unsigned long file_objects_cnt = 0 , dir_objects_cnt = 0 , root_objects_cnt = 0, base_objects_cnt = 0;
-
-    unsigned long *files_at_depth = memory_pool_alloc(mem_pool , (sizeof(unsigned long)*(goal_depth +1)));
-    for (int i = 0; i < (goal_depth + 1); i++) {
-        files_at_depth[i] = 0;
-    }
 
     File* files_array = NULL;
     Dir* dirs_array = NULL;
@@ -37,7 +36,7 @@ int main(int argc , char** argv){
     char* input_type;
     char sep[2] = ":";
 
-    //We Will Determine the hastable size of the merged file blocks based on the total amount of blocks in the system
+    //We Will Determine the hash table size of the merged file blocks based on the total amount of blocks in the system
     int merged_file_ht_size = 0;
     bool is_input_file_heuristic = false;
 
@@ -273,28 +272,24 @@ int main(int argc , char** argv){
     strcpy(output_dirs_file_name , output_file_name);
     output_dirs_file_name[strlen(output_dirs_file_name) - 4] = '\0';
     strcat(output_dirs_file_name , "_DIR.csv");
-    printf("-->%s\n" , output_dirs_file_name);
 
     //Base Objects Output File Name
     char* output_base_objects_file_name = calloc(275 , sizeof(char));
     strcpy(output_base_objects_file_name , output_file_name);
     output_base_objects_file_name[strlen(output_base_objects_file_name) - 4] = '\0';
     strcat(output_base_objects_file_name , "_BO.csv");
-    printf("-->%s\n" , output_base_objects_file_name);
 
     //Logical Files Output File Name
     char* output_logical_files_file_name = calloc(275 , sizeof(char));
     strcpy(output_logical_files_file_name , output_file_name);
     output_logical_files_file_name[strlen(output_logical_files_file_name) - 4] = '\0';
     strcat(output_logical_files_file_name , "_LF.csv");
-    printf("-->%s\n" , output_logical_files_file_name);
 
     //Merged  Files Output File Name
     char* output_merged_files_file_name = calloc(275 , sizeof(char));
     strcpy(output_merged_files_file_name , output_file_name);
     output_merged_files_file_name[strlen(output_merged_files_file_name) - 4] = '\0';
     strcat(output_merged_files_file_name , "_MF.csv");
-    printf("-->%s\n" , output_merged_files_file_name);
 
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -327,7 +322,7 @@ int main(int argc , char** argv){
     calculate_depth_and_merge_files(output_merged_files_file , roots_array, num_roots, dirs_array, num_dir_objects,
                                     files_array, num_file_objects, base_objects_arr, num_base_objects, goal_depth,
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx ,
-                                    merged_file_ht_size , files_at_depth , &original_depth , mem_pool);
+                                    merged_file_ht_size , &original_depth , &max_mf_mempool_cnt , mem_pool);
     time(&process_time_end);
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
@@ -388,11 +383,8 @@ int main(int argc , char** argv){
     fprintf(debugging_params_file ,"# FilesBelowTargetDepth :%lu\n",(num_file_objects - output_files_idx));
     fprintf(debugging_params_file ,"# TimeToLoad :%f\n",diff_load);
     fprintf(debugging_params_file ,"# TimeToProcess :%f\n",diff_process);
-    fprintf(debugging_params_file ,"# FilesAtDepth : ");
-    for (int i = 0; i < goal_depth + 1; i++) {
-        fprintf(debugging_params_file ,"%lu," , files_at_depth[i]);
-    }
-    fprintf(debugging_params_file ,"\n");
+    fprintf(debugging_params_file ,"# RegularMempoolCount :%d\n",mem_pool->mempool_cnt);
+    fprintf(debugging_params_file ,"# MaxMFMempoolCount :%d\n",max_mf_mempool_cnt);
     fclose(debugging_params_file);
 
 
@@ -405,14 +397,11 @@ int main(int argc , char** argv){
     fclose(output_logical_files_file);
     fclose(output_merged_files_file);
 
-
     //free output file names strings
     free(output_file_name);
     free(output_dirs_file_name);
     free(output_base_objects_file_name);
     free(output_logical_files_file_name);
-    //free(files_at_depth);
-
 
     //freeing all allocations
     memory_pool_destroy(mem_pool);

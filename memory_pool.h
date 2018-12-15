@@ -15,32 +15,22 @@
 #define POOL_INITIAL_SIZE 8192*8192
 #define POOL_INITIAL_SIZE_MF 1024*1024
 
-//typedef struct memory_pool_t
-//{
-//    uint32_t next_free_index; //index inside the current pool
-//    uint32_t next_free_pool_index; //index inside next pool that is free
-//    uint32_t *arr; // array
-//    int arr_size; // array of size - configured depends on MF or not
-//    struct memory_pool_t* next_pool; //pointer to the next allocated pool
-//    struct memory_pool_t* next_free_pool_ptr; //pointer to the next allocated pool
-//}Memory_pool, *PMemory_pool;
-
-typedef struct memory_pool_t
-{
+typedef struct memory_pool_t {
     uint32_t next_free_index; //index inside the current pool
     uint32_t next_free_pool_index; //index inside next pool that is free
     uint32_t arr[POOL_INITIAL_SIZE]; // array
     struct memory_pool_t* next_pool; //pointer to the next allocated pool
     struct memory_pool_t* next_free_pool_ptr; //pointer to the next allocated pool
+    int mempool_cnt;
 }Memory_pool, *PMemory_pool;
 
-typedef struct memory_pool_mf_t
-{
+typedef struct memory_pool_mf_t {
     uint32_t next_free_index; //index inside the current pool
     uint32_t next_free_pool_index; //index inside next pool that is free
     uint32_t arr[POOL_INITIAL_SIZE_MF]; // array
     struct memory_pool_mf_t* next_pool; //pointer to the next allocated pool
     struct memory_pool_mf_t* next_free_pool_ptr; //pointer to the next allocated pool
+    int mempool_cnt;
 }Memory_pool_mf, *PMemory_pool_mf;
 
 
@@ -78,6 +68,6 @@ void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size);
 
 void memory_pool_mf_destroy(PMemory_pool_mf pool);
 
-
+void memory_pool_mf_reset(PMemory_pool_mf pool);
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_MEMORY_POOL_H
