@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #define POOL_INITIAL_SIZE 8192*8192
-#define POOL_INITIAL_SIZE_MF 1024*1024
+#define POOL_INITIAL_SIZE_MF 2048*2048
 
 typedef struct memory_pool_t {
     uint32_t next_free_index; //index inside the current pool

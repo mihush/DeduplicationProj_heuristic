@@ -30,7 +30,7 @@ int countRootsInInput(char* line);
  * @num_base_objects - The amount of the base objects in the current input file based on
  *                     which the hashtable size will be determined
  */
-unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type , int goal_depth);
+unsigned int determine_Merged_File_Base_Object_HT_Size(unsigned long num_base_objects , char dedup_type );
 
 /*
  * readFileLine - Parses the input line into a file object to be saved
@@ -65,18 +65,13 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool);
  *  @merged_file    - ...
  *  @file_to_insert - ...
  */
-void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool , Base_Object* base_object_array);
+//void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool , Base_Object* base_object_array);
+void add_base_object_to_merge_file(File merged_file, File* files_array , unsigned long file_to_insert_sn,
+                                   PMemory_pool memory_pool , Base_Object* base_object_array);
 
-/*
- *  update_outputArray_and_sn - ...
- *
- *  @current_dir    - ...
- *  @files_array    - ...
- *  @output_files_array - ...
- *  @output_files_array - ...
- */
-void update_outputArray_and_sn(Dir current_dir , File* files_array , File* output_files_array ,
-                               unsigned long* output_files_idx);
+//void move_files_to_output_array(Dir current_dir , File* files_array , File* output_files_array , unsigned long* output_files_idx, PMemory_pool memory_pool);
+void move_files_to_output_array(Dir* dirs_array , unsigned long dir_sn , File* files_array , File* output_files_array ,
+                                unsigned long* output_files_idx, PMemory_pool memory_pool);
 
 /*
  * RECURSIVE !!!!
@@ -98,12 +93,16 @@ void update_outputArray_and_sn(Dir current_dir , File* files_array , File* outpu
  * @output_dirs_idx      - ...
  * @dedup_type           - ...
  */
-void update_dir_values(FILE *files_output_result, Dir current_dir , int goal_depth, Dir* dirs_array, unsigned long num_dirs,
+
+void update_dir_values(FILE *files_output_result, unsigned long  current_dir_sn , int goal_depth, Dir* dirs_array, unsigned long num_dirs,
                        File* files_array,  unsigned long num_files, Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
                        unsigned int merged_file_ht_size , int* original_depth , int* max_mf_mempool_cnt,
                        PMemory_pool_mf merged_file_mem_pool ,PMemory_pool memory_pool);
+
+
+
 
 /*
  *  calculate_depth_and_merge_files - ...

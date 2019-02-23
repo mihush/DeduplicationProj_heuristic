@@ -8,6 +8,7 @@
 Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_object_size, PMemory_pool memory_pool){
     Base_Object base_object = memory_pool_alloc(memory_pool , sizeof(*base_object));
     if(base_object == NULL){ //Check memory allocation was successful
+        printf("--> (1) NULL BASE OBJECT !!!!!!!!!!!!!!!!!!!!!!!!\n");
         return NULL;
     }
 
@@ -18,12 +19,15 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
     base_object->output_files_ht = NULL;
     base_object->shared_by_num_files = 0;
     base_object->output_updated_idx = 0;
+
+
     return base_object;
 }
 
 Base_Object base_object_update(Base_Object base_object, char *base_object_id,
                                unsigned int shared_by_num_files, PMemory_pool memory_pool){
     if(base_object == NULL){ //Check memory allocation was successful
+        printf("--> (2) NULL BASE OBJECT !!!!!!!!!!!!!!!!!!!!!!!!\n");
         return NULL;
     }
 
@@ -70,22 +74,26 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     if(isMerged){
         file = memory_pool_mf_alloc(memory_pool_mf, (sizeof(*file)));
         if(file == NULL){
+            printf("--> (1) NULL FILE !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
         file->mem_pool_mf = memory_pool_mf;
         id_length = MERGED_FILE_ID;
         file->id = memory_pool_mf_alloc(memory_pool_mf, (sizeof(char)*id_length));
         if(file->id == NULL){
+            printf("--> (1) NULL FILE ID !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
     } else {
         file = memory_pool_alloc(memory_pool , (sizeof(*file)));
         if(file == NULL){
+            printf("--> (2) NULL FILE !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
         id_length = (int)(strlen(id) + 1);
         file->id = memory_pool_alloc(memory_pool, (sizeof(char)*id_length));
         if(file->id == NULL){
+            printf("--> (2) NULL FILE ID !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
     }
@@ -101,11 +109,13 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     if(isMerged){ //Allocate Hash Table For Merged Files
         file->base_objects_hash_merged = ht_create(ht_size , NULL, memory_pool_mf, true);
         if(file->base_objects_hash_merged == NULL){
+            printf("--> (1) NULL FILE HASHTABLE !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
     } else { //Allocate Arrays For Regular Files
         file->base_objects_arr = memory_pool_alloc(memory_pool , ((sizeof(Base_Object))*num_base_object));
         if(file->base_objects_arr == NULL){
+            printf("--> (2) NULL FILE HASHTABLE !!!!!!!!!!!!!!!!!!!!!!!!\n");
             return NULL;
         }
     }
@@ -187,10 +197,18 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     if(dir->files_array== NULL){
         return NULL;
     }
+
     //Number of updated files can grow by at most 1 - addition of merged file
     dir->upd_files_array = memory_pool_alloc(memory_pool , (sizeof(unsigned long)*(num_of_files + 1)));
     if(dir->upd_files_array== NULL){
         return NULL;
+    }
+
+    if(dir_sn == 50123){
+        printf("Getting the Directory %lu...\n",dir_sn);
+        if(dir->files_array == NULL){
+            printf(" --> OOPS we have a problem :( \n");
+        }
     }
 
     //number of subdirectories can only stay the same or decrease
@@ -212,8 +230,11 @@ ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx){
     if(dir == NULL){
         return INVALID_INPUT;
     }
-    (dir->files_array)[idx] = file_sn;
 
+    (dir->files_array)[idx] = file_sn;
+    if(dir->sn == 50123){
+        printf("Inside add_file_sn_to_dir - adding %lu...\n",dir->sn , (dir->files_array)[idx]);
+    }
     return SUCCESS;
 }
 
