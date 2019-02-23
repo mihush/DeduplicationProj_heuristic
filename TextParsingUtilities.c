@@ -280,6 +280,9 @@ void update_dir_values(FILE *files_output_result , Dir current_dir , int goal_de
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
     if(current_dir->num_of_subdirs == 0){
+        if(current_dir->sn == 41962){
+            printf("Haaaaushhhh!!!!\n");
+        }
         if(current_dir->num_of_files == 0){
             return;
         } else { //There are still some files in the directory
