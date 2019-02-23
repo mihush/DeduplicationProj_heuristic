@@ -4,8 +4,8 @@
 
 #define  OUTPUT_TYPE_CHAR_LOC 15
 
-//3 boys /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/NB_inputs/P_dedup_002_002_4194304_D0_P0.csv 1
-//3 girls /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/inputs/P_dedup_002_002.csv
+//BOYS  : 3 containers /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/NB_inputs/P_dedup_002_002_4194304_D0_P0.csv 1
+//GIRLS : 3 chunks /Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic/inputs/P_dedup_002_002.csv
 
 int main(int argc , char** argv){
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
@@ -72,7 +72,7 @@ int main(int argc , char** argv){
     /* ------------------------------------------- Read Global Parameters ------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* -------------------------------- Read Parameter Values from Input file header -------------------------------- */
-    if(strcmp(input_type, "boys") == 0){ // Case of Boys input file (Nadav & Benny)
+    if(strcmp(input_type, "containers") == 0){ // Case of Boys input file (Nadav & Benny)
         //Get the number of files that were read - use the input file names line
         int k = 4;
         //Read three first rows uneeded from header
@@ -106,7 +106,7 @@ int main(int argc , char** argv){
             k--;
         }
 
-    } else if(strcmp(input_type, "girls") == 0){ // Case of OUR input file (Michal & Polina)
+    } else if(strcmp(input_type, "chunks") == 0){ // Case of OUR input file (Michal & Polina)
         //Read the Output type
         fgets(line , MAX_LINE_LEN , input_file);
         if(line[OUTPUT_TYPE_CHAR_LOC] == 'b'){
@@ -167,7 +167,7 @@ int main(int argc , char** argv){
     }
 
     //Determine Merged File HashTable Size
-    merged_file_ht_size = determine_Merged_File_Base_Object_HT_Size(num_base_objects , dedup_type[0] , goal_depth);
+    merged_file_ht_size = determine_Merged_File_Base_Object_HT_Size(num_base_objects , dedup_type[0]);
     printf("---> Merged File Hashtable size is: %d \n" , merged_file_ht_size);
     printf("---> Number of Base Objects  is: %lu \n" , num_base_objects);
     /* -------------------------------- Read Parameter Values from Input file header -------------------------------- */
