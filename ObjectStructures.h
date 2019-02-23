@@ -35,7 +35,6 @@ typedef enum{
  *            - shared_by_num_files -> number of files sharing this block
  *            - files_array -> array of file serial number that share the same physical file
  */
-//struct base_object_t{
 struct base_object_t{
     unsigned long sn; // running index
     char* id; // Hashed
