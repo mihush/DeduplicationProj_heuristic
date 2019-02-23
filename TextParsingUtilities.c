@@ -264,10 +264,6 @@ void update_dir_values(FILE *files_output_result , unsigned long  current_dir_sn
     unsigned long curr_dir_sn = current_dir->sn;
     bool merged_file_needed;
 
-    if(current_dir == NULL){
-        printf("ERROR - Got an Empty directory for recursion ...\n");
-        return;
-    }
     // Check if current_dir is a root directory or not
     if(curr_dir_sn == current_dir->parent_dir_sn){ //It's a ROOT
         current_depth = current_dir->depth; //supposed to be 0
@@ -276,7 +272,7 @@ void update_dir_values(FILE *files_output_result , unsigned long  current_dir_sn
         current_depth = current_dir->depth;
     }
 
-    //printf("******** Currently processing directory %lu  (dirs=%lu)(files=%lu) \n" , curr_dir_sn,current_dir->num_of_subdirs , current_dir->num_of_files);
+    printf("******** Currently processing directory %lu  (dirs=%lu)(files=%lu) \n" , current_dir->sn,current_dir->num_of_subdirs , current_dir->num_of_files);
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
     if(current_dir->num_of_subdirs == 0){
         if(current_dir->num_of_files != 0){  //There are still some files in the directory

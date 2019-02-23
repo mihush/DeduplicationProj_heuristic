@@ -215,8 +215,8 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[10];
