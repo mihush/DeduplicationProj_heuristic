@@ -215,8 +215,8 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
+//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[10];
@@ -228,11 +228,11 @@ int main(int argc , char** argv){
 
     tok = strtok(input_file_name , sep_file_name); // Read B/P
     // Case of input from Nadav&Benny need to relate as "file-level"
-    if(strcmp(tok, "P") == 0 && strcmp(input_type, "boys") == 0) {
+    if(strcmp(tok, "P") == 0 && strcmp(input_type, "containers") == 0) {
         dedup_type[0] = 'F';
     }
 
-    //Read the Output type0
+    //Read the Output type
     fgets(line , MAX_LINE_LEN , input_file);
     tok = strtok(NULL , sep_file_name); // Read heuristic/dedup
     if(is_input_file_heuristic == true){ //The input was heuristic output
@@ -245,7 +245,7 @@ int main(int argc , char** argv){
     tok = strtok(NULL , sep_file_name); // Read second srv index
     strcat(output_file_name , sep_file_name);
     strcat(output_file_name , tok);
-    if(strcmp(input_type, "boys") == 0) {
+    if(strcmp(input_type, "containers") == 0) {
         tok = strtok(NULL , sep_file_name); // Read file size
         strcat(output_file_name , sep_file_name);
         strcat(output_file_name , tok);
@@ -257,7 +257,7 @@ int main(int argc , char** argv){
         strcat(output_file_name , tok);
     }
 
-    if(strcmp(input_type, "boys") == 0){
+    if(strcmp(input_type, "containers") == 0){
         //Determine the Output type
         if(output_file_name[0] == 'B'){
             dedup_type[0] = 'B';
@@ -266,7 +266,7 @@ int main(int argc , char** argv){
         }
     }
 
-    //At this point output_file_name contains the output file that will initially contain the header only
+    //At this point output_file_name containc the output file that will initially contain the header only
     //Directories Output File Name
     char* output_dirs_file_name = calloc(275 , sizeof(char));
     strcpy(output_dirs_file_name , output_file_name);

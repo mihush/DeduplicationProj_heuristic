@@ -34,7 +34,7 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
     /* check that the pool has enough memory to allocate the requested size, if not,
      * allocate a new pool node */
     if (POOL_INITIAL_SIZE <= (pool->next_free_index + size_of_uint32_to_alloc)){
-        pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool));
+        pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool)); //Allocating new pool node
         (pool->mempool_cnt)++;
         if (!pool_to_alloc_from->next_pool){
             printf("--> Error Allocating REGULAR Memory Pool\n");

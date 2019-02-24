@@ -233,7 +233,7 @@ ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx){
 
     (dir->files_array)[idx] = file_sn;
     if(dir->sn == 50123){
-        printf("Inside add_file_sn_to_dir - adding %lu...\n",dir->sn , (dir->files_array)[idx]);
+        printf("Inside add_file_sn_to_dir - adding %lu...\n",dir->sn);
     }
     return SUCCESS;
 }
