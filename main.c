@@ -211,15 +211,18 @@ int main(int argc , char** argv){
         fgets(line , MAX_LINE_LEN , input_file);
     }
     time(&load_time_end);
+
+    Dir temp_dir = dirs_array[214];
+
     /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    char* input_file_name = (strrchr(input_file_path , '/') + 1);
+    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
-    char depth_to_output[10];
+    char depth_to_output[15];
     sprintf(depth_to_output, "_depth%d", goal_depth);
 
     strncpy(output_file_name , input_file_name , 2);
@@ -310,6 +313,7 @@ int main(int argc , char** argv){
     /* --------------------------------- Define Output Directories and Files arrays --------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
+
     // Create empty file to print temporally the output files into a csv file
     FILE* output_merged_files_file = fopen(output_merged_files_file_name , "w+");
     if(output_merged_files_file == NULL){

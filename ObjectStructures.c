@@ -204,13 +204,6 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
         return NULL;
     }
 
-    if(dir_sn == 50123){
-        printf("Getting the Directory %lu...\n",dir_sn);
-        if(dir->files_array == NULL){
-            printf(" --> OOPS we have a problem :( \n");
-        }
-    }
-
     //number of subdirectories can only stay the same or decrease
     dir->dirs_array = memory_pool_alloc(memory_pool , (sizeof(unsigned long)*num_of_sub_dirs));
     if(dir->dirs_array == NULL){
@@ -230,11 +223,8 @@ ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx){
     if(dir == NULL){
         return INVALID_INPUT;
     }
-
     (dir->files_array)[idx] = file_sn;
-    if(dir->sn == 50123){
-        printf("Inside add_file_sn_to_dir - adding %lu...\n",dir->sn);
-    }
+
     return SUCCESS;
 }
 

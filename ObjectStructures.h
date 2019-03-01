@@ -99,14 +99,14 @@ struct dir_t{
     unsigned long num_of_files;
     unsigned long* files_array; //array of serial numbers
     unsigned long* upd_files_array; //array of serial numbers
-    unsigned short upd_files_array_idx;
+    unsigned long upd_files_array_idx;
 
 
     //Sub-Dirs
     unsigned long num_of_subdirs;
     unsigned long* dirs_array; // array of serial numbers
     unsigned long* upd_subdirs_array; // array of serial numbers
-    unsigned short upd_subdirs_array_idx;
+    unsigned long upd_subdirs_array_idx;
 
     //For heuristic part
     File merged_file;

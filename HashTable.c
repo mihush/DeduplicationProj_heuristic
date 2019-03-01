@@ -96,7 +96,7 @@ Entry ht_set(HashTable ht, char *key , bool* object_exists, unsigned int data, P
 
     //Changed From long int to unsigned int - 16.10
     unsigned int hash_key = ht_hash(ht , key);
-    next = (ht->table)[hash_key];
+    next = ht->table[hash_key];
 
     // Advance until get the end of the list OR first matching key
     while( next != NULL && next->key != NULL && strcmp( key, next->key ) != 0 ) {

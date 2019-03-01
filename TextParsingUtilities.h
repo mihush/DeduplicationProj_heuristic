@@ -66,17 +66,8 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool);
  *  @file_to_insert - ...
  */
 void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool , Base_Object* base_object_array);
-
-/*
- *  update_outputArray_and_sn - ...
- *
- *  @current_dir    - ...
- *  @files_array    - ...
- *  @output_files_array - ...
- *  @output_files_array - ...
- */
-void update_outputArray_and_sn(Dir current_dir , File* files_array , File* output_files_array ,
-                               unsigned long* output_files_idx);
+void move_files_to_output_array(Dir current_dir , File* files_array , File* output_files_array ,
+                                unsigned long* output_files_idx, PMemory_pool memory_pool);
 
 /*
  * RECURSIVE !!!!
@@ -98,7 +89,7 @@ void update_outputArray_and_sn(Dir current_dir , File* files_array , File* outpu
  * @output_dirs_idx      - ...
  * @dedup_type           - ...
  */
-void update_dir_values(FILE *files_output_result, Dir current_dir, unsigned long dir_sn, int goal_depth, Dir* dirs_array, unsigned long num_dirs,
+void update_dir_values(FILE *files_output_result, Dir current_dir, int goal_depth, Dir* dirs_array, unsigned long num_dirs,
                        File* files_array,  unsigned long num_files, Base_Object* base_object_array, unsigned long num_base_object,
                        File* output_files_array , unsigned long* output_files_idx,
                        Dir* output_dirs_array , unsigned long* output_dirs_idx, int parent_depth,
@@ -166,7 +157,5 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
                                Base_Object* base_objects_arr , File file_obj);
 void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
                               Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files);
-void read_fragmented_line_Base_Object(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
-                                      Base_Object base_obj, unsigned int shared_by_num_files);
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H
