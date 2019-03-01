@@ -118,6 +118,7 @@ struct dir_t{
     unsigned long original_sn;
     char* id;
     unsigned long parent_dir_sn;
+    unsigned long original_parent_dir_sn;
     int depth;
 
     //Files in directory
@@ -249,7 +250,7 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
  */
 ErrorCode add_file_sn_to_dir(Dir dir, unsigned long file_sn, int idx);
 
-/* Adding sub_dir into the directory */
+
 /*
  * add_sub_dir_sn_to_dir - Adds a sub-directory to a directory object by saving its' ID in the sub-directories list of
  *                   the directory and updates the files counter of the folder

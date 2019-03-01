@@ -193,6 +193,7 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->upd_subdirs_array_idx = 0;
 
     dir->parent_dir_sn = parent_dir_sn;
+    dir->original_parent_dir_sn = parent_dir_sn;
 
     dir->files_array = memory_pool_alloc(memory_pool , (sizeof(unsigned long)*num_of_files));
     if(dir->files_array== NULL){

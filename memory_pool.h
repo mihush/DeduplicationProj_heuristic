@@ -64,10 +64,28 @@ void memory_pool_destroy(PMemory_pool pool);
 //Creates the struct of a Memory Pool that contains 4 values
 void* memory_pool_mf_init(PMemory_pool_mf pool);
 
+/*
+	@Function:	memory_pool_alloc
+	@Params:	pool -	Pointer to the pool from which to allocate memory from.
+				size -	The size (in bytes) of memory to allocate.
+	@Desc:		Memory of the requested size will be allocated from the pool,
+                if required the pool would be extended.
+				A pointer to the beginning of the memory would be place in the res pointer.
+*/
 void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size);
 
+/*
+	@Function:	memory_pool_destroy
+	@Params:	pool -	Pointer to the pool to destroy
+	@Desc:		All memory of the pool will be freed.
+*/
 void memory_pool_mf_destroy(PMemory_pool_mf pool);
 
+/*
+	@Function:	memory_pool_mf_reset
+	@Params:	pool -	Pointer to the pool to reset
+	@Desc:		All memory of the pool will be freed except the first one that will be realocated.
+*/
 void memory_pool_mf_reset(PMemory_pool_mf pool);
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_MEMORY_POOL_H

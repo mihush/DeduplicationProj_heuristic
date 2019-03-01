@@ -179,10 +179,8 @@ Dir readDirLine(FILE* input_file, char* line , PMemory_pool memory_pool){
 void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemory_pool memory_pool, Base_Object* base_object_array ){
     Base_Object base_object = NULL;
     unsigned long merged_file_sn = merged_file->sn;
+    assert(merged_file!= NULL); //make sure the merged file is not null pointer
 
-    if(merged_file == NULL){
-        printf("NULL Merge File !!!\n");
-    }
     for(int i = 0 ; i < file_to_insert->num_base_objects ; i++){ //Go over all base objects that belong the file to be merged
         bool object_exists = false, is_first_object = false;
         unsigned long base_object_sn = ((file_to_insert->base_objects_arr))[i]->sn; //the sn of the base object to be added
@@ -271,16 +269,13 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
     if(current_dir == NULL){
         return;
     }
-    // Check if current dir is a root directory or not
-    if(current_dir->sn == current_dir->parent_dir_sn){
+    // Check if current dir is a root directory or not (Based on original input)
+    if(current_dir->original_sn == current_dir->original_parent_dir_sn){
+        //1.3.19 - changed because needs to address the original_sn of the parent directory since
         current_depth = current_dir->depth;
     } else {
         current_dir->depth = (parent_depth + 1);
         current_depth = current_dir->depth;
-    }
-
-    if(current_dir->sn == 5){
-        printf("Stop 1\n");
     }
 
     // STOP CONDITIONS - stop if you have reached the leaves meaning a folder with no subdirs or files
@@ -472,7 +467,7 @@ void print_output_csv_header(FILE *results_file, char dedup_type, char *input_fi
         fprintf(results_file ,"# Output type: file-level\n");
     }
 
-    if(strcmp(input_type, "boys") == 0){
+    if(strcmp(input_type, "containers") == 0){
         fprintf(results_file ,"# Input files: \n");
     } else {
         fprintf(results_file ,"%s" , input_files_list);
@@ -501,12 +496,6 @@ unsigned int pow_aux(int x, int y){
     return res;
 }
 
-// Input file may contain extremely long lines -  over 22M chars
-// The Solution is to read each line in fragments of buffer with const size
-// For each line read the following conditions will be checked and treated accordingly:
-//          - Buffer Contains the Entire Line.
-//          - Line was cut in the middle : Either end with a comma or a sign or number or with a new line sign.
-// fgets will read until the first new line, maximum bytes to read at once, or EOF, which ever is sent first
 void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,PMemory_pool memory_pool,
                                Base_Object* base_objects_arr , File file_obj){
     bool line_end_with_comma = false; //if the line ends with a comma it means we are in the middle of a line.
