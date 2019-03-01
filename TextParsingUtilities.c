@@ -309,7 +309,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
 
         for(unsigned long d = 0 ; d < current_dir->num_of_subdirs ; d++){
             // root dir contains its own sn in the subdirs array
-            if((current_dir->dirs_array)[d] == current_dir->sn){
+            if((current_dir->dirs_array)[d] == current_dir->original_sn){
+                //1.3.19 - changed because needs to address the original_sn of the parent directory since
                 continue;
             }
 
@@ -373,7 +374,8 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
         //Update all directory depths : for each directory - call update_dir_values
         for(unsigned long j = 0 ; j < current_dir->num_of_subdirs ; j++){
             // In case this is a root directory - don't need to update
-            if((current_dir->dirs_array)[j] == current_dir->sn){
+            if((current_dir->dirs_array)[j] == current_dir->original_sn){
+                //1.3.19 - changed because needs to address the original_sn of the parent directory since
                 continue;
             }
 
