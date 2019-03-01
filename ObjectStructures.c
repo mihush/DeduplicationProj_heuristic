@@ -8,7 +8,7 @@
 Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_object_size, PMemory_pool memory_pool){
     Base_Object base_object = memory_pool_alloc(memory_pool , sizeof(*base_object));
     if(base_object == NULL){ //Check memory allocation was successful
-        printf("--> (1) NULL BASE OBJECT !!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("ERROR - NULL BASE OBJECT ... \n");
         return NULL;
     }
 
@@ -184,6 +184,7 @@ Dir dir_create(char* dir_id , unsigned long dir_sn, unsigned long parent_dir_sn 
     dir->id = strcpy(dir->id , dir_id);
 
     dir->sn = dir_sn;
+    dir->original_sn = dir_sn;
 
     dir->num_of_files = num_of_files;
     dir->num_of_subdirs = num_of_sub_dirs;

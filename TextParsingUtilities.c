@@ -307,18 +307,23 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
             move_files_to_output_array(current_dir, files_array, output_files_array, output_files_idx, memory_pool);
         }
 
-
         for(unsigned long d = 0 ; d < current_dir->num_of_subdirs ; d++){
             // root dir contains its own sn in the subdirs array
             if((current_dir->dirs_array)[d] == current_dir->sn){
                 continue;
             }
 
+            //Check if Directory has no files down the hierarchy and only empty directories - stop processing it
+            bool is_subdirs_empty = false;
+            check_dir_has_child_files(dirs_array[(current_dir->dirs_array)[d]] , dirs_array , &is_subdirs_empty);
             // Continue with recursion only if folder has files/directories
-            if((dirs_array[(current_dir->dirs_array)[d]]->num_of_files == 0) &&
-                    (dirs_array[(current_dir->dirs_array)[d]]->num_of_subdirs == 0)){
+            if(is_subdirs_empty == false){ // false - meaning there are no subfiles in the directory
                 continue;
             }
+//            if((dirs_array[(current_dir->dirs_array)[d]]->num_of_files == 0) &&
+//                    (dirs_array[(current_dir->dirs_array)[d]]->num_of_subdirs == 0)){
+//                continue;
+//            }
             // Add current subdir to output_dirs_array
             new_sub_dir_sn = *output_dirs_idx;
             output_dirs_array[*output_dirs_idx] = dirs_array[(current_dir->dirs_array)[d]];
@@ -326,7 +331,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
             output_dirs_array[*output_dirs_idx]->parent_dir_sn = current_dir->sn; // Update the sn of the subdir in the parent subdir array
             (*output_dirs_idx)++;
             (current_dir->upd_subdirs_array)[current_dir->upd_subdirs_array_idx] = new_sub_dir_sn; //Update parent directory with the subdirectories new sn
-            (current_dir->upd_subdirs_array_idx) = current_dir->upd_subdirs_array_idx + 1;// TODO - this changed from prev versions
+            (current_dir->upd_subdirs_array_idx) = current_dir->upd_subdirs_array_idx + 1;
 
             //For each directory - call update_dir_values
             update_dir_values(files_output_result , output_dirs_array[new_sub_dir_sn] ,goal_depth,
