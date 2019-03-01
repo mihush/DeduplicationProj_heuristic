@@ -320,10 +320,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
             if(is_subdirs_empty == false){ // false - meaning there are no subfiles in the directory
                 continue;
             }
-//            if((dirs_array[(current_dir->dirs_array)[d]]->num_of_files == 0) &&
-//                    (dirs_array[(current_dir->dirs_array)[d]]->num_of_subdirs == 0)){
-//                continue;
-//            }
+
             // Add current subdir to output_dirs_array
             new_sub_dir_sn = *output_dirs_idx;
             output_dirs_array[*output_dirs_idx] = dirs_array[(current_dir->dirs_array)[d]];
