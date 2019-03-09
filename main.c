@@ -10,7 +10,7 @@
 int main(int argc , char** argv){
     /* ---------------------------------------------- Define Variables ---------------------------------------------- */
     PMemory_pool mem_pool = calloc(1 , sizeof(Memory_pool));
-    memory_pool_init(mem_pool);
+    memory_pool_init(mem_pool, atoi(argv[4]));
 
     char dedup_type[2];
     dedup_type[1] = '\0';
@@ -19,7 +19,6 @@ int main(int argc , char** argv){
     //Debugging parameters
     int original_depth = 0;
     int max_mf_mempool_cnt = 0;
-
 
     char* input_file_path;
     char* line = (char*)memory_pool_alloc(mem_pool , (MAX_LINE_LEN*sizeof(char)));
@@ -39,6 +38,7 @@ int main(int argc , char** argv){
     //We Will Determine the hash table size of the merged file blocks based on the total amount of blocks in the system
     int merged_file_ht_size = 0;
     bool is_input_file_heuristic = false;
+
 
     //Variables in order to calculate time execution
     time_t load_time_start , load_time_end , process_time_start , process_time_end;
@@ -61,6 +61,11 @@ int main(int argc , char** argv){
     int input_file_path_len = (int)strlen(argv[3]) + 1;
     input_file_path = (char*)memory_pool_alloc(mem_pool , (input_file_path_len * sizeof(char)));
     strcpy(input_file_path, argv[3]);
+
+    // Get the k param for the base_object filtering rule
+    int base_obj_filter_param_k = atoi(argv[5]);
+    unsigned long base_obj_after_filter_idx = 0;
+    printf("$$$$---> the k param is: %d\n", base_obj_filter_param_k);
 
     //Open the Input File
     time(&load_time_start);
@@ -187,7 +192,7 @@ int main(int argc , char** argv){
             case 'C':
             case 'B':
             case 'P': //This Lines Shouldn't be extremely long
-                base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr);
+                base_object = readBaseObjectLine(input_file, line, mem_pool, base_objects_arr, base_obj_filter_param_k);
                 base_objects_arr[base_object->sn] = base_object;
                 base_objects_cnt++;
                 break;
@@ -218,8 +223,8 @@ int main(int argc , char** argv){
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
     //The format of the File Name will be : P_heuristic_depth3_118_120.csv
-    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
-    //char* input_file_name = (strrchr(input_file_path , '/') + 1);
+//    char* input_file_name = (strrchr(input_file_path , '\\') + 1);
+    char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
     char depth_to_output[15];
@@ -327,7 +332,16 @@ int main(int argc , char** argv){
                                     files_array, num_file_objects, base_objects_arr, num_base_objects, goal_depth,
                                     output_files_array, &output_files_idx, output_dirs_array, &output_dirs_idx ,
                                     merged_file_ht_size , &original_depth , &max_mf_mempool_cnt , mem_pool);
+
+    // Change the sn's of blocks which is in the output
+    if(base_obj_filter_param_k > 0){
+        base_obj_after_filter_idx = fix_base_object_sn_after_filter_k(base_objects_arr, num_base_objects);
+    } else{
+        base_obj_after_filter_idx = num_base_objects;
+    }
+
     time(&process_time_end);
+
 
     /* ------------------------------------- Implement Heuristic on Input Data -------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
@@ -354,7 +368,7 @@ int main(int argc , char** argv){
     }
 
     print_output_csv_header(results_file ,dedup_type[0] , input_files_list , goal_depth , output_files_idx ,
-                            output_dirs_idx , num_base_objects , input_type);
+                            output_dirs_idx , base_obj_after_filter_idx , input_type);
     printf(" #-#-# The OUTPUT Files array #-#-# \n");
     for( int i = 0 ; i < output_files_idx ; i++){ //Print Files to Output CSV
         if(output_files_array[i] == NULL){ //Skip over empty cells of Merged File
@@ -363,12 +377,14 @@ int main(int argc , char** argv){
         print_file_to_csv(output_files_array[i] , temp_output_line , output_logical_files_file);
     }
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
-    for(int i = 0 ; i < num_base_objects; i++){ //Print Base_object (physichal_file or block) output CSV
-        if(dedup_type[0] == 'B'){
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'B' , output_base_objects_file);
-        } else{
-            print_base_object_to_csv(base_objects_arr[i] , temp_output_line, 'P' , output_base_objects_file);
+    for(int i = 0 ; i < num_base_objects; i++) { //Print Base_object (physichal_file or block) output CSV
+        if (base_objects_arr[i]->is_valid_by_k) {
+            if (dedup_type[0] == 'B') {
+                print_base_object_to_csv(base_objects_arr[i], temp_output_line, 'B', output_base_objects_file);
+            } else {
+                print_base_object_to_csv(base_objects_arr[i], temp_output_line, 'P', output_base_objects_file);
 
+            }
         }
     }
     printf(" #-#-# The OUTPUT Directories array #-#-# \n");

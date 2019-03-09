@@ -54,8 +54,10 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
  * @line             - input line that is currently being read
  * @memory_pool      - pointer to the memory pool on which the objects will be created on
  * @base_objects_arr - pointer to the Base Objects array of the entire system
+ * @base_obj_filter_param_k   -  the filter rule param, which defines the base objects that will be included in the output
  */
-Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool, Base_Object* base_objects_arr);
+Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool,
+                                Base_Object* base_objects_arr, int base_obj_filter_param_k);
 
 /*
  * readRootDirLine - 1) Parses the input line into a directory object to be saved
@@ -221,5 +223,14 @@ void read_fragmented_line_File(FILE* input_file, char* line,int input_line_len ,
  */
 void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,PMemory_pool memory_pool,
                               Dir dir_obj, unsigned long num_of_sub_dirs, unsigned long num_of_files);
+
+/*
+ * fix_base_object_sn_after_filter_k - Change the sn's of the base_objects (Blocks) after using the filter rule (k)
+ *
+ * @base_objects_arr     - pointer to the Base Objects array of the entire system
+ * @num_base_object      - number of objects in base_objects_arr
+ */
+unsigned long fix_base_object_sn_after_filter_k(Base_Object* base_object_array, unsigned long num_base_object);
+
 
 #endif //DEDUPLICATIONPROJ_HEURISTIC_TEXTPARSINGUTILITIES_H

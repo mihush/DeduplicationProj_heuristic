@@ -21,6 +21,7 @@ typedef enum{
 #define FILE_ID_LEN 35
 #define MAX_LINE_LEN (1024*32)
 #define MERGED_FILE_ID 120
+#define BIT_ARRAY_SIZE 200
 
 /* **************************************************** INCLUDES **************************************************** */
 /* ****************************************************************************************************************** */
@@ -52,6 +53,7 @@ struct base_object_t{
 
     unsigned long* files_array_updated;
     unsigned long output_updated_idx;
+    bool is_valid_by_k; //param which tells if the object need to be included in the output
 };
 typedef struct base_object_t *Base_Object;
 
@@ -269,6 +271,17 @@ ErrorCode add_sub_dir_sn_to_dir(Dir dir, unsigned long dir_sn, int idx);
  *  @csv_output_file - Pointer to the output csv file
  */
 void print_dir_to_csv(Dir dir, char *output_line , FILE* csv_output_file);
+
+/*
+ * blocks_filter_rule - function which returns if a block answer a threshold number
+ *                      of 0-s in the most significant bits
+ * @blocks_filter_param_k   - the threshold parameter, k
+ * @id                      - the block id
+ * return:              ---> true - if there are at lest k 0-s bits in the most significant bits
+ *                      ---> false - otherwise
+ */
+bool blocks_filter_rule(int blocks_filter_param_k, char* id);
+
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */
 /* ****************************************************************************************************************** */

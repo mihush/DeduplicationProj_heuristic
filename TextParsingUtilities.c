@@ -95,7 +95,8 @@ File readFileLine(FILE* input_file, char* line, PMemory_pool memory_pool, Base_O
     return file;
 }
 
-Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool , Base_Object* base_objects_arr){
+Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory_pool ,
+                                Base_Object* base_objects_arr, int base_obj_filter_param_k){
     char* base_object_id = NULL;
     unsigned long base_object_sn = 0;
     unsigned int shared_by_num_files = 0;
@@ -112,6 +113,8 @@ Base_Object readBaseObjectLine(FILE* input_file, char *line, PMemory_pool memory
     tok = strtok(NULL , sep); //reading num_of_files
     shared_by_num_files = atoi(tok);
     Base_Object base_object_to_update = base_objects_arr[base_object_sn];
+    // Decide if the object is valid using the input param k
+    base_object_to_update->is_valid_by_k = blocks_filter_rule(base_obj_filter_param_k, base_object_id);
     base_object_update(base_object_to_update, base_object_id, shared_by_num_files, memory_pool);
 
     // Need to get the directory using fragments
@@ -188,6 +191,10 @@ void add_base_object_to_merge_file(File merged_file, File file_to_insert, PMemor
         sprintf(base_object_sn_str , "%lu" , base_object_sn);
 
         base_object = base_object_array[base_object_sn]; //Get The pointer to the base object element from the general array
+        // If the base object id not valid by the k param
+        if(!(base_object->is_valid_by_k)){
+            continue;
+        }
         //Try adding the object to the merged file hashtable
         ht_set(merged_file->base_objects_hash_merged , base_object_sn_str , &object_exists , base_object->size, NULL, merged_file->mem_pool_mf, true);
         //If the block doesn't exist it is added to the hashtable ,  otherwise it is already there
@@ -244,7 +251,10 @@ void move_files_to_output_array(Dir current_dir , File* files_array , File* outp
         for(int j = 0 ; j < curr_file->num_base_objects ; j++){
             bool file_exists = false;
             Base_Object curr_object = (curr_file->base_objects_arr)[j];
-
+            // In case the current base object doesn't need to be in the output
+            if(!(curr_object->is_valid_by_k)){
+                continue;
+            }
             ht_set(curr_object->output_files_ht, curr_file->id, &file_exists, curr_file->sn , memory_pool, NULL, false);
             if(file_exists == false){
                 (curr_object->files_array_updated)[(curr_object->output_updated_idx)] = curr_file->sn;
@@ -415,7 +425,7 @@ void calculate_depth_and_merge_files(FILE *files_output_result , Dir* roots_arra
     //Allocate Memory Pool for Merged Files
     PMemory_pool_mf merged_file_mem_pool = NULL;
     merged_file_mem_pool = calloc(1 , sizeof(Memory_pool_mf));
-    memory_pool_mf_init(merged_file_mem_pool);
+    memory_pool_mf_init(merged_file_mem_pool, num_roots);
 
     for(int r = 0 ; r < num_roots ; r++){
         //Set each roots depth to be 0
@@ -627,3 +637,59 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     }
     return;
 }
+
+bool blocks_filter_rule(int blocks_filter_param_k, char* id){
+
+    char ch = *id;
+    int cnt_zeros = 0;
+    int l = 0;
+    char value[BIT_ARRAY_SIZE] = "";
+
+    const char* quads[] = {"0000", "0001", "0010", "0011", "0100", "0101",
+                           "0110", "0111", "1000", "1001", "1010", "1011",
+                           "1100", "1101", "1110", "1111"};
+    int id_length = strlen(id);
+    for (int i = 0; i < id_length ; i++) {
+        if (ch >= '0' && ch <= '9')
+            strncat(value, quads[ch - '0'], 4);
+        if (ch >= 'A' && ch <= 'F')
+            strncat(value, quads[10 + ch - 'A'], 4);
+        if (ch >= 'a' && ch <= 'f')
+            strncat(value, quads[10 + ch - 'a'], 4);
+
+        ch = *(++id);
+    }
+
+    int value_length = strlen(value);
+    int j = value_length;
+
+    while(cnt_zeros < blocks_filter_param_k){
+        if(value[l] == '0'){
+            cnt_zeros++;
+            l++;
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+unsigned long fix_base_object_sn_after_filter_k(Base_Object* base_object_array, unsigned long num_base_object){
+    if(!base_object_array || num_base_object <= 0){
+        printf("There are no objects to handle\n");
+        return 0;
+    }
+    unsigned long num_base_object_after_filter = 0;
+    for(unsigned long i = 0 ; i < num_base_object ; i++){
+        if(base_object_array[i]->is_valid_by_k){
+            base_object_array[i]->sn = num_base_object_after_filter;
+            num_base_object_after_filter++;
+        } else{ // In case the block dosn't belomg to the output
+            base_object_array[i]->sn = -1;
+        }
+    }
+    return num_base_object_after_filter;
+}
+

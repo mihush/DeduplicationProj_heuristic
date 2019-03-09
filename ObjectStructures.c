@@ -19,7 +19,7 @@ Base_Object base_object_create(unsigned long base_object_sn, unsigned int base_o
     base_object->output_files_ht = NULL;
     base_object->shared_by_num_files = 0;
     base_object->output_updated_idx = 0;
-
+    base_object->is_valid_by_k = false;
 
     return base_object;
 }
@@ -53,6 +53,7 @@ void print_base_object_to_csv(Base_Object base_object, char* output_line, char o
 
     //Print all file serial numbers the block belongs to
     for(int i = 0 ; i < base_object->output_updated_idx ;  i++){
+
         sprintf(temp , "%lu," , (base_object->files_array_updated)[i]);
         strcat(output_line , temp);
     }
@@ -251,7 +252,7 @@ void print_dir_to_csv(Dir dir , char *output_line , FILE* csv_output_file){
         dir_type = 'D';
     }
 
-    sprintf(output_line , "%c,%lu,%s,%lu,%d,%d," ,dir_type, dir->sn, dir->id, dir->parent_dir_sn,
+    sprintf(output_line , "%c,%lu,%s,%lu,%lu,%lu," ,dir_type, dir->sn, dir->id, dir->parent_dir_sn,
             dir->upd_subdirs_array_idx, dir->upd_files_array_idx);
     for(int i = 0 ; i < dir->upd_subdirs_array_idx ; i++){
         sprintf(temp , "%lu," , (dir->upd_subdirs_array)[i]);
