@@ -119,6 +119,8 @@ void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size){
      * allocate a new pool node */
     if (pool->mempool_init_size <= (pool->next_free_index + size_of_uint32_to_alloc)){
         pool_to_alloc_from->next_pool = calloc(1 , sizeof(Memory_pool_mf)); //Allocating new pool node
+        pool->arr = calloc(1 , sizeof(uint32_t)*(pool->mempool_init_size)); //Allocating the array of the mempool
+
         (pool->mempool_cnt)++;
         if (!pool_to_alloc_from->next_pool){
             printf("--> Error Allocating MF Memory Pool\n");
@@ -157,11 +159,15 @@ void memory_pool_mf_reset(PMemory_pool_mf pool) {
     PMemory_pool_mf next_pool = NULL;
     PMemory_pool_mf pool_to_free = pool->next_pool;
     int num_of_mempools = pool->mempool_cnt;
-    free(pool->arr);
+    int mem_pool_init_size_old = pool->mempool_init_size;
 
+
+    free(pool->arr);
     for(int i = 0 ; i < num_of_mempools ; i++){
         if(i == 0){
-            memset(pool, 0, sizeof(Memory_pool_mf));
+            pool = memset(pool, 0, sizeof(Memory_pool_mf));
+            pool->mempool_init_size = mem_pool_init_size_old;
+            pool->arr = calloc(1 , sizeof(uint32_t)*(pool->mempool_init_size)); //Allocating the array of the mempool
         } else {
             free(pool_to_free->arr);
             next_pool = pool_to_free->next_pool;
