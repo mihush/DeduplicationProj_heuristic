@@ -65,7 +65,7 @@ int main(int argc , char** argv){
     // Get the k param for the base_object filtering rule
     int base_obj_filter_param_k = atoi(argv[5]);
     unsigned long base_obj_after_filter_idx = 0;
-    printf("$$$$---> the k param is: %d\n", base_obj_filter_param_k);
+//    printf("$$$$---> the k param is: %d\n", base_obj_filter_param_k);
 
     //Open the Input File
     time(&load_time_start);
@@ -217,8 +217,6 @@ int main(int argc , char** argv){
     }
     time(&load_time_end);
 
-    Dir temp_dir = dirs_array[214];
-
     /* --------------------------------------------- Read Data Objects ---------------------------------------------- */
     /* -------------------------------------------------------------------------------------------------------------- */
     /* --------------------------------------- Create Output File Name String --------------------------------------- */
@@ -227,8 +225,8 @@ int main(int argc , char** argv){
     char* input_file_name = (strrchr(input_file_path , '/') + 1);
     char sep_file_name[2] = "_";
     char* output_file_name = calloc(275 , sizeof(char));
-    char depth_to_output[15];
-    sprintf(depth_to_output, "_depth%d", goal_depth);
+    char depth_to_output[20];
+    sprintf(depth_to_output, "_depth%d_k%d", goal_depth, base_obj_filter_param_k);
 
     strncpy(output_file_name , input_file_name , 2);
     strcat(output_file_name , "heuristic");

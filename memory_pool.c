@@ -64,7 +64,7 @@ void* memory_pool_alloc(PMemory_pool pool, uint32_t size){
 void memory_pool_destroy(PMemory_pool pool) {
     PMemory_pool next_pool = NULL;
     PMemory_pool pool_to_free = pool->next_pool;
-
+    free(pool->arr);
     /* Iterate over all pool nodes and free them */
     while (pool_to_free){
         free(pool_to_free->arr);
@@ -79,6 +79,7 @@ void memory_pool_destroy(PMemory_pool pool) {
 //----------- Memory Pool For Merged File GODDD -----------//
 //Creates the struct of a Memory Pool that contains 4 values
 void* memory_pool_mf_init(PMemory_pool_mf pool, int bundle_size){
+    memset(pool, 0, sizeof(Memory_pool_mf));
     pool->mempool_cnt = 1;
     if(bundle_size <= 10){
         pool->mempool_init_size = POOL_INITIAL_SIZE_MF_S;
@@ -89,8 +90,7 @@ void* memory_pool_mf_init(PMemory_pool_mf pool, int bundle_size){
     }
     pool->arr = calloc(1 , sizeof(uint32_t)*(pool->mempool_init_size)); //Allocating the array of the mempool
 
-    pool->mempool_cnt = 1;
-    return memset(pool, 0, sizeof(Memory_pool_mf));
+    return pool;
 }
 
 void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size){
@@ -140,9 +140,11 @@ void* memory_pool_mf_alloc(PMemory_pool_mf pool, uint32_t size){
 void memory_pool_mf_destroy(PMemory_pool_mf pool) {
     PMemory_pool_mf next_pool = NULL;
     PMemory_pool_mf pool_to_free = pool->next_pool;
+    free(pool->arr);
 
     /* Iterate over all pool nodes and free them */
     while (pool_to_free){
+        free(pool_to_free->arr);
         next_pool = pool_to_free->next_pool;
         free(pool_to_free);
         pool_to_free = next_pool;
@@ -155,6 +157,7 @@ void memory_pool_mf_reset(PMemory_pool_mf pool) {
     PMemory_pool_mf next_pool = NULL;
     PMemory_pool_mf pool_to_free = pool->next_pool;
     int num_of_mempools = pool->mempool_cnt;
+    free(pool->arr);
 
     for(int i = 0 ; i < num_of_mempools ; i++){
         if(i == 0){

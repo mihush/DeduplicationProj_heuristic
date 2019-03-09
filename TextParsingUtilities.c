@@ -660,9 +660,6 @@ bool blocks_filter_rule(int blocks_filter_param_k, char* id){
         ch = *(++id);
     }
 
-    int value_length = strlen(value);
-    int j = value_length;
-
     while(cnt_zeros < blocks_filter_param_k){
         if(value[l] == '0'){
             cnt_zeros++;
