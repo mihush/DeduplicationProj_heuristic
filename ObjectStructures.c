@@ -124,27 +124,35 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
     return file;
 }
 
-void print_file_to_csv(File file, char* output_line , FILE* csv_output_file){
+void print_file_to_csv(File file, char* output_line , FILE* csv_output_file, Base_Object* base_object_arr){
     assert(file);
     char temp[100];
     int output_line_len = 0;
     Entry pair = NULL;
 
-    sprintf(output_line , "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
+    snprintf(output_line , sizeof(output_line), "F,%lu,%s,%lu,%lu,",file->sn,file->id,file->dir_sn,file->base_object_arr_idx);
+
     output_line_len = (int)strlen(output_line);
+    unsigned long base_object_sn = 0;
 
     if((file->id[0] =='M')&&(file->id[1] =='F')&&(file->id[2] =='_')){ //In case this is a merged file - print from hashtable
-        for(int i = 0 ; i < (file->base_objects_hash_merged->size_table) ;i++){
+        for(int i = 0 ; i < (file->base_objects_hash_merged->size_table) ;i++) {
             pair = file->base_objects_hash_merged->table[i];
-            while( pair != NULL && pair->key != NULL) {
-                sprintf(temp , "%s,%u," , pair->key , pair->data);
-                if((strlen(temp) + output_line_len + 1) > MAX_LINE_LEN){ //Check if line is too long for the buffer and print it to the file
-                    fprintf(csv_output_file , "%s" ,output_line);//Print the Current line to file
-                    memset(output_line,0,strlen(output_line)); //Clear Output Line Buffer
+            while (pair != NULL && pair->key != NULL) {
+                base_object_sn = atol(pair->key);
+                if (base_object_arr[base_object_sn]->sn == -1) {
+                    printf("sn with -1 value \n");
                 }
-                strcat(output_line , temp);
-                output_line_len  = (int)strlen(output_line);
-
+                if (base_object_arr[base_object_sn]->is_valid_by_k) {
+                    snprintf(temp, sizeof(output_line), "%lu,%u,", base_object_arr[base_object_sn]->sn, pair->data);
+                    if ((strlen(temp) + output_line_len + 1) >
+                        MAX_LINE_LEN) { //Check if line is too long for the buffer and print it to the file
+                        fprintf(csv_output_file, "%s", output_line);//Print the Current line to file
+                        memset(output_line, 0, strlen(output_line)); //Clear Output Line Buffer
+                    }
+                    strcat(output_line, temp);
+                    output_line_len = (int) strlen(output_line);
+                }
                 pair = pair->next;
             }
         }
@@ -152,13 +160,16 @@ void print_file_to_csv(File file, char* output_line , FILE* csv_output_file){
         fprintf(csv_output_file , "%s" ,output_line);
     } else { //In Case this isn't a merged file
         for(int i = 0 ; i < file->base_object_arr_idx ; i++){
-            sprintf(temp , "%lu,%u," , ((file->base_objects_arr)[i])->sn , ((file->base_objects_arr)[i])->size);
-            if((strlen(temp) + output_line_len + 1) > MAX_LINE_LEN){ //Check if line is too long for the buffer and print it to the file
-                fprintf(csv_output_file , "%s" ,output_line);//Print the Current line to file
-                memset(output_line,0,strlen(output_line)); //Clear Output Line Buffer
+            if((file->base_objects_arr)[i]->is_valid_by_k) {
+                snprintf(temp, sizeof(output_line), "%lu,%u,", ((file->base_objects_arr)[i])->sn, ((file->base_objects_arr)[i])->size);
+                if ((strlen(temp) + output_line_len + 1) >
+                    MAX_LINE_LEN) { //Check if line is too long for the buffer and print it to the file
+                    fprintf(csv_output_file, "%s", output_line);//Print the Current line to file
+                    memset(output_line, 0, strlen(output_line)); //Clear Output Line Buffer
+                }
+                strcat(output_line, temp);
+                output_line_len = (int) strlen(output_line);
             }
-            strcat(output_line , temp);
-            output_line_len  = (int)strlen(output_line);
         }
         strcat(output_line , "\n");
         fprintf(csv_output_file , "%s" ,output_line);

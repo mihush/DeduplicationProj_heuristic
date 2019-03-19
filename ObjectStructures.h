@@ -221,7 +221,7 @@ File file_create(unsigned long sn ,char* id , unsigned long parent_dir_sn,
  *  @output_line     - Pointer to the allocated memory for output line (Single allocation from main)
  *  @csv_output_file - Pointer to the output csv file
  */
-void print_file_to_csv(File file, char* output_line , FILE* csv_output_file);
+void print_file_to_csv(File file, char* output_line , FILE* csv_output_file, Base_Object* base_object_arr);
 
 /* ******************** END ******************** File STRUCT Functions ******************** END ********************* */
 /* ****************************************************************************************************************** */

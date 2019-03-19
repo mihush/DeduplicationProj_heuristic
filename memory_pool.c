@@ -7,11 +7,12 @@
 void* memory_pool_init(PMemory_pool pool, int bundle_size){
     pool = memset(pool, 0, sizeof(Memory_pool));
     pool->mempool_cnt = 1;
-    if(bundle_size <= 10){
-        pool->mempool_init_size = POOL_INITIAL_SIZE_S;
-    } else {
-        pool->mempool_init_size = POOL_INITIAL_SIZE_M;
-    }
+    pool->mempool_init_size = POOL_INITIAL_SIZE_M;
+//    if(bundle_size <= 5){
+//        pool->mempool_init_size = POOL_INITIAL_SIZE_S;
+//    } else {
+//        pool->mempool_init_size = POOL_INITIAL_SIZE_M;
+//    }
     pool->arr = calloc(1 , sizeof(uint32_t)*(pool->mempool_init_size)); //Allocating the array of the mempool
     return pool;
 }
@@ -81,13 +82,14 @@ void memory_pool_destroy(PMemory_pool pool) {
 void* memory_pool_mf_init(PMemory_pool_mf pool, int bundle_size){
     memset(pool, 0, sizeof(Memory_pool_mf));
     pool->mempool_cnt = 1;
-    if(bundle_size <= 10){
-        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_S;
-    } else if(bundle_size <= 25){
-        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_M;
-    } else {
-        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_L;
-    }
+    pool->mempool_init_size = POOL_INITIAL_SIZE_MF_L;
+//    if(bundle_size <= 10){
+//        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_S;
+//    } else if(bundle_size <= 25){
+//        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_M;
+//    } else {
+//        pool->mempool_init_size = POOL_INITIAL_SIZE_MF_L;
+//    }
     pool->arr = calloc(1 , sizeof(uint32_t)*(pool->mempool_init_size)); //Allocating the array of the mempool
 
     return pool;

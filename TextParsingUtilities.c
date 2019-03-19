@@ -403,7 +403,7 @@ void update_dir_values(FILE *files_output_result , Dir current_dir, int goal_dep
         if((current_depth == (goal_depth - 1)) && (merged_file_needed == true)){
             char* temp_output_line = (char*)malloc(MAX_LINE_LEN*sizeof(char));
             unsigned long mf_to_remove_SN = current_dir->merged_file->sn;
-            print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result);
+            print_file_to_csv(current_dir->merged_file , temp_output_line , files_output_result, base_object_array);
 
             memory_pool_mf_reset(merged_file_mem_pool);
             output_files_array[mf_to_remove_SN] = NULL;

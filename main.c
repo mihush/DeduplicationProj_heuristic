@@ -372,7 +372,12 @@ int main(int argc , char** argv){
         if(output_files_array[i] == NULL){ //Skip over empty cells of Merged File
             continue;
         }
-        print_file_to_csv(output_files_array[i] , temp_output_line , output_logical_files_file);
+        File temp = output_files_array[i];
+        if(output_files_array[i]->sn == 1){
+            printf("Sarittt\n");
+//            continue;
+        }
+        print_file_to_csv(temp , temp_output_line , output_logical_files_file, base_objects_arr);
     }
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
     for(int i = 0 ; i < num_base_objects; i++) { //Print Base_object (physichal_file or block) output CSV
