@@ -638,7 +638,7 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     return;
 }
 
-bool blocks_filter_rule(int blocks_filter_param_k, char* id){
+bool blocks_filter_rule2(int blocks_filter_param_k, char* id){
 
     char ch = *id;
     int cnt_zeros = 0;
@@ -671,6 +671,33 @@ bool blocks_filter_rule(int blocks_filter_param_k, char* id){
 
     return true;
 }
+
+bool blocks_filter_rule(int blocks_filter_param_k, char* id){
+
+    char ch;
+    uint64_t id_in_bits = 0;
+    int id_length = strlen(id);
+    int mask_length = (id_length*4) - blocks_filter_param_k;
+
+    for (int i = 0; i < id_length ; i++) {
+        ch = id[id_length - i -1];
+        if (ch >= '0' && ch <= '9') {
+            id_in_bits |= (uint64_t)((ch - '0')) << (i*4);
+        } else if (ch >= 'A' && ch <= 'F') {
+            id_in_bits |= (uint64_t)((10 + ch - 'A')) << (i*4);
+        } else if (ch >= 'a' && ch <= 'f') {
+            id_in_bits |= (uint64_t)((10 + ch - 'a')) << (i*4);
+        }
+
+    }
+    uint64_t id_after_filter = (uint64_t)(id_in_bits >> mask_length);
+    if(!id_after_filter){
+        return true;
+    }
+
+    return false;
+}
+
 
 
 unsigned long fix_base_object_sn_after_filter_k(Base_Object* base_object_array, unsigned long num_base_object){

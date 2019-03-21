@@ -281,6 +281,7 @@ void print_dir_to_csv(Dir dir, char *output_line , FILE* csv_output_file);
  *                      ---> false - otherwise
  */
 bool blocks_filter_rule(int blocks_filter_param_k, char* id);
+bool blocks_filter_rule2(int blocks_filter_param_k, char* id);
 
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */

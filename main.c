@@ -373,10 +373,6 @@ int main(int argc , char** argv){
             continue;
         }
         File temp = output_files_array[i];
-        if(output_files_array[i]->sn == 1){
-            printf("Sarittt\n");
-//            continue;
-        }
         print_file_to_csv(temp , temp_output_line , output_logical_files_file, base_objects_arr);
     }
     printf(" #-#-# The OUTPUT Blocks array #-#-# \n");
@@ -432,3 +428,38 @@ int main(int argc , char** argv){
     /* ------------------------------------------- Free all allocated Data ------------------------------------------ */
     return 0;
 }
+
+
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <ctype.h>
+//#include "ObjectStructures.h"
+//#include "TextParsingUtilities.h"
+//
+//
+//int main(){
+//    FILE *input_file = NULL;
+//    char* current_file = NULL;
+//    input_file = fopen("/Users/mihushamsh/CLionProjects/DeduplicationProj_heuristic_kParam/inputs/input_example_gala.txt" , "r");
+//    char buff[200];
+//    //fgets(buff, BUFFER_SIZE , input_file); //Read First Line
+//
+//    char* result_conversion;
+//    bool res = false;
+//    while (fgets(buff, 200 , input_file)) {
+//        res = blocks_filter_rule2(4, buff);
+//        //    res = ascii_to_binary(buff, &result_conversion, strlen(buff), 4);
+//        printf("The result for k = 4 is :\n");
+//        printf("res = %d\n", res);
+//        res = blocks_filter_rule2(8, buff);
+//        //    res = ascii_to_binary(buff, &result_conversion ,strlen(buff), 8);
+//        printf("The result for k = 8 is :\n");
+//        printf("res = %d\n", res);
+//
+//        fgets(buff, 200, input_file);
+//    }
+//
+//    fclose(input_file);
+//
+//}
