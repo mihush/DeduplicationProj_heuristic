@@ -638,7 +638,34 @@ void read_fragmented_line_Dir(FILE* input_file, char* line, int input_line_len ,
     return;
 }
 
-bool blocks_filter_rule2(int blocks_filter_param_k, char* id){
+bool blocks_filter_rule(int blocks_filter_param_k, char* id){
+
+    char ch;
+    uint64_t id_in_bits = 0;
+    int id_length = strlen(id);
+    int mask_length = (id_length*4) - blocks_filter_param_k;
+
+    for (int i = 0; i < id_length ; i++) {
+        ch = id[id_length - i -1];
+        if (ch >= '0' && ch <= '9') {
+            id_in_bits |= (uint64_t)((ch - '0')) << (i*4);
+        } else if (ch >= 'A' && ch <= 'F') {
+            id_in_bits |= (uint64_t)((10 + ch - 'A')) << (i*4);
+        } else if (ch >= 'a' && ch <= 'f') {
+            id_in_bits |= (uint64_t)((10 + ch - 'a')) << (i*4);
+        }
+
+    }
+
+    uint64_t id_after_filter = (uint64_t)(id_in_bits >> mask_length);
+    if(!id_after_filter){
+        return true;
+    }
+
+    return false;
+}
+
+bool blocks_filter_rule_naiive(int blocks_filter_param_k, char* id){
 
     char ch = *id;
     int cnt_zeros = 0;
@@ -660,6 +687,8 @@ bool blocks_filter_rule2(int blocks_filter_param_k, char* id){
         ch = *(++id);
     }
 
+    int value_length = strlen(value);
+
     while(cnt_zeros < blocks_filter_param_k){
         if(value[l] == '0'){
             cnt_zeros++;
@@ -672,33 +701,64 @@ bool blocks_filter_rule2(int blocks_filter_param_k, char* id){
     return true;
 }
 
-bool blocks_filter_rule(int blocks_filter_param_k, char* id){
+bool ascii_to_binary(char *input, char **value, int len, int blocks_filter_param_k) {
+    if(!input){
+        printf("ERROR in input file\n");
+    }
 
-    char ch;
-    uint64_t id_in_bits = 0;
-    int id_length = strlen(id);
-    int mask_length = (id_length*4) - blocks_filter_param_k;
+    if (len == 0) {
+        printf("Length argument is zero\n");
+        return false;
+    }
+    /* Assign the len to be in multiply of 4 bits */
+    int str_len = len * 4;
 
-    for (int i = 0; i < id_length ; i++) {
-        ch = id[id_length - i -1];
-        if (ch >= '0' && ch <= '9') {
-            id_in_bits |= (uint64_t)((ch - '0')) << (i*4);
-        } else if (ch >= 'A' && ch <= 'F') {
-            id_in_bits |= (uint64_t)((10 + ch - 'A')) << (i*4);
-        } else if (ch >= 'a' && ch <= 'f') {
-            id_in_bits |= (uint64_t)((10 + ch - 'a')) << (i*4);
+    (*value) = malloc(sizeof(char)*(str_len + 1));
+    if ((*value) == NULL) {
+        printf("Can't allocate binary string\n");
+        return false;
+    }
+
+    if (memset((*value), 0, (str_len)) == NULL) {
+        printf("Can't initialize memory to zero\n");
+        return false;
+    }
+
+    for (int i = 0; i < len; i++) {
+        char ch = input[i];
+        char *o = *value + 4 * i;
+
+        for (int b = 3; b >= 0; b--) {
+            if (ch >= '0' && ch <= '9') {
+                *o++ = ((ch - '0') & (1 << b)) ? '1' : '0';
+            }
+            else if (ch >= 'A' && ch <= 'F') {
+                *o++ = ((10 + ch - 'A') & (1 << b)) ? '1' : '0';
+            }
+            else if (ch >= 'a' && ch <= 'f') {
+                *o++ = ((10 + ch - 'a') & (1 << b)) ? '1' : '0';
+            }
         }
-
     }
-    uint64_t id_after_filter = (uint64_t)(id_in_bits >> mask_length);
-    if(!id_after_filter){
-        return true;
-    }
+    (*value)[str_len] = '\0';
 
-    return false;
+    /* Print the conversion result */
+    printf("The result of conversion to binary is:\n");
+    printf("%s\n", *value);
+
+    /* Check if there is at lest blocks_filter_param_k zeros */
+    int cnt_zeros = 0, l = 0;
+    while(cnt_zeros < blocks_filter_param_k){
+        if((*value)[l] == '0'){
+            cnt_zeros++;
+            l++;
+        } else {
+            return false;
+        }
+    }
+    free(*value);
+    return true;
 }
-
-
 
 unsigned long fix_base_object_sn_after_filter_k(Base_Object* base_object_array, unsigned long num_base_object){
     if(!base_object_array || num_base_object <= 0){

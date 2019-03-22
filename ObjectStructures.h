@@ -281,7 +281,33 @@ void print_dir_to_csv(Dir dir, char *output_line , FILE* csv_output_file);
  *                      ---> false - otherwise
  */
 bool blocks_filter_rule(int blocks_filter_param_k, char* id);
-bool blocks_filter_rule2(int blocks_filter_param_k, char* id);
+/*
+ * ~~~ Two more implementations for thw filtering rule ~~~
+ *
+ * blocks_filter_rule_naiive - naiive function which uses string representation
+ *                             Convert each hex number using array from hex to binary
+ *                             (in idx = 0 the conversion will be '0000', in idx = 1 will be '0001',
+ *                              in idx = 15 will be '1111')
+ * ascii_to_binary - naiive function which also uses string representation.
+ *                   The function convert each hex number using bitwise shifting respectively.
+ *                   the result is string of '0' and '1' which is the id in binary representation.
+ * Checking Method: checks if there are k (block_filter_param_k) zeros in the beginning of the string.
+ *                   - Yes ? ---> return true.
+ *                   - No ?  ---> return false.
+ */
+bool blocks_filter_rule_naiive(int blocks_filter_param_k, char* id);
+bool ascii_to_binary(char *input,  char **value, int len, int blocks_filter_param_k);
+
+/*
+ * fix_base_object_sn_after_filter_k - function which fix the serial numbers (sn) to be consecutive.
+ *                                     Checks if the block is legal (using a flag in his structure, is_valid_by_k)
+ *                                     - Yes ? ---> update his sn by the next one (counter of the legal blocks).
+ *                                     - No ?  ---> don't fix and continue to the next block.
+ *
+ * @base_object_array - conatains all base objects given in the input
+ * @num_base_object - the number of base objects (the array size).
+ */
+unsigned long fix_base_object_sn_after_filter_k(Base_Object* base_object_array, unsigned long num_base_object);
 
 /* ******************* END ******************* Directory STRUCT Functions ******************* END ******************* */
 /* ****************************************************************************************************************** */
